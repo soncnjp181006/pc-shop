@@ -1,11 +1,6 @@
 from pydantic import (
-    BaseModel,          # Class tạo bộ lọc
     EmailStr,           # Class ép kiểu emai; 
-    field_serializer    # Phương thức dùng để kiểm tra
 )
-import re
-from typing import Optional # Optional cho phép None
-
 # Import class cha UserBase(BaseModel) để đa kế thừa
 from ..user.userbase import UserBase
         
@@ -21,13 +16,9 @@ class UserCreate(UserBase):
             "password" : "TranXuanSon006"
         }
     """
-
     username:str
-    email:str
+    email:EmailStr
     password:str
 
-    
-    
-    
-
-    
+    # Tự kế thừa username_format
+    # Tự kế thừa password_format

@@ -1,9 +1,8 @@
 from pydantic import (
     BaseModel,          # Class tạo bộ lọc
-    EmailStr,           # Class ép kiểu emai; 
+    EmailStr,           # Class ép kiểu, bắt lỗi email
     field_serializer    # Phương thức dùng để kiểm tra
 )
-import re
 from typing import Optional # Optional cho phép None
 
 class UserBase(BaseModel):
