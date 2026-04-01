@@ -26,6 +26,7 @@ class User(Base):
     '''User Model'''
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(200), unique=True, nullable=False)
     email = Column(String(200), nullable=False, unique=True, index=True)
     hashed_password = Column(String(200), nullable=False, unique=False)
     is_active = Column(Boolean, nullable=False, default=True)
