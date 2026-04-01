@@ -52,7 +52,7 @@ def test_users_table_columns():
         # List danh sách các cột trong một user cơ bản
         # Danh sách cột mong đợi có đầy đủ
         expected_columns = [
-            'id', 'email', 'hashed_password',
+            'id', 'email', 'username', 'hashed_password',
             'is_active', 'role', 'created_at'
         ]
 

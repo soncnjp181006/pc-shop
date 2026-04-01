@@ -117,7 +117,7 @@ class UserBase(BaseModel):
 
         An toàn dữ liệu:
         + không chứa control character (\n, \t, \0, ...)
-        + không chứa ký tự escape nguy hiểm (\ " ' `)
+        + không chứa ký tự escape nguy hiểm (\\ " ' `)
 
         Chuẩn hóa dữ liệu:
         + trim khoảng trắng đầu/cuối
