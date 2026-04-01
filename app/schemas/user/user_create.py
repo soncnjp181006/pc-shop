@@ -2,7 +2,7 @@ from pydantic import (
     EmailStr,           # Class ép kiểu emai; 
 )
 # Import class cha UserBase(BaseModel) để đa kế thừa
-from ..user.userbase import UserBase
+from .user_base import UserBase
         
 
 class UserCreate(UserBase):

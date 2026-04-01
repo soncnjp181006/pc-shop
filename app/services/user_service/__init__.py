@@ -1,6 +1,6 @@
-from ..user_service.createuser import create_user
-from ..user_service.useremail import get_user_by_email
-from ..user_service.userid import get_user_by_id
+from .create_user import create_user
+from .usere_mail import get_user_by_email
+from .user_id import get_user_by_id
 
 __all__ = [
     "create_user",

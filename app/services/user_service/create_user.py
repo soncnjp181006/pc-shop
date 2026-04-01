@@ -23,7 +23,7 @@ def create_user(db:Session, username:str, email:str, password:str) -> User:
         hashed_password=hashed_pwd
     )
 
-    from app.repositories.user_repo.createuser import create_user_repo
+    from app.repositories.user_repo.create_user import create_user_repo
     return create_user_repo(db=db, user=user)
 
     # db.add(user) # Thêm vào DB
