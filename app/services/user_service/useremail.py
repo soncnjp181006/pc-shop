@@ -10,5 +10,5 @@ def get_user_by_email(db:Session, email:str):
         - None nếu không tồn tại
     """
 
-    return db.query(User).filter(User.email == email).first()
-
+    from app.repositories.user_repo.useremail import get_user_by_email_repo
+    get_user_by_email_repo(db=db, email=email)
