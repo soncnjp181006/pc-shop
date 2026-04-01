@@ -1,0 +1,305 @@
+/* Auth.css - Dark Gaming Premium Theme */
+:root {
+  --color-bg-dark: #0d0d12;
+  --color-panel-bg: rgba(22, 22, 30, 0.7);
+  --color-accent-cyan: #00e5ff;
+  --color-accent-purple: #b026ff;
+  --color-text-main: #f0f0f5;
+  --color-text-muted: #8b8b99;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-glow: rgba(0, 229, 255, 0.5);
+  --font-family-cyber: 'Inter', system-ui, sans-serif;
+  --transition-speed: 0.3s;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--color-bg-dark);
+  /* Lưới nhạt dạng cyber-grid (có thể thay bằng hình nền tùy chọn) */
+  background-image: 
+    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  font-family: var(--font-family-cyber);
+  color: var(--color-text-main);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.auth-box {
+  background: var(--color-panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 229, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: height var(--transition-speed) ease;
+}
+
+/* Hiệu ứng tia sáng chạy viền hộp thoại (Tuỳ chọn) */
+.auth-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent-cyan), var(--color-accent-purple), transparent);
+  animation: scanningLine 3s infinite linear;
+}
+
+@keyframes scanningLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--color-accent-cyan), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Input Styles */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color var(--transition-speed);
+}
+
+.glow-input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  background: rgba(10, 10, 15, 0.5);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-main);
+  font-size: 15px;
+  outline: none;
+  transition: all var(--transition-speed);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.glow-input:focus {
+  border-color: var(--color-accent-cyan);
+  background: rgba(10, 10, 15, 0.8);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+}
+
+.glow-input:focus + .input-icon,
+.glow-input:not(:placeholder-shown) ~ .input-icon {
+  color: var(--color-accent-cyan);
+}
+
+/* Checkbox and links */
+.form-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.margin-top {
+  margin-top: -8px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-container input {
+  display: none;
+}
+
+.checkmark {
+  width: 16px;
+  height: 16px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background: var(--color-accent-cyan);
+  border-color: var(--color-accent-cyan);
+}
+
+.checkbox-container input:checked ~ .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #000;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.forgot-password, .term-link {
+  color: var(--color-accent-cyan);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-password:hover, .term-link:hover {
+  text-decoration: underline;
+  color: var(--color-accent-purple);
+}
+
+/* Cyber Button */
+.cyber-button {
+  margin-top: 10px;
+  background: linear-gradient(45deg, var(--color-accent-cyan), var(--color-accent-purple));
+  color: #fff;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.cyber-button:hover::before {
+  transform: scaleX(1);
+}
+
+.cyber-button:hover {
+  box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
+}
+
+/* Switch */
+.auth-switch {
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 10px;
+}
+
+.switch-btn {
+  background: none;
+  border: none;
+  color: var(--color-accent-cyan);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 5px;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.switch-btn:hover {
+  color: var(--color-accent-purple);
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-box {
+    padding: 30px 20px;
+    border-radius: 12px;
+  }
+  
+  .input-group-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+}

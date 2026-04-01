@@ -1,4 +1,5 @@
 from passlib.context import CryptContext
+import hashlib
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # CryptContext quản lý thuật toán hash.
@@ -17,5 +18,7 @@ def hash_password(password: str) -> str:
         → Mỗi lần hash mất ~100ms. Với attacker dùng brute force,
         100ms/attempt × 1 tỷ lần = rất lâu. Với user login, 100ms là chấp nhận được.
     """
+
+    password = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
     return pwd_context.hash(password)
