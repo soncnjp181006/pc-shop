@@ -73,3 +73,81 @@ def test_register_success(client, db_session):
     user_in_db = db_session.query(User).filter(User.email == email).first()
     assert user_in_db is not None
     assert user_in_db.hashed_password.startswith('$2b$')
+
+
+def test_register_duplicate_email(client):
+    """
+    Test case 2: Email đã tồn tại -> 409 Conflict
+    """
+
+    # Tạo user trước
+    client.post(
+        "/api/v1/auth/regiter",
+        json={
+            "email": "duplicate@example.com",
+            "password": "soncnjp2006"
+        }
+    )
+
+    # Đăng ký email trùng lại
+    response = client.post(
+        "/api/v1/auth/regiter",
+        json={
+            "email": "duplicate@example.com",
+            "password": "pass123SSS"
+        }
+    )
+
+    assert response.status_code == 409
+    assert "email" in response.json()["detail"].lower()  # Thông báo rõ ràng
+
+
+def test_register_missing_fields(client):
+    """
+    Test case 3: Thiếu một trường dữ liệu -> 422 Validation Error
+    """
+
+    # Thiếu username
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "missingpass@example.com",
+            "password": "passs12333546"
+        }
+    )
+    assert response.status_code == 422
+
+    # Thiếu password
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "soncnjp2006",
+            "email": "missingpass@example.com"
+        }
+    )
+    assert response.status_code == 422
+
+    # Thiếu email
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "soncnjp2006",
+            "password": "StrongPass123"
+        }
+    )
+    assert response.status_code == 422
+
+
+def test_register_password_too_short(client):
+    """
+    Test case 4: Password quá ngắn
+    """
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "soncnjp2006",
+            "email": "short@example.com", 
+            "password": "123"
+        }
+    )
+    assert response.status_code == 422
