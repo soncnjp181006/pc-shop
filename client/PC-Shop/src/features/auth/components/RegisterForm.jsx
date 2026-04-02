@@ -36,7 +36,7 @@ const RegisterForm = ({ toggleMode }) => {
     
     setIsLoading(true);
     try {
-      const response = await fetch('/api/v1/auth/register', {
+      const response = await fetch('http://localhost:8000/api/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -51,11 +51,12 @@ const RegisterForm = ({ toggleMode }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Đăng ký thất bại. Vui lòng thử lại!');
+        throw new Error(data.detail || 'Đăng ký thất bại. Vui lòng thử lại!');
       }
 
       setSuccess('Đăng ký thành công! Bạn có thể chuyển sang đăng nhập.');
       setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+      setIsTermsAccepted(false);
       
     } catch (err) {
       setError(err.message === 'Failed to fetch' ? 'Lỗi kết nối máy chủ (Check backend)' : err.message);
@@ -75,6 +76,7 @@ const RegisterForm = ({ toggleMode }) => {
         value={formData.username}
         onChange={handleChange}
         required
+        disabled={isLoading}
         icon={
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -92,6 +94,7 @@ const RegisterForm = ({ toggleMode }) => {
         value={formData.email}
         onChange={handleChange}
         required
+        disabled={isLoading}
         icon={
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M4 7.00005L10.2 11.65C11.2667 12.45 12.7333 12.45 13.8 11.65L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -110,6 +113,7 @@ const RegisterForm = ({ toggleMode }) => {
         value={formData.password}
         onChange={handleChange}
         required
+        disabled={isLoading}
         icon={
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 10V14M8 10V14M16 10V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -127,6 +131,7 @@ const RegisterForm = ({ toggleMode }) => {
         value={formData.confirmPassword}
         onChange={handleChange}
         required
+        disabled={isLoading}
         icon={
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 10V14M8 10V14M16 10V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -141,6 +146,7 @@ const RegisterForm = ({ toggleMode }) => {
             type="checkbox" 
             checked={isTermsAccepted}
             onChange={(e) => setIsTermsAccepted(e.target.checked)}
+            disabled={isLoading}
           />
           <span className="checkmark"></span>
           Đồng ý với <a href="#terms" className="term-link">Điều khoản dịch vụ</a>
@@ -157,7 +163,7 @@ const RegisterForm = ({ toggleMode }) => {
 
       <div className="auth-switch">
         <span>Đã có tài khoản? </span>
-        <button type="button" onClick={toggleMode} className="switch-btn">
+        <button type="button" onClick={toggleMode} className="switch-btn" disabled={isLoading}>
           ĐĂNG NHẬP
         </button>
       </div>

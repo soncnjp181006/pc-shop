@@ -1,6 +1,6 @@
 import React from 'react';
 
-const InputField = ({ label, id, name, type = 'text', placeholder, value, onChange, icon, required }) => {
+const InputField = ({ label, id, name, type = 'text', placeholder, value, onChange, icon, required, disabled }) => {
   return (
     <div className="input-group">
       <label htmlFor={id}>{label}</label>
@@ -13,6 +13,7 @@ const InputField = ({ label, id, name, type = 'text', placeholder, value, onChan
           value={value}
           onChange={onChange}
           required={required}
+          disabled={disabled}
           className="glow-input"
         />
         {icon && React.cloneElement(icon, { className: "input-icon" })}
