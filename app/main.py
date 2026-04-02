@@ -20,6 +20,11 @@ app.include_router(healthSys)
 from app.api.deps import auth
 app.include_router(auth)
 
+# endpoint user
+from app.api.deps import user
+app.include_router(user)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", port=8000, reload=True)
