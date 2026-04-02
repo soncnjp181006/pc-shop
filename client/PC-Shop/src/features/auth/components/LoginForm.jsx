@@ -52,7 +52,7 @@ const LoginForm = ({ toggleMode }) => {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      {error && <div className="error-message" style={{ color: '#ff4d4d', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+      {error && <div className="error-message">{error}</div>}
       
       <InputField
         label="Email"

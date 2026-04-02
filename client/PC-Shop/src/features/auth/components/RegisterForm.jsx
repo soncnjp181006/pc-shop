@@ -153,8 +153,8 @@ const RegisterForm = ({ toggleMode }) => {
         </label>
       </div>
 
-      {error && <div className="error-message" style={{ color: '#ff3366', fontSize: '14px', textAlign: 'center' }}>{error}</div>}
-      {success && <div className="success-message" style={{ color: '#00e5ff', fontSize: '14px', textAlign: 'center' }}>{success}</div>}
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
 
       <button type="submit" className="btn-primary cyber-button flex-row" disabled={isLoading}>
         {isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG KÝ TÀI KHOẢN'}
