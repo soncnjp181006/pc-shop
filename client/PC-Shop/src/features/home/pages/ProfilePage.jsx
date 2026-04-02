@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import heroLogo from '../../../assets/hero.png';
-import './HomePage.css';
+import './ProfilePage.css';
 
-const HomePage = () => {
+const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const navigate = useNavigate();
@@ -61,50 +61,23 @@ const HomePage = () => {
     }
   };
 
-  const handleLogout = (e) => {
-    e.stopPropagation(); // Prevent navigation when logging out
+  const handleLogout = () => {
     localStorage.removeItem('access_token');
     navigate('/');
   };
 
+  if (!user) return <div className="loading">Đang tải thông tin...</div>;
+
   return (
-    <div className="home-container">
+    <div className="profile-container">
       <header className="main-header">
         <div className="header-content">
-          <div className="header-left">
-            <Link to="/home" className="logo-section">
-              <img src={heroLogo} alt="PC Shop Logo" className="header-logo" />
-              <span className="logo-text">PC SHOP</span>
-            </Link>
-
-            <div className="header-item location-item">
-              <div className="icon-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </div>
-              <div className="item-text">
-                <span>Xem giá tại</span>
-                <strong>Hồ Chí Minh</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="header-center">
-            <div className="search-bar">
-              <input type="text" placeholder="Bạn muốn mua gì hôm nay?" />
-              <button className="search-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="header-right">
-            <button className="theme-toggle-header" onClick={toggleTheme} title="Đổi chế độ sáng/tối">
+          <Link to="/home" className="logo-section">
+            <img src={heroLogo} alt="PC Shop Logo" className="header-logo" />
+            <span className="logo-text">PC SHOP</span>
+          </Link>
+          <div className="header-actions">
+            <button className="theme-toggle-header" onClick={toggleTheme}>
               {isDarkMode ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="5"></circle>
@@ -123,31 +96,6 @@ const HomePage = () => {
                 </svg>
               )}
             </button>
-
-            <div className="header-item cart-item">
-              <div className="icon-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="9" cy="21" r="1"></circle>
-                  <circle cx="20" cy="21" r="1"></circle>
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                </svg>
-              </div>
-              <span>Giỏ hàng</span>
-            </div>
-
-            <div className="header-item user-item-wrapper" onClick={() => navigate('/profile')}>
-              <div className="icon-wrapper user-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div className="item-text">
-                <span>Chào,</span>
-                <strong>{user ? user.username : 'Đang tải...'}</strong>
-              </div>
-            </div>
-
             <button className="logout-header-btn" onClick={handleLogout} title="Đăng xuất">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -159,14 +107,36 @@ const HomePage = () => {
         </div>
       </header>
 
-      <main className="home-content">
-        <div className="hero-banner">
-          <h1>Chào mừng đến với PC Shop</h1>
-          <p>Nơi cung cấp linh kiện PC hàng đầu Việt Nam</p>
+      <main className="profile-content">
+        <div className="profile-card">
+          <div className="profile-header">
+            <div className="profile-avatar">
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+            <h2>Thông tin tài khoản</h2>
+          </div>
+          
+          <div className="profile-info">
+            <div className="info-group">
+              <label>Tên người dùng</label>
+              <div className="info-value">{user.username}</div>
+            </div>
+            <div className="info-group">
+              <label>Email liên kết</label>
+              <div className="info-value">{user.email}</div>
+            </div>
+            <div className="info-group">
+              <label>ID Tài khoản</label>
+              <div className="info-value">#{user.id}</div>
+            </div>
+          </div>
+
+          <button className="btn-edit-profile">Chỉnh sửa thông tin</button>
+          <button className="btn-logout-card" onClick={handleLogout}>Đăng xuất tài khoản</button>
         </div>
       </main>
     </div>
   );
 };
 
-export default HomePage;
+export default ProfilePage;
