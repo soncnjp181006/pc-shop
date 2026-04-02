@@ -53,7 +53,7 @@ def test_register_success(client, db_session):
         json={
             "username": "soncnjp",
             "email": email,
-            "password": "sontrxcn2006"
+            "password": "Sontrxcn2006!"
         }
     )
 
@@ -84,8 +84,9 @@ def test_register_duplicate_email(client):
     client.post(
         "/api/v1/auth/register",
         json={
+            "username": "duplicate_user_1",
             "email": "duplicate@example.com",
-            "password": "soncnjp2006"
+            "password": "DuplicateUser123!"
         }
     )
 
@@ -93,8 +94,9 @@ def test_register_duplicate_email(client):
     response = client.post(
         "/api/v1/auth/register",
         json={
+            "username": "duplicate_user_2",
             "email": "duplicate@example.com",
-            "password": "pass123SSS"
+            "password": "Pass123SSS!"
         }
     )
 
@@ -112,7 +114,7 @@ def test_register_missing_fields(client):
         "/api/v1/auth/register",
         json={
             "email": "missingpass@example.com",
-            "password": "passs12333546"
+            "password": "Passs12333546!"
         }
     )
     assert response.status_code == 422
@@ -132,7 +134,7 @@ def test_register_missing_fields(client):
         "/api/v1/auth/register",
         json={
             "username": "soncnjp2006",
-            "password": "StrongPass123"
+            "password": "StrongPass123!"
         }
     )
     assert response.status_code == 422

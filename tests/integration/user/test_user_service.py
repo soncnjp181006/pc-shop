@@ -53,7 +53,7 @@ def test_create_user_success(db_session):
         db=db_session,
         username='soncnjp',
         email='soncn@example.com',
-        password='PassWord123'
+        password='PassWord123!'
     )
 
     # Kiểm tra có trả về theo UserOut không

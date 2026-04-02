@@ -60,14 +60,14 @@ def registered_user(client):
         json={
             'username': 'sontrx006',
             'email': 'logintest@example.com',
-            'password': 'StrongPass123'
+            'password': 'StrongPass123!'
         }
     )
 
     assert response.status_code == 201, "Fixture: Tạo user thất bại"
     return {
         "email": "logintest@example.com",
-        "password": "StrongPass123"
+        "password": "StrongPass123!"
     }
 
 # Test case
@@ -115,7 +115,7 @@ def test_login_wrong_password(client, registered_user):
         '/api/v1/auth/login',
         data={
             "username": registered_user["email"],
-            "password": "Saimatkhau999"
+            "password": "Saimatkhau999!"
         }
     )
 
@@ -136,7 +136,7 @@ def test_login_user_not_found(client):
         "/api/v1/auth/login",
         data={
             "username": "khongtontai@example.com",
-            "password": "PassBatKy123"
+            "password": "PassBatKy123!"
         }
     )
     assert response.status_code == 401
