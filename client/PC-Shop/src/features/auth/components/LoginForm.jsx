@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import InputField from '../../../components/common/InputField/InputField';
 
 const LoginForm = ({ toggleMode }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,8 +41,9 @@ const LoginForm = ({ toggleMode }) => {
 
       console.log('Đăng nhập thành công:', data);
       localStorage.setItem('access_token', data.access_token);
-      alert('Đăng nhập thành công!');
-      // TODO: Redirect to dashboard/home page
+      
+      // Chuyển hướng sang trang chủ sau khi login thành công
+      navigate('/home');
       
     } catch (err) {
       console.error('Lỗi login:', err);
