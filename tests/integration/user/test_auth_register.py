@@ -82,7 +82,7 @@ def test_register_duplicate_email(client):
 
     # Tạo user trước
     client.post(
-        "/api/v1/auth/regiter",
+        "/api/v1/auth/register",
         json={
             "email": "duplicate@example.com",
             "password": "soncnjp2006"
@@ -91,7 +91,7 @@ def test_register_duplicate_email(client):
 
     # Đăng ký email trùng lại
     response = client.post(
-        "/api/v1/auth/regiter",
+        "/api/v1/auth/register",
         json={
             "email": "duplicate@example.com",
             "password": "pass123SSS"
