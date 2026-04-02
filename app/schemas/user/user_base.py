@@ -1,7 +1,7 @@
 from pydantic import (
     BaseModel,          # Class tạo bộ lọc
     EmailStr,           # Class ép kiểu, bắt lỗi email
-    field_validator    # Phương thức dùng để kiểm tra
+    field_validator     # Pydantic v2 validator
 )
 from typing import Optional # Optional cho phép None
 
@@ -11,22 +11,24 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = None
 
-    # Validator cho username
     @field_validator('username')
     @classmethod
-    def username_format(cls, v: str) -> str:
-        # Debug: Rút gọn tối đa
-        if not v: return v
-        if len(v) < 3:
-            raise ValueError("Tên quá ngắn")
+    def username_format(cls, v: Optional[str]) -> Optional[str]:
+        """Validator cho username: 3-50 ký tự, không dấu cách"""
+        if v is None:
+            return v
+        if not (3 <= len(v) <= 50):
+            raise ValueError('Username phải từ 3 đến 50 ký tự')
+        if ' ' in v:
+            raise ValueError('Username không được chứa khoảng trắng')
         return v
-    
-    # Validator cho password
+
     @field_validator('password')
     @classmethod
-    def password_format(cls, v: str) -> str:
-        # Debug: Rút gọn tối đa
-        if not v: return v
+    def password_format(cls, v: Optional[str]) -> Optional[str]:
+        """Validator cho password: tối thiểu 8 ký tự"""
+        if v is None:
+            return v
         if len(v) < 8:
-            raise ValueError("Password quá ngắn")
+            raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
         return v
