@@ -11,6 +11,10 @@ class Settings(BaseSettings):
 
     DB_USER:str=''
 
+    SECRET_KEY:str=''
+    ALGORITHM:str=''
+    ACCESS_TOKEN_EXPIRE_MINUTES:int=0
+
     @property # def A() -> Settings Obj -> Call: Obj.A [Không cần ()]
     def DATABASE_URL(self):
         return (
