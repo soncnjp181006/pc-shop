@@ -14,13 +14,11 @@ class UserBase(BaseModel):
     @field_validator('username')
     @classmethod
     def username_format(cls, v: Optional[str]) -> Optional[str]:
-        """Validator cho username: 3-50 ký tự, không dấu cách"""
+        """Validator cho username: 3-50 ký tự"""
         if v is None:
             return v
         if not (3 <= len(v) <= 50):
             raise ValueError('Username phải từ 3 đến 50 ký tự')
-        if ' ' in v:
-            raise ValueError('Username không được chứa khoảng trắng')
         return v
 
     @field_validator('password')
