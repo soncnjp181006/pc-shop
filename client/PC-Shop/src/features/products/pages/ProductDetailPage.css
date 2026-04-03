@@ -229,9 +229,9 @@
   gap: 12px;
 }
 
-/* Options & Variants */
+/* Options & Variants - Modern Chips */
 .options-section {
-  margin-bottom: 50px;
+  margin-bottom: 40px;
 }
 
 .options-section h3 {
@@ -244,131 +244,252 @@
 }
 
 .variants-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
 }
 
 .variant-option {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: var(--input-bg);
-  border: var(--glass-border);
-  border-radius: 20px;
-  color: var(--text-primary);
-  font-weight: 700;
-  transition: all 0.3s;
-  cursor: pointer;
+  flex: 0 0 auto !important;
+  min-width: 90px !important;
+  padding: 12px 20px !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  color: var(--text-secondary) !important;
 }
 
 .variant-option:hover {
-  background: var(--border-color);
-  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--accent-primary) !important;
+  transform: translateY(-2px) !important;
 }
 
 .variant-option.selected {
-  background: rgba(0, 113, 227, 0.1);
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+  background: var(--accent-gradient) !important;
+  border-color: var(--accent-primary) !important;
+  color: white !important;
+  box-shadow: 0 8px 16px rgba(0, 113, 227, 0.3) !important;
+}
+
+.variant-name {
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .variant-price-diff {
-  color: var(--accent-primary);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
-/* Controls & Actions */
+/* Purchase Controls - Centered & Visible */
 .purchase-controls {
-  padding-top: 40px;
-  border-top: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
-  gap: 32px;
-  margin-bottom: 50px;
+  align-items: center;
+  gap: 24px;
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border-color);
 }
 
 .quantity-picker {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: var(--input-bg);
-  padding: 6px;
-  border-radius: 100px;
-  width: fit-content;
-  border: var(--glass-border);
+  display: flex !important;
+  align-items: center !important;
+  background: var(--input-bg) !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: 100px !important;
+  height: 60px !important;
+  padding: 0 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.quantity-picker:focus-within {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 15px rgba(0, 113, 227, 0.2) !important;
 }
 
 .quantity-picker button {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--panel-bg);
-  color: var(--text-primary);
-  font-size: 1.25rem;
-  font-weight: 700;
-  transition: all 0.2s;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: var(--panel-bg) !important;
+  color: var(--text-primary) !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.quantity-picker button:hover { transform: scale(1.1); background: var(--border-color); }
+.quantity-picker button:hover {
+  background: var(--accent-primary) !important;
+  color: white !important;
+}
 
 .quantity-picker input {
-  width: 50px;
-  background: transparent;
-  border: none;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 800;
+  width: 60px !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: center !important;
+  font-size: 1.4rem !important;
+  font-weight: 900 !important;
+  color: #00e5ff !important; /* Force visible cyan color */
+  outline: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  appearance: none;
+  -moz-appearance: textfield;
 }
 
+.quantity-picker input::-webkit-outer-spin-button,
+.quantity-picker input::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 16px;
+  flex: 1;
 }
 
 .btn-add-cart, .btn-buy-now {
   flex: 1;
-  padding: 20px 30px;
+  height: 60px;
   border-radius: 100px;
-  font-size: 1.1rem;
   font-weight: 800;
-  transition: all 0.4s var(--transition-normal);
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .btn-add-cart {
-  background: var(--accent-gradient);
-  color: white;
-  box-shadow: 0 10px 30px var(--accent-shadow);
+  background: transparent;
+  border: 1.5px solid var(--accent-primary) !important;
+  color: var(--accent-primary);
 }
 
-.btn-add-cart:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px var(--accent-shadow);
-  filter: brightness(1.1);
+.btn-add-cart:hover:not(:disabled) {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 10px 20px rgba(0, 113, 227, 0.3);
+  transform: translateY(-2px);
 }
 
 .btn-buy-now {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 0 10px 20px rgba(0, 113, 227, 0.2);
 }
 
-.btn-buy-now:hover { transform: translateY(-4px); opacity: 0.9; }
+.btn-buy-now:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(0, 113, 227, 0.3);
+  filter: brightness(1.1);
+}
+
+/* Media Gallery Premium */
+.media-gallery-premium {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 10px 0 20px;
+  margin-top: 20px;
+}
+
+.media-gallery-premium::-webkit-scrollbar {
+  height: 4px;
+}
+
+.media-gallery-premium::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 10px;
+}
+
+.media-item-card {
+  flex: 0 0 90px;
+  height: 90px;
+  border-radius: 14px;
+  border: var(--glass-border);
+  background: var(--input-bg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.media-item-card:hover {
+  transform: scale(1.08) translateY(-5px);
+  border-color: var(--accent-primary);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+  z-index: 5;
+}
+
+.media-item-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-thumb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 1.8rem;
+  z-index: 2;
+  text-shadow: 0 0 15px rgba(0,0,0,0.8);
+}
+
+.video-thumb img {
+  filter: brightness(0.5);
+}
 
 /* Meta Footer */
 .product-meta-footer {
+  margin-top: 50px;
   padding-top: 30px;
   border-top: 1px solid var(--border-color);
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
-.meta-item { font-size: 0.9rem; color: var(--text-tertiary); }
-.meta-item strong { color: var(--text-primary); margin-right: 8px; }
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-item strong {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
 /* Responsive */
 @media (max-width: 1200px) {
@@ -380,7 +501,7 @@
 @media (max-width: 768px) {
   .product-container { padding: 0 20px; }
   .product-title { font-size: 2.2rem; }
+  .purchase-controls { flex-direction: column; align-items: stretch; }
   .action-buttons { flex-direction: column; }
-  .main-image-card { aspect-ratio: 1; }
 }
 

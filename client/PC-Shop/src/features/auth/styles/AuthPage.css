@@ -174,9 +174,49 @@
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   color: var(--text-secondary);
+  font-size: 14px;
+  user-select: none;
+}
+
+.checkbox-container input[type="checkbox"] {
+  display: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  position: relative;
+  transition: all 0.2s ease;
+  background: var(--input-bg);
+}
+
+.checkbox-container:hover .checkmark {
+  border-color: var(--accent-primary);
+}
+
+.checkbox-container input:checked + .checkmark {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -55%);
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .forgot-password, .term-link {

@@ -157,6 +157,7 @@ const RegisterForm = ({ toggleMode }) => {
             checked={isTermsAccepted}
             onChange={(e) => setIsTermsAccepted(e.target.checked)}
             disabled={isLoading}
+            style={{ display: 'none' }}
           />
           <span className="checkmark"></span>
           Đồng ý với <a href="#terms" className="term-link">Điều khoản dịch vụ</a>

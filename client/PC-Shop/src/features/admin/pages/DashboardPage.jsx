@@ -76,6 +76,7 @@ const DashboardPage = () => {
     base_price: '',
     category_id: '',
     image_url: '',
+    additional_media: '', // Thêm trường mới cho nhiều ảnh/video
     is_active: true
   });
   const [categoryFormData, setCategoryFormData] = useState({
@@ -273,6 +274,7 @@ const DashboardPage = () => {
       base_price: '',
       category_id: '',
       image_url: '',
+      additional_media: '',
       is_active: true
     });
     setShowAddModal(true);
@@ -281,10 +283,16 @@ const DashboardPage = () => {
   const openEditProductModal = (p) => {
     setProductModalMode('edit');
     setEditingProduct(p);
+    // Trích xuất media links từ description
+    const mediaMatch = (p.description || '').match(/\[MEDIA:(.*?)\]/);
+    const mediaLinks = mediaMatch ? mediaMatch[1].split(';').join('\n') : '';
+    const cleanDesc = (p.description || '').replace(/\[MEDIA:.*?\]/, '').trim();
+
     setFormData({
       name: p.name || '',
       slug: p.slug || '',
-      description: p.description || '',
+      description: cleanDesc,
+      additional_media: mediaLinks,
       base_price: String(p.base_price ?? ''),
       category_id: String(p.category_id ?? ''),
       image_url: p.image_url || '',
@@ -501,10 +509,22 @@ const DashboardPage = () => {
     }
     setSubmitting(true);
     try {
+      // Chuẩn bị description với media links ẩn
+      let finalDescription = formData.description || '';
+      if (formData.additional_media.trim()) {
+        const links = formData.additional_media.split('\n')
+          .map(l => l.trim())
+          .filter(l => l)
+          .join(';');
+        if (links) {
+          finalDescription += `\n\n[MEDIA:${links}]`;
+        }
+      }
+
       const payloadBase = {
         name: formData.name,
         slug: formData.slug,
-        description: formData.description || null,
+        description: finalDescription || null,
         base_price: parseFloat(formData.base_price),
         category_id: parseInt(formData.category_id),
         image_url: formData.image_url || null,
@@ -520,7 +540,7 @@ const DashboardPage = () => {
         setShowAddModal(false);
         setEditingProduct(null);
         setProductModalMode('create');
-        setFormData({ name: '', slug: '', description: '', base_price: '', category_id: '', image_url: '', is_active: true });
+        setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', is_active: true });
         fetchProducts();
       } else {
         const error = await response.json();
@@ -654,7 +674,9 @@ const DashboardPage = () => {
             <p>Chào mừng trở lại, {user.username}!</p>
           </div>
           <div className="header-actions">
-            <button className="btn-primary" onClick={() => navigate('/home')}>Xem shop</button>
+            <button className="btn-view-shop" onClick={() => navigate('/home')}>
+              <span>👁️</span> Xem shop
+            </button>
           </div>
         </header>
 
@@ -1244,8 +1266,20 @@ const DashboardPage = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     placeholder="Nhập chi tiết về sản phẩm..."
-                    rows="4"
+                    rows="3"
                   ></textarea>
+                </div>
+                <div className="form-group full-width">
+                  <label>Ảnh & Video bổ sung (Mỗi link một dòng)</label>
+                  <textarea
+                    name="additional_media"
+                    value={formData.additional_media}
+                    onChange={handleInputChange}
+                    placeholder="Dán link ảnh hoặc video bổ sung tại đây...&#10;Hỗ trợ: Google Drive, YouTube, Link trực tiếp"
+                    rows="4"
+                    className="media-textarea"
+                  ></textarea>
+                  <p className="field-hint">Hệ thống tự nhận diện Ảnh hoặc Video để hiển thị trong bộ sưu tập.</p>
                 </div>
                 <div className="form-group checkbox-group">
                   <label className="checkbox-label">

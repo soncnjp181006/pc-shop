@@ -121,11 +121,39 @@ const ProductDetailPage = () => {
                 <div className="image-placeholder-large">PC</div>
               )}
             </div>
-            <div className="thumbnail-grid">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="thumb-card">PC</div>
-              ))}
-            </div>
+            
+            {/* Gallery bổ sung từ description MEDIA tag */}
+            {(() => {
+              const mediaMatch = (product.description || '').match(/\[MEDIA:(.*?)\]/);
+              if (!mediaMatch) return (
+                <div className="thumbnail-grid">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="thumb-card">PC</div>
+                  ))}
+                </div>
+              );
+
+              const mediaLinks = mediaMatch[1].split(';').filter(l => l.trim());
+              return (
+                <div className="media-gallery-premium">
+                  {mediaLinks.map((link, idx) => {
+                    const isVideo = link.includes('youtube.com') || link.includes('youtu.be') || link.includes('.mp4');
+                    return (
+                      <div key={idx} className={`media-item-card ${isVideo ? 'video-type' : ''}`}>
+                         {isVideo ? (
+                           <div className="video-thumb">
+                             <span className="play-icon">▶</span>
+                             <img src="/hero.png" alt="Video" />
+                           </div>
+                         ) : (
+                           <img src={getImageUrl(link)} alt={`Gallery ${idx}`} onClick={() => window.open(link, '_blank')} />
+                         )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="product-info-panel">
@@ -139,7 +167,16 @@ const ProductDetailPage = () => {
 
             <section className="product-description-section">
               <h3>Mô tả sản phẩm</h3>
-              <p>{product.description || "Sản phẩm công nghệ cao cấp, mang lại hiệu năng tối ưu cho công việc và giải trí."}</p>
+              <p>
+                {(product.description || "Sản phẩm công nghệ cao cấp, mang lại hiệu năng tối ưu cho công việc và giải trí.")
+                  .replace(/\[MEDIA:.*?\]/, '')
+                  .split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}<br/>
+                    </React.Fragment>
+                  ))
+                }
+              </p>
             </section>
 
             {variants.length > 0 && (
@@ -173,6 +210,7 @@ const ProductDetailPage = () => {
                   type="number" 
                   value={quantity} 
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{ color: '#00e5ff', opacity: 1, visibility: 'visible', textAlign: 'center' }}
                 />
                 <button onClick={() => setQuantity(q => q + 1)}>+</button>
               </div>

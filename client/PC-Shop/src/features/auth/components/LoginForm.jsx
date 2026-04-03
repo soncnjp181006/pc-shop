@@ -101,7 +101,7 @@ const LoginForm = ({ toggleMode }) => {
 
       <div className="form-actions-row">
         <label className="checkbox-container">
-          <input type="checkbox" disabled={loading} />
+          <input type="checkbox" disabled={loading} style={{ display: 'none' }} />
           <span className="checkmark"></span>
           Ghi nhớ đăng nhập
         </label>
