@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiFetch } from '../../../utils/api';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -19,32 +20,17 @@ const HomePage = () => {
     }
 
     const fetchUser = async () => {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        navigate('/');
-        return;
-      }
-
       try {
-        const response = await fetch('http://localhost:8000/api/v1/user/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/user/me');
 
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-        } else if (response.status === 401) {
-          // Chỉ xóa token và chuyển hướng nếu thực sự hết hạn phiên
-          localStorage.removeItem('access_token');
-          navigate('/');
         } else {
           console.error('Lỗi khi lấy thông tin user:', response.status);
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        // Không navigate về / khi gặp lỗi mạng để tránh thoát ra ngoài vô lý
       }
     };
 
@@ -66,6 +52,7 @@ const HomePage = () => {
   const handleLogout = (e) => {
     e.stopPropagation(); // Prevent navigation when logging out
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     navigate('/');
   };
 

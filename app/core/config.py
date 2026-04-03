@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     SECRET_KEY:str=''
     ALGORITHM:str=''
     ACCESS_TOKEN_EXPIRE_MINUTES:int=0
+    REFRESH_TOKEN_EXPIRE_MINUTES:int=10080
 
     @property # def A() -> Settings Obj -> Call: Obj.A [Không cần ()]
     def DATABASE_URL(self):

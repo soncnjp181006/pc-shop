@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiFetch } from '../../../utils/api';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -19,25 +20,12 @@ const ProfilePage = () => {
     }
 
     const fetchUser = async () => {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        navigate('/');
-        return;
-      }
-
       try {
-        const response = await fetch('http://localhost:8000/api/v1/user/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/user/me');
 
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-        } else if (response.status === 401) {
-          localStorage.removeItem('access_token');
-          navigate('/');
         } else {
           console.error('Lỗi khi lấy thông tin user:', response.status);
           // Cho phép ở lại trang profile để tránh bị đá về login vô lý
@@ -64,6 +52,7 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     navigate('/');
   };
 

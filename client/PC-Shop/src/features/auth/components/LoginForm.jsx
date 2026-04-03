@@ -41,6 +41,7 @@ const LoginForm = ({ toggleMode }) => {
 
       console.log('Đăng nhập thành công:', data);
       localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
       
       // Chuyển hướng sang trang chủ sau khi login thành công
       navigate('/home');
