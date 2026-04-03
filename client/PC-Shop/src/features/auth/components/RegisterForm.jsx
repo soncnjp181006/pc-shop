@@ -51,6 +51,16 @@ const RegisterForm = ({ toggleMode }) => {
       const data = await response.json();
 
       if (!response.ok) {
+        // Xử lý lỗi validation từ Pydantic (status 422)
+        if (response.status === 422 && data.detail) {
+          const errorMsg = Array.isArray(data.detail) 
+            ? data.detail.map(err => {
+                const field = err.loc[err.loc.length - 1];
+                return `${field === 'password' ? 'Mật khẩu' : field}: ${err.msg}`;
+              }).join(', ')
+            : typeof data.detail === 'string' ? data.detail : 'Dữ liệu không hợp lệ';
+          throw new Error(errorMsg);
+        }
         throw new Error(data.detail || 'Đăng ký thất bại. Vui lòng thử lại!');
       }
 

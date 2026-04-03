@@ -28,6 +28,10 @@ app.include_router(user)
 from app.api.deps import admin
 app.include_router(admin)
 
+# endpoint categories
+from app.api.deps import category_router
+app.include_router(category_router)
+
 
 if __name__ == "__main__":
     import uvicorn
