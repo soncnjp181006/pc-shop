@@ -1,24 +1,28 @@
-from passlib.context import CryptContext
-import hashlib
+# app/security/hashing.py
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# CryptContext quản lý thuật toán hash.
-# schemes=["bcrypt"]: dùng bcrypt (thuật toán mạnh, có salt tự động, chậm có chủ đích).
-# deprecated="auto": tự động nâng cấp hash cũ sang scheme mới khi user login.
-
+import bcrypt
 
 def hash_password(password: str) -> str:
     """
-    Hash password trước khi lưu vào DB
-
-    Ví dụ:
-        "StrongPass123"  →  "$2b$12$KIXaBc..."
-
-    Tại sao bcrypt chậm có chủ đích?
-        → Mỗi lần hash mất ~100ms. Với attacker dùng brute force,
-        100ms/attempt × 1 tỷ lần = rất lâu. Với user login, 100ms là chấp nhận được.
+    Hash password sử dụng trực tiếp thư viện bcrypt.
+    Mật khẩu đầu vào đã được Schema giới hạn tối đa 72 ký tự.
     """
+    pwd_bytes = password.encode('utf-8')
+    # gensalt() tự động tạo salt ngẫu nhiên
+    salt = bcrypt.gensalt()
+    # hashpw() thực hiện hash
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8')
 
-    password = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-    return pwd_context.hash(password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Kiểm tra mật khẩu nhập vào có khớp với hash trong DB không.
+    """
+    try:
+        password_bytes = plain_password.encode('utf-8')
+        hashed_bytes = hashed_password.encode('utf-8')
+        # checkpw() tự động tách salt từ hashed_bytes và so sánh
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except Exception:
+        return False

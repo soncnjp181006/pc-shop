@@ -24,9 +24,9 @@ class UserBase(BaseModel):
     @field_validator('password')
     @classmethod
     def password_format(cls, v: Optional[str]) -> Optional[str]:
-        """Validator cho password: tối thiểu 8 ký tự"""
+        """Validator cho password: tối thiểu 8, tối đa 72 ký tự"""
         if v is None:
             return v
-        if len(v) < 8:
-            raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
+        if not (8 <= len(v) <= 72):
+            raise ValueError('Mật khẩu phải từ 8 đến 72 ký tự')
         return v
