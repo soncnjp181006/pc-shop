@@ -73,6 +73,11 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -214,3 +219,36 @@ input:focus {
   background: var(--text-secondary);
 }
 
+/* Global Loading States */
+.loading-container {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Spinner already defined in ProductDetailPage.css; define globally here as fallback */
+
+/* Image Placeholder */
+.image-placeholder,
+.image-placeholder-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--input-bg);
+  color: var(--text-tertiary);
+  font-weight: 800;
+  border-radius: var(--border-radius-sm);
+  width: 100%;
+  height: 100%;
+  font-size: 1.5rem;
+}
+
+.image-placeholder-large {
+  font-size: 3rem;
+  aspect-ratio: 1;
+}

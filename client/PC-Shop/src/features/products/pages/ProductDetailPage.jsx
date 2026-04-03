@@ -13,6 +13,12 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     fetchProductDetail();
@@ -49,7 +55,7 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     if (!selectedVariant) {
-      alert("Vui lòng chọn một phiên bản sản phẩm.");
+      showToast('Vui lòng chọn một phiên bản sản phẩm.', 'error');
       return;
     }
 
@@ -57,16 +63,15 @@ const ProductDetailPage = () => {
     try {
       const response = await cartApi.addItem(selectedVariant.id, quantity);
       if (response.ok) {
-        // Success feedback
-        alert("Đã thêm sản phẩm vào giỏ hàng!");
+        showToast('Đã thêm sản phẩm vào giỏ hàng! 🛒', 'success');
       } else if (response.status === 401) {
         navigate('/');
       } else {
-        alert("Lỗi khi thêm vào giỏ hàng.");
+        showToast('Lỗi khi thêm vào giỏ hàng.', 'error');
       }
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
-      alert("Lỗi kết nối server.");
+      showToast('Lỗi kết nối server.', 'error');
     } finally {
       setAddingToCart(false);
     }
@@ -79,11 +84,25 @@ const ProductDetailPage = () => {
     </div>
   );
   
-  if (error) return <div className="error-message">{error}</div>;
+  if (error) return (
+    <div className="loading-container">
+      <div className="error-state">
+        <div className="error-icon">⚠️</div>
+        <p>{error}</p>
+        <button className="btn btn-secondary" onClick={() => navigate('/products')}>Quay lại</button>
+      </div>
+    </div>
+  );
   if (!product) return null;
 
   return (
     <div className="product-page animate-fade-in">
+      {toast && (
+        <div className={`toast-notification ${toast.type}`}>
+          <span>{toast.message}</span>
+          <button onClick={() => setToast(null)}>✕</button>
+        </div>
+      )}
       <div className="product-container">
         <nav className="breadcrumb">
           <Link to="/home">Trang chủ</Link>

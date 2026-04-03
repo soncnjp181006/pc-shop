@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../../utils/api';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_role');
+    navigate('/');
+  };
 
   useEffect(() => {
     const fetchUser = async () => {

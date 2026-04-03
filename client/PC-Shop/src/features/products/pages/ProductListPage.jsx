@@ -43,7 +43,10 @@ const ProductListPage = () => {
     fetchProducts();
     const newParams = {};
     Object.keys(filters).forEach(key => {
-      if (filters[key]) newParams[key] = filters[key];
+      // Chỉ thêm param khi có giá trị thực sự (không gửi false lên server)
+      if (filters[key] !== '' && filters[key] !== false && filters[key] !== null && filters[key] !== undefined) {
+        newParams[key] = filters[key];
+      }
     });
     setSearchParams(newParams);
   }, [filters, pagination.page]);
@@ -71,11 +74,14 @@ const ProductListPage = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await productsApi.getAll({
-        ...filters,
-        page: pagination.page,
-        limit: pagination.limit
+      // Chỉ gửi params có giá trị thực (không gửi false/empty lên server)
+      const params = { page: pagination.page, limit: pagination.limit };
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== '' && filters[key] !== false && filters[key] !== null && filters[key] !== undefined) {
+          params[key] = filters[key];
+        }
       });
+      const response = await productsApi.getAll(params);
       if (response.ok) {
         const data = await response.json();
         setProducts(data.data);
