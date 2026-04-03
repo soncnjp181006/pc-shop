@@ -112,7 +112,7 @@
   font-weight: 900;
   margin: 0 0 12px 0;
   letter-spacing: -0.05em;
-  background: linear-gradient(135deg, #ffffff 0%, #86868b 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -318,13 +318,71 @@
   gap: 6px;
 }
 
+.category-tree {
+  gap: 4px;
+}
+
+.category-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 0 0 auto;
+}
+
+.cat-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.cat-leaf {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  flex: 0 0 auto;
+}
+
+.category-select {
+  flex: 1;
+}
+
+.category-children {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
 .category-item {
   text-align: left;
   background: transparent;
   color: var(--text-secondary);
   padding: 10px 14px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 650;
   border-radius: 10px;
   border: 1px solid transparent;
   transition: all 0.3s ease;

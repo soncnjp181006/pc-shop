@@ -9,6 +9,7 @@ const ProductListPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 12, pages: 1 });
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState([]);
   
   const [filters, setFilters] = useState({
     q: searchParams.get('q') || '',
@@ -21,11 +22,18 @@ const ProductListPage = () => {
   });
 
   const brands = ["Apple", "ASUS", "MSI", "Gigabyte", "Dell", "HP", "Lenovo", "Razer"];
-  const quickCategories = [
-    { id: 'ram', name: 'RAM', icon: '⚡' },
-    { id: 'monitor', name: 'Màn hình', icon: '🖥️' },
-    { id: 'accessories', name: 'Phụ kiện', icon: '🖱️' }
-  ];
+  
+  const findCategoryPath = (nodes, targetId, path = []) => {
+    for (const node of nodes) {
+      const nextPath = [...path, node.id];
+      if (String(node.id) === String(targetId)) return nextPath;
+      if (node.children && node.children.length > 0) {
+        const res = findCategoryPath(node.children, targetId, nextPath);
+        if (res) return res;
+      }
+    }
+    return null;
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -39,6 +47,14 @@ const ProductListPage = () => {
     });
     setSearchParams(newParams);
   }, [filters, pagination.page]);
+
+  useEffect(() => {
+    if (!filters.category_id || categories.length === 0) return;
+    const path = findCategoryPath(categories, filters.category_id);
+    if (path && path.length > 1) {
+      setExpandedCategoryIds(path.slice(0, -1));
+    }
+  }, [categories, filters.category_id]);
 
   const fetchCategories = async () => {
     try {
@@ -89,47 +105,77 @@ const ProductListPage = () => {
       brand: '',
       in_stock: false
     });
+    setExpandedCategoryIds([]);
     setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const toggleCategoryExpand = (id) => {
+    setExpandedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const renderCategoryNode = (node, depth = 0) => {
+    const hasChildren = node.children && node.children.length > 0;
+    const expanded = expandedCategoryIds.includes(node.id);
+    const active = String(filters.category_id) === String(node.id);
+
+    return (
+      <div key={node.id} className="category-node">
+        <div className="category-row" style={{ paddingLeft: `${10 + depth * 14}px` }}>
+          {hasChildren ? (
+            <button
+              type="button"
+              className="cat-toggle"
+              aria-label={expanded ? 'Thu gọn' : 'Mở rộng'}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleCategoryExpand(node.id);
+              }}
+            >
+              {expanded ? '▾' : '▸'}
+            </button>
+          ) : (
+            <span className="cat-leaf">•</span>
+          )}
+          <button
+            type="button"
+            className={`category-item category-select ${active ? 'active' : ''}`}
+            onClick={() => {
+              handleFilterChange({ target: { name: 'category_id', value: node.id } });
+              if (hasChildren && !expanded) toggleCategoryExpand(node.id);
+            }}
+          >
+            {node.name}
+          </button>
+        </div>
+
+        {hasChildren && expanded && (
+          <div className="category-children">
+            {node.children.map((child) => renderCategoryNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="product-list-page">
       <aside className="sidebar-fixed glass-panel">
         <div className="sidebar-group">
-          <h3 className="group-label">Khám phá nhanh</h3>
-          <div className="quick-cat-grid">
-            {quickCategories.map(cat => (
-              <button 
-                key={cat.id}
-                className={`quick-cat-item ${filters.q.toLowerCase().includes(cat.id) ? 'active' : ''}`}
-                onClick={() => handleFilterChange({ target: { name: 'q', value: cat.name } })}
-                title={cat.name}
-              >
-                <span className="quick-cat-icon">{cat.icon}</span>
-                <span className="quick-cat-name">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="sidebar-group">
           <h3 className="group-label">Danh mục</h3>
-          <div className="category-list">
-            <button 
-              className={`category-item ${filters.category_id === '' ? 'active' : ''}`}
-              onClick={() => handleFilterChange({ target: { name: 'category_id', value: '' } })}
+          <div className="category-list category-tree">
+            <button
+              type="button"
+              className={`category-item category-select ${filters.category_id === '' ? 'active' : ''}`}
+              onClick={() => {
+                setExpandedCategoryIds([]);
+                handleFilterChange({ target: { name: 'category_id', value: '' } });
+              }}
             >
               Tất cả sản phẩm
             </button>
-            {categories.map(cat => (
-              <button 
-                key={cat.id}
-                className={`category-item ${filters.category_id == cat.id ? 'active' : ''}`}
-                onClick={() => handleFilterChange({ target: { name: 'category_id', value: cat.id } })}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.map((cat) => renderCategoryNode(cat, 0))}
           </div>
         </div>
 

@@ -5,20 +5,10 @@ import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') !== 'light');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Theme initialization
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      setIsDarkMode(false);
-      document.documentElement.classList.add('light');
-    } else {
-      setIsDarkMode(true);
-      document.documentElement.classList.remove('light');
-    }
-
     const fetchUser = async () => {
       try {
         const response = await apiFetch('/user/me');
@@ -28,7 +18,6 @@ const ProfilePage = () => {
           setUser(userData);
         } else {
           console.error('Lỗi khi lấy thông tin user:', response.status);
-          // Cho phép ở lại trang profile để tránh bị đá về login vô lý
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -38,16 +27,18 @@ const ProfilePage = () => {
     fetchUser();
   }, [navigate]);
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    if (newTheme) {
+  useEffect(() => {
+    if (isDarkMode) {
       document.documentElement.classList.remove('light');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.add('light');
       localStorage.setItem('theme', 'light');
     }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode((v) => !v);
   };
 
   const handleLogout = () => {

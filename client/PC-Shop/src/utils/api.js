@@ -77,7 +77,9 @@ export const productsApi = {
   getAll: (params = {}) => {
     const query = new URLSearchParams();
     Object.keys(params).forEach(key => {
-      if (params[key]) query.append(key, params[key]);
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        query.append(key, String(params[key]));
+      }
     });
     return apiFetch(`/products/?${query.toString()}`);
   },
@@ -93,16 +95,19 @@ export const productsApi = {
   delete: (id) => apiFetch(`/products/${id}`, {
     method: 'DELETE',
   }),
+  softDelete: (id) => apiFetch(`/products/${id}/soft-delete`, {
+    method: 'PATCH',
+  }),
   getVariants: (productId) => apiFetch(`/products/${productId}/variants/`),
   createVariant: (productId, data) => apiFetch(`/products/${productId}/variants/`, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
-  updateVariant: (productId, variantId, data) => apiFetch(`/products/${productId}/variants/${variantId}`, {
+  updateVariant: (variantId, data) => apiFetch(`/products/variants/${variantId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
-  deleteVariant: (productId, variantId) => apiFetch(`/products/${productId}/variants/${variantId}`, {
+  deleteVariant: (variantId) => apiFetch(`/products/variants/${variantId}`, {
     method: 'DELETE',
   }),
 };
@@ -110,6 +115,16 @@ export const productsApi = {
 // API Categories
 export const categoriesApi = {
   getTree: () => apiFetch('/categories/tree'),
+  getAll: (params = {}) => {
+    const query = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        query.append(key, String(params[key]));
+      }
+    });
+    const qs = query.toString();
+    return apiFetch(`/categories/${qs ? `?${qs}` : ''}`);
+  },
   create: (data) => apiFetch('/categories/', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -120,6 +135,27 @@ export const categoriesApi = {
   }),
   delete: (id) => apiFetch(`/categories/${id}`, {
     method: 'DELETE',
+  }),
+};
+
+export const adminApi = {
+  getUsers: (params = {}) => {
+    const query = new URLSearchParams();
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        query.append(key, String(params[key]));
+      }
+    });
+    const qs = query.toString();
+    return apiFetch(`/admin/users${qs ? `?${qs}` : ''}`);
+  },
+  updateUserRole: (userId, role) => apiFetch(`/admin/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  }),
+  updateUserActive: (userId, is_active) => apiFetch(`/admin/${userId}/active`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active }),
   }),
 };
 

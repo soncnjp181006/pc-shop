@@ -5,20 +5,10 @@ import './Header.css';
 
 const Header = () => {
   const [user, setUser] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') !== 'light');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Theme initialization
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      setIsDarkMode(false);
-      document.documentElement.classList.add('light');
-    } else {
-      setIsDarkMode(true);
-      document.documentElement.classList.remove('light');
-    }
-
     const fetchUser = async () => {
       const token = localStorage.getItem('access_token');
       if (!token) return;
@@ -37,16 +27,18 @@ const Header = () => {
     fetchUser();
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    if (newTheme) {
+  useEffect(() => {
+    if (isDarkMode) {
       document.documentElement.classList.remove('light');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.add('light');
       localStorage.setItem('theme', 'light');
     }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode((v) => !v);
   };
 
   const handleLogout = (e) => {

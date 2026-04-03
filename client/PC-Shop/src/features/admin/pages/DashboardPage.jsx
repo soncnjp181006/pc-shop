@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch, productsApi, categoriesApi, getImageUrl } from '../../../utils/api';
+import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -9,6 +9,7 @@ const DashboardPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [variants, setVariants] = useState([]);
   const [loadingVariants, setLoadingVariants] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const fetchVariants = async (productId) => {
     setLoadingVariants(true);
@@ -27,6 +28,9 @@ const DashboardPage = () => {
 
   const handleShowVariants = (product) => {
     setSelectedProduct(product);
+    setVariantFormOpen(false);
+    setEditingVariant(null);
+    setVariantFormMode('create');
     fetchVariants(product.id);
   };
   const [products, setProducts] = useState([]);
@@ -34,6 +38,37 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [productPaging, setProductPaging] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 1,
+    sort: 'newest',
+    active_only: false
+  });
+  const [overviewStats, setOverviewStats] = useState({ products: 0, categories: 0, users: 0 });
+  const [productModalMode, setProductModalMode] = useState('create');
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [categoryModalMode, setCategoryModalMode] = useState('create');
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [variantFormOpen, setVariantFormOpen] = useState(false);
+  const [variantFormMode, setVariantFormMode] = useState('create');
+  const [editingVariant, setEditingVariant] = useState(null);
+  const [variantFormData, setVariantFormData] = useState({
+    sku: '',
+    attributes_json: '{}',
+    price_override: '',
+    stock_quantity: 0,
+    is_active: true
+  });
+  const [users, setUsers] = useState([]);
+  const [usersPaging, setUsersPaging] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
+  const [usersSearch, setUsersSearch] = useState('');
+  const [usersRole, setUsersRole] = useState('');
+  const [usersActive, setUsersActive] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -51,6 +86,24 @@ const DashboardPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      setSelectedProduct(null);
+      setShowAddModal(false);
+      setShowAddCategoryModal(false);
+      setVariantFormOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -72,20 +125,42 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (activeTab === 'products') {
-      fetchProducts();
-      fetchCategories(); // Cần lấy danh mục để chọn khi thêm sản phẩm
-    } else if (activeTab === 'categories') {
       fetchCategories();
     }
+    if (activeTab === 'categories') {
+      fetchCategories();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'products') return;
+    fetchProducts();
+  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.active_only, productSearch]);
+
+  useEffect(() => {
+    if (activeTab !== 'users') return;
+    fetchUsers();
+  }, [activeTab, usersPaging.page, usersPaging.limit, usersSearch, usersRole, usersActive]);
+
+  useEffect(() => {
+    if (activeTab !== 'overview') return;
+    fetchOverviewStats();
   }, [activeTab]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await productsApi.getAll({ limit: 50 });
+      const response = await productsApi.getAll({
+        page: productPaging.page,
+        limit: productPaging.limit,
+        sort: productPaging.sort,
+        active_only: productPaging.active_only,
+        q: productSearch || undefined
+      });
       if (response.ok) {
         const data = await response.json();
         setProducts(data.data);
+        setProductPaging((prev) => ({ ...prev, total: data.total, pages: data.pages }));
       }
     } catch (error) {
       console.error('Lỗi khi tải sản phẩm:', error);
@@ -109,6 +184,64 @@ const DashboardPage = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await adminApi.getUsers({
+        page: usersPaging.page,
+        limit: usersPaging.limit,
+        q: usersSearch || undefined,
+        role: usersRole || undefined,
+        is_active: usersActive === '' ? undefined : usersActive
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.data);
+        setUsersPaging((prev) => ({ ...prev, total: data.total, pages: data.pages }));
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể tải người dùng' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải người dùng:', error);
+      setToast({ type: 'error', message: 'Không thể tải người dùng' });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const fetchOverviewStats = async () => {
+    try {
+      const [pRes, cRes, uRes] = await Promise.all([
+        productsApi.getAll({ page: 1, limit: 1, active_only: false }),
+        categoriesApi.getAll({ active_only: false }),
+        adminApi.getUsers({ page: 1, limit: 1 })
+      ]);
+
+      let productsTotal = 0;
+      if (pRes.ok) {
+        const data = await pRes.json();
+        productsTotal = data.total || 0;
+      }
+
+      let categoriesTotal = 0;
+      if (cRes.ok) {
+        const data = await cRes.json();
+        categoriesTotal = Array.isArray(data) ? data.length : 0;
+      }
+
+      let usersTotal = 0;
+      if (uRes.ok) {
+        const data = await uRes.json();
+        usersTotal = data.total || 0;
+      }
+
+      setOverviewStats({ products: productsTotal, categories: categoriesTotal, users: usersTotal });
+    } catch (error) {
+      console.error('Lỗi khi tải tổng quan:', error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -121,11 +254,210 @@ const DashboardPage = () => {
       try {
         const response = await productsApi.delete(id);
         if (response.ok) {
-          setProducts(products.filter(p => p.id !== id));
+          setToast({ type: 'success', message: 'Đã xóa sản phẩm' });
+          fetchProducts();
         }
       } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
       }
+    }
+  };
+
+  const openCreateProductModal = () => {
+    setProductModalMode('create');
+    setEditingProduct(null);
+    setFormData({
+      name: '',
+      slug: '',
+      description: '',
+      base_price: '',
+      category_id: '',
+      image_url: '',
+      is_active: true
+    });
+    setShowAddModal(true);
+  };
+
+  const openEditProductModal = (p) => {
+    setProductModalMode('edit');
+    setEditingProduct(p);
+    setFormData({
+      name: p.name || '',
+      slug: p.slug || '',
+      description: p.description || '',
+      base_price: String(p.base_price ?? ''),
+      category_id: String(p.category_id ?? ''),
+      image_url: p.image_url || '',
+      is_active: !!p.is_active
+    });
+    setShowAddModal(true);
+  };
+
+  const handleToggleProductActive = async (p) => {
+    try {
+      const response = await productsApi.update(p.id, { is_active: !p.is_active });
+      if (response.ok) {
+        setToast({ type: 'success', message: p.is_active ? 'Đã ẩn sản phẩm' : 'Đã bật lại sản phẩm' });
+        fetchProducts();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể cập nhật sản phẩm' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật sản phẩm:', error);
+      setToast({ type: 'error', message: 'Không thể cập nhật sản phẩm' });
+    }
+  };
+
+  const openCreateCategoryModal = () => {
+    setCategoryModalMode('create');
+    setEditingCategory(null);
+    setCategoryFormData({ name: '', slug: '', parent_id: '', is_active: true });
+    setShowAddCategoryModal(true);
+  };
+
+  const openEditCategoryModal = (cat) => {
+    setCategoryModalMode('edit');
+    setEditingCategory(cat);
+    setCategoryFormData({
+      name: cat.name || '',
+      slug: cat.slug || '',
+      parent_id: cat.parent_id ? String(cat.parent_id) : '',
+      is_active: !!cat.is_active
+    });
+    setShowAddCategoryModal(true);
+  };
+
+  const handleDeleteCategory = async (catId) => {
+    if (!window.confirm('Xóa danh mục sẽ ẩn danh mục này. Tiếp tục?')) return;
+    try {
+      const response = await categoriesApi.delete(catId);
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Đã xóa danh mục' });
+        fetchCategories();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể xóa danh mục' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa danh mục:', error);
+      setToast({ type: 'error', message: 'Không thể xóa danh mục' });
+    }
+  };
+
+  const openCreateVariantForm = () => {
+    setVariantFormMode('create');
+    setEditingVariant(null);
+    setVariantFormData({
+      sku: '',
+      attributes_json: '{}',
+      price_override: '',
+      stock_quantity: 0,
+      is_active: true
+    });
+    setVariantFormOpen(true);
+  };
+
+  const openEditVariantForm = (v) => {
+    setVariantFormMode('edit');
+    setEditingVariant(v);
+    setVariantFormData({
+      sku: v.sku || '',
+      attributes_json: JSON.stringify(v.attributes || {}, null, 2),
+      price_override: v.price_override === null || v.price_override === undefined ? '' : String(v.price_override),
+      stock_quantity: v.stock_quantity ?? 0,
+      is_active: !!v.is_active
+    });
+    setVariantFormOpen(true);
+  };
+
+  const handleVariantInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setVariantFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSaveVariant = async (e) => {
+    e.preventDefault();
+    if (!selectedProduct) return;
+    let attributes;
+    try {
+      attributes = JSON.parse(variantFormData.attributes_json || '{}');
+    } catch {
+      setToast({ type: 'error', message: 'Thuộc tính phải là JSON hợp lệ' });
+      return;
+    }
+    const payload = {
+      product_id: selectedProduct.id,
+      sku: variantFormData.sku,
+      attributes,
+      price_override: variantFormData.price_override === '' ? null : parseFloat(variantFormData.price_override),
+      stock_quantity: parseInt(variantFormData.stock_quantity, 10) || 0,
+      is_active: !!variantFormData.is_active
+    };
+    try {
+      const response = variantFormMode === 'create'
+        ? await productsApi.createVariant(selectedProduct.id, payload)
+        : await productsApi.updateVariant(editingVariant.id, payload);
+      if (response.ok) {
+        setToast({ type: 'success', message: variantFormMode === 'create' ? 'Đã thêm biến thể' : 'Đã cập nhật biến thể' });
+        setVariantFormOpen(false);
+        fetchVariants(selectedProduct.id);
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể lưu biến thể' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi lưu biến thể:', error);
+      setToast({ type: 'error', message: 'Không thể lưu biến thể' });
+    }
+  };
+
+  const handleDeleteVariant = async (variantId) => {
+    if (!window.confirm('Xóa biến thể này?')) return;
+    try {
+      const response = await productsApi.deleteVariant(variantId);
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Đã xóa biến thể' });
+        if (selectedProduct) fetchVariants(selectedProduct.id);
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể xóa biến thể' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa biến thể:', error);
+      setToast({ type: 'error', message: 'Không thể xóa biến thể' });
+    }
+  };
+
+  const handleUpdateUserRole = async (u, role) => {
+    try {
+      const response = await adminApi.updateUserRole(u.id, role);
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Đã cập nhật quyền' });
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể cập nhật quyền' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật quyền:', error);
+      setToast({ type: 'error', message: 'Không thể cập nhật quyền' });
+    }
+  };
+
+  const handleUpdateUserActive = async (u, isActive) => {
+    try {
+      const response = await adminApi.updateUserActive(u.id, isActive);
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Đã cập nhật trạng thái' });
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.detail || 'Không thể cập nhật trạng thái' });
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái:', error);
+      setToast({ type: 'error', message: 'Không thể cập nhật trạng thái' });
     }
   };
 
@@ -136,12 +468,11 @@ const DashboardPage = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
     
-    // Tự động tạo slug từ tên sản phẩm
     if (name === 'name') {
       const slug = value.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Xóa dấu
-        .replace(/[^\w ]+/g, '') // Xóa ký tự đặc biệt
-        .replace(/ +/g, '-'); // Thay khoảng trắng bằng gạch ngang
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w ]+/g, '')
+        .replace(/ +/g, '-');
       setFormData(prev => ({ ...prev, slug }));
     }
   };
@@ -165,33 +496,39 @@ const DashboardPage = () => {
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     if (!formData.category_id) {
-      alert('Vui lòng chọn danh mục sản phẩm!');
+      setToast({ type: 'error', message: 'Vui lòng chọn danh mục sản phẩm' });
       return;
     }
     setSubmitting(true);
     try {
-      const payload = {
-        ...formData,
+      const payloadBase = {
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description || null,
         base_price: parseFloat(formData.base_price),
         category_id: parseInt(formData.category_id),
-        seller_id: user.id
+        image_url: formData.image_url || null,
+        is_active: !!formData.is_active
       };
-      
-      const response = await productsApi.create(payload);
+
+      const response = productModalMode === 'create'
+        ? await productsApi.create({ ...payloadBase, seller_id: user.id })
+        : await productsApi.update(editingProduct.id, payloadBase);
+
       if (response.ok) {
-        alert('Thêm sản phẩm thành công!');
+        setToast({ type: 'success', message: productModalMode === 'create' ? 'Đã thêm sản phẩm' : 'Đã cập nhật sản phẩm' });
         setShowAddModal(false);
-        setFormData({
-          name: '', slug: '', description: '', base_price: '', category_id: '', image_url: '', is_active: true
-        });
-        fetchProducts(); // Tải lại danh sách
+        setEditingProduct(null);
+        setProductModalMode('create');
+        setFormData({ name: '', slug: '', description: '', base_price: '', category_id: '', image_url: '', is_active: true });
+        fetchProducts();
       } else {
         const error = await response.json();
-        alert('Lỗi: ' + (error.detail || 'Không thể thêm sản phẩm'));
+        setToast({ type: 'error', message: error.detail || 'Không thể lưu sản phẩm' });
       }
     } catch (error) {
       console.error('Lỗi khi thêm sản phẩm:', error);
-      alert('Đã có lỗi xảy ra!');
+      setToast({ type: 'error', message: 'Đã có lỗi xảy ra' });
     } finally {
       setSubmitting(false);
     }
@@ -205,28 +542,52 @@ const DashboardPage = () => {
         ...categoryFormData,
         parent_id: categoryFormData.parent_id ? parseInt(categoryFormData.parent_id) : null
       };
-      
-      const response = await categoriesApi.create(payload);
+
+      const response = categoryModalMode === 'create'
+        ? await categoriesApi.create(payload)
+        : await categoriesApi.update(editingCategory.id, payload);
+
       if (response.ok) {
-        alert('Thêm danh mục thành công!');
+        setToast({ type: 'success', message: categoryModalMode === 'create' ? 'Đã thêm danh mục' : 'Đã cập nhật danh mục' });
         setShowAddCategoryModal(false);
-        setCategoryFormData({
-          name: '', slug: '', parent_id: '', is_active: true
-        });
+        setEditingCategory(null);
+        setCategoryModalMode('create');
+        setCategoryFormData({ name: '', slug: '', parent_id: '', is_active: true });
         fetchCategories();
       } else {
         const error = await response.json();
-        alert('Lỗi: ' + (error.detail || 'Không thể thêm danh mục'));
+        setToast({ type: 'error', message: error.detail || 'Không thể lưu danh mục' });
       }
     } catch (error) {
       console.error('Lỗi khi thêm danh mục:', error);
-      alert('Đã có lỗi xảy ra!');
+      setToast({ type: 'error', message: 'Đã có lỗi xảy ra' });
     } finally {
       setSubmitting(false);
     }
   };
 
   if (!user) return <div className="loading-container"><div className="loader"></div></div>;
+
+  const flattenCategoryOptions = (nodes, depth = 0) => {
+    const out = [];
+    nodes.forEach((n) => {
+      out.push({ id: n.id, name: n.name, depth });
+      if (n.children && n.children.length) {
+        out.push(...flattenCategoryOptions(n.children, depth + 1));
+      }
+    });
+    return out;
+  };
+
+  const categoryOptions = flattenCategoryOptions(categories);
+
+  const visibleCategories = categories.filter((cat) => {
+    if (!categorySearch.trim()) return true;
+    const term = categorySearch.trim().toLowerCase();
+    const rootMatch = (cat.name || '').toLowerCase().includes(term);
+    const childMatch = (cat.children || []).some(c => (c.name || '').toLowerCase().includes(term));
+    return rootMatch || childMatch;
+  });
 
   return (
     <div className="admin-dashboard">
@@ -285,7 +646,7 @@ const DashboardPage = () => {
       </aside>
 
       <main className="admin-main">
-        <header className="admin-header animate-fade-in">
+        <header className="admin-header admin-header-sticky animate-fade-in">
           <div className="header-info">
             <h1>{activeTab === 'overview' ? 'Bảng điều khiển' : 
                  activeTab === 'products' ? 'Quản lý kho hàng' : 
@@ -293,7 +654,7 @@ const DashboardPage = () => {
             <p>Chào mừng trở lại, {user.username}!</p>
           </div>
           <div className="header-actions">
-            <button className="btn-primary" onClick={() => window.location.href = '/home'}>Xem shop</button>
+            <button className="btn-primary" onClick={() => navigate('/home')}>Xem shop</button>
           </div>
         </header>
 
@@ -305,32 +666,32 @@ const DashboardPage = () => {
                   <div className="stat-icon products-icon">📦</div>
                   <div className="stat-info">
                     <h3>Sản phẩm</h3>
-                    <p>1,240</p>
-                    <span className="stat-trend up">+12% tháng này</span>
+                    <p>{overviewStats.products.toLocaleString()}</p>
+                    <span className="stat-trend up">Tổng sản phẩm</span>
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
                   <div className="stat-icon users-icon">👥</div>
                   <div className="stat-info">
-                    <h3>Khách hàng</h3>
-                    <p>856</p>
-                    <span className="stat-trend up">+5% tháng này</span>
+                    <h3>Người dùng</h3>
+                    <p>{overviewStats.users.toLocaleString()}</p>
+                    <span className="stat-trend up">Tổng người dùng</span>
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon orders-icon">🛒</div>
+                  <div className="stat-icon orders-icon">�</div>
                   <div className="stat-info">
-                    <h3>Đơn hàng</h3>
-                    <p>320</p>
-                    <span className="stat-trend down">-2% tháng này</span>
+                    <h3>Danh mục</h3>
+                    <p>{overviewStats.categories.toLocaleString()}</p>
+                    <span className="stat-trend up">Tổng danh mục</span>
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
                   <div className="stat-icon revenue-icon">💰</div>
                   <div className="stat-info">
                     <h3>Doanh thu</h3>
-                    <p>1.5B ₫</p>
-                    <span className="stat-trend up">+18% tháng này</span>
+                    <p>—</p>
+                    <span className="stat-trend">Chưa tích hợp</span>
                   </div>
                 </div>
               </div>
@@ -368,9 +729,47 @@ const DashboardPage = () => {
             <div className="management-tab">
               <div className="table-header-actions">
                 <div className="search-box glass-panel">
-                  <input type="text" placeholder="Tìm tên sản phẩm, SKU..." />
+                  <input
+                    type="text"
+                    placeholder="Tìm tên sản phẩm, slug, ID..."
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setProductPaging((prev) => ({ ...prev, page: 1 }));
+                    }}
+                  />
                 </div>
-                <button className="btn-add-new" onClick={() => setShowAddModal(true)}>+ Thêm sản phẩm</button>
+                <div className="table-actions-right">
+                  <div className="admin-chips">
+                    <span className="admin-chip">{productPaging.total} tổng</span>
+                    <span className="admin-chip">{productPaging.active_only ? 'Đang bán' : 'Tất cả'}</span>
+                  </div>
+                  <div className="admin-toolbar">
+                    <select
+                      className="admin-select"
+                      value={productPaging.sort}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, sort: e.target.value, page: 1 }))}
+                    >
+                      <option value="newest">Mới nhất</option>
+                      <option value="price_asc">Giá tăng dần</option>
+                      <option value="price_desc">Giá giảm dần</option>
+                    </select>
+                    <select
+                      className="admin-select"
+                      value={productPaging.active_only ? 'true' : 'false'}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, active_only: e.target.value === 'true', page: 1 }))}
+                    >
+                      <option value="false">Tất cả trạng thái</option>
+                      <option value="true">Chỉ đang bán</option>
+                    </select>
+                  </div>
+                  <button
+                    className="btn-add-new"
+                    onClick={openCreateProductModal}
+                  >
+                    + Thêm sản phẩm
+                  </button>
+                </div>
               </div>
 
               <div className="admin-table-container glass-panel">
@@ -414,7 +813,10 @@ const DashboardPage = () => {
                                 title="Biến thể"
                                 onClick={() => handleShowVariants(p)}
                               >💎</button>
-                              <button className="btn-edit" title="Chỉnh sửa">✏️</button>
+                              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}>✏️</button>
+                              <button className="btn-toggle" title={p.is_active ? 'Ẩn' : 'Bật lại'} onClick={() => handleToggleProductActive(p)}>
+                                {p.is_active ? '🙈' : '👁️'}
+                              </button>
                               <button 
                                 className="btn-delete" 
                                 title="Xóa"
@@ -425,10 +827,34 @@ const DashboardPage = () => {
                         </tr>
                       ))
                     ) : (
-                      <tr><td colSpan="6" className="text-center">Không có sản phẩm nào.</td></tr>
+                      <tr>
+                        <td colSpan="6" className="text-center">
+                          {productSearch.trim() ? 'Không có sản phẩm khớp tìm kiếm.' : 'Không có sản phẩm nào.'}
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="admin-pagination">
+                <button
+                  className="btn-page"
+                  disabled={productPaging.page <= 1 || loading}
+                  onClick={() => setProductPaging((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                >
+                  Trước
+                </button>
+                <span className="page-meta">
+                  Trang {productPaging.page} / {productPaging.pages}
+                </span>
+                <button
+                  className="btn-page"
+                  disabled={productPaging.page >= productPaging.pages || loading}
+                  onClick={() => setProductPaging((prev) => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
+                >
+                  Sau
+                </button>
               </div>
             </div>
           )}
@@ -436,32 +862,50 @@ const DashboardPage = () => {
           {activeTab === 'categories' && (
             <div className="management-tab">
               <div className="table-header-actions">
-                <button className="btn-add-new" onClick={() => setShowAddCategoryModal(true)}>+ Thêm danh mục</button>
+                <div className="search-box glass-panel">
+                  <input
+                    type="text"
+                    placeholder="Tìm danh mục..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                  />
+                </div>
+                <button
+                  className="btn-add-new"
+                  onClick={openCreateCategoryModal}
+                >
+                  + Thêm danh mục
+                </button>
               </div>
               <div className="category-tree-container glass-panel">
                 {loading ? (
                   <p className="text-center">Đang tải...</p>
-                ) : categories.length > 0 ? (
+                ) : visibleCategories.length > 0 ? (
                   <div className="cat-tree">
-                    {categories.map(cat => (
+                    {visibleCategories.map(cat => (
                       <div key={cat.id} className="cat-node">
                         <div className="cat-node-content">
                           <span className="cat-icon">📁</span>
                           <strong>{cat.name}</strong>
                           <div className="cat-actions">
-                            <button className="btn-small">Sửa</button>
-                            <button className="btn-small danger">Xóa</button>
+                            <button className="btn-small" onClick={() => openEditCategoryModal(cat)}>Sửa</button>
+                            <button className="btn-small danger" onClick={() => handleDeleteCategory(cat.id)}>Xóa</button>
                           </div>
                         </div>
                         {cat.children && cat.children.length > 0 && (
                           <div className="cat-children">
-                            {cat.children.map(sub => (
+                            {cat.children
+                              .filter((sub) => {
+                                if (!categorySearch.trim()) return true;
+                                return (sub.name || '').toLowerCase().includes(categorySearch.trim().toLowerCase());
+                              })
+                              .map(sub => (
                               <div key={sub.id} className="cat-node sub">
                                 <span className="cat-icon">📄</span>
                                 {sub.name}
                                 <div className="cat-actions">
-                                  <button className="btn-small">Sửa</button>
-                                  <button className="btn-small danger">Xóa</button>
+                                  <button className="btn-small" onClick={() => openEditCategoryModal(sub)}>Sửa</button>
+                                  <button className="btn-small danger" onClick={() => handleDeleteCategory(sub.id)}>Xóa</button>
                                 </div>
                               </div>
                             ))}
@@ -471,68 +915,260 @@ const DashboardPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center">Không có danh mục nào.</p>
+                  <p className="text-center">
+                    {categorySearch.trim() ? 'Không có danh mục khớp tìm kiếm.' : 'Không có danh mục nào.'}
+                  </p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'users' && (
+            <div className="management-tab">
+              <div className="table-header-actions">
+                <div className="search-box glass-panel">
+                  <input
+                    type="text"
+                    placeholder="Tìm theo username/email..."
+                    value={usersSearch}
+                    onChange={(e) => {
+                      setUsersSearch(e.target.value);
+                      setUsersPaging((prev) => ({ ...prev, page: 1 }));
+                    }}
+                  />
+                </div>
+                <div className="table-actions-right">
+                  <div className="admin-toolbar">
+                    <select
+                      className="admin-select"
+                      value={usersRole}
+                      onChange={(e) => {
+                        setUsersRole(e.target.value);
+                        setUsersPaging((prev) => ({ ...prev, page: 1 }));
+                      }}
+                    >
+                      <option value="">Tất cả role</option>
+                      <option value="CUSTOMER">CUSTOMER</option>
+                      <option value="SELLER">SELLER</option>
+                      <option value="ADMIN">ADMIN</option>
+                    </select>
+                    <select
+                      className="admin-select"
+                      value={usersActive}
+                      onChange={(e) => {
+                        setUsersActive(e.target.value);
+                        setUsersPaging((prev) => ({ ...prev, page: 1 }));
+                      }}
+                    >
+                      <option value="">Tất cả trạng thái</option>
+                      <option value="true">Đang hoạt động</option>
+                      <option value="false">Bị khóa</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-table-container glass-panel">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Trạng thái</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadingUsers ? (
+                      <tr><td colSpan="6" className="text-center">Đang tải dữ liệu...</td></tr>
+                    ) : users.length > 0 ? (
+                      users.map((u) => (
+                        <tr key={u.id}>
+                          <td>{u.id}</td>
+                          <td><strong>{u.username}</strong></td>
+                          <td>{u.email}</td>
+                          <td>
+                            <select
+                              className="admin-select small"
+                              value={u.role}
+                              disabled={u.id === user.id}
+                              onChange={(e) => handleUpdateUserRole(u, e.target.value)}
+                            >
+                              <option value="CUSTOMER">CUSTOMER</option>
+                              <option value="SELLER">SELLER</option>
+                              <option value="ADMIN">ADMIN</option>
+                            </select>
+                          </td>
+                          <td>
+                            <span className={`status-tag ${u.is_active ? 'active' : 'inactive'}`}>
+                              {u.is_active ? 'Hoạt động' : 'Khóa'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                className="btn-toggle"
+                                disabled={u.id === user.id}
+                                title={u.is_active ? 'Khóa user' : 'Mở khóa user'}
+                                onClick={() => handleUpdateUserActive(u, !u.is_active)}
+                              >
+                                {u.is_active ? '🔒' : '🔓'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">
+                          {usersSearch.trim() ? 'Không có người dùng khớp tìm kiếm.' : 'Không có người dùng nào.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="admin-pagination">
+                <button
+                  className="btn-page"
+                  disabled={usersPaging.page <= 1 || loadingUsers}
+                  onClick={() => setUsersPaging((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                >
+                  Trước
+                </button>
+                <span className="page-meta">
+                  Trang {usersPaging.page} / {usersPaging.pages}
+                </span>
+                <button
+                  className="btn-page"
+                  disabled={usersPaging.page >= usersPaging.pages || loadingUsers}
+                  onClick={() => setUsersPaging((prev) => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
+                >
+                  Sau
+                </button>
               </div>
             </div>
           )}
         </div>
       </main>
 
+      {toast && (
+        <div className={`admin-toast ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
+
       {selectedProduct && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal glass-panel animate-fade-in">
+        <div className="admin-modal-overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="admin-modal glass-panel animate-fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Biến thể của: {selectedProduct.name}</h3>
               <button className="btn-close" onClick={() => setSelectedProduct(null)}>✕</button>
             </div>
             <div className="modal-content">
+              <div className="modal-toolbar">
+                <button className="btn-add-new" onClick={openCreateVariantForm}>+ Thêm biến thể</button>
+              </div>
+
+              {variantFormOpen && (
+                <form className="variant-form glass-panel" onSubmit={handleSaveVariant}>
+                  <div className="variant-grid">
+                    <div className="form-group">
+                      <label>SKU</label>
+                      <input name="sku" value={variantFormData.sku} onChange={handleVariantInputChange} required />
+                    </div>
+                    <div className="form-group">
+                      <label>Giá cộng thêm (VNĐ)</label>
+                      <input name="price_override" type="number" value={variantFormData.price_override} onChange={handleVariantInputChange} placeholder="Để trống nếu không có" />
+                    </div>
+                    <div className="form-group">
+                      <label>Tồn kho</label>
+                      <input name="stock_quantity" type="number" value={variantFormData.stock_quantity} onChange={handleVariantInputChange} />
+                    </div>
+                    <div className="form-group checkbox-group">
+                      <label className="checkbox-label">
+                        <input name="is_active" type="checkbox" checked={variantFormData.is_active} onChange={handleVariantInputChange} />
+                        Đang hoạt động
+                      </label>
+                    </div>
+                    <div className="form-group full-width">
+                      <label>Thuộc tính (JSON)</label>
+                      <textarea
+                        name="attributes_json"
+                        rows="5"
+                        value={variantFormData.attributes_json}
+                        onChange={handleVariantInputChange}
+                        placeholder='{"ram":"16GB","color":"black"}'
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="modal-footer compact">
+                    <button type="button" className="btn-cancel" onClick={() => setVariantFormOpen(false)}>Hủy</button>
+                    <button type="submit" className="btn-submit" disabled={submitting}>
+                      {variantFormMode === 'create' ? 'Lưu biến thể' : 'Cập nhật biến thể'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
               {loadingVariants ? (
                 <p>Đang tải biến thể...</p>
               ) : variants.length > 0 ? (
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>SKU</th>
-                      <th>Thuộc tính</th>
-                      <th>Giá cộng thêm</th>
-                      <th>Tồn kho</th>
-                      <th>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {variants.map(v => (
-                      <tr key={v.id}>
-                        <td>{v.sku}</td>
-                        <td>
-                          {Object.entries(v.attributes).map(([key, value]) => (
-                            <span key={key} className="attr-tag">{key}: {value}</span>
-                          ))}
-                        </td>
-                        <td>+{v.price_override.toLocaleString()} ₫</td>
-                        <td>{v.stock_quantity}</td>
-                        <td>
-                          <button className="btn-small">Sửa</button>
-                        </td>
+                <div className="admin-table-container glass-panel">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>SKU</th>
+                        <th>Thuộc tính</th>
+                        <th>Giá cộng thêm</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {variants.map(v => (
+                        <tr key={v.id}>
+                          <td><strong>{v.sku}</strong></td>
+                          <td>
+                            {Object.entries(v.attributes || {}).map(([key, value]) => (
+                              <span key={key} className="attr-tag">{key}: {String(value)}</span>
+                            ))}
+                          </td>
+                          <td>{v.price_override === null || v.price_override === undefined ? '—' : `+${Number(v.price_override).toLocaleString()} ₫`}</td>
+                          <td>{v.stock_quantity}</td>
+                          <td>
+                            <span className={`status-tag ${v.is_active ? 'active' : 'inactive'}`}>{v.is_active ? 'Hoạt động' : 'Ẩn'}</span>
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button className="btn-edit" title="Sửa" onClick={() => openEditVariantForm(v)}>✏️</button>
+                              <button className="btn-delete" title="Xóa" onClick={() => handleDeleteVariant(v.id)}>🗑️</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p>Chưa có biến thể nào cho sản phẩm này.</p>
               )}
-              <button className="btn-add-new mt-20">+ Thêm biến thể</button>
             </div>
           </div>
         </div>
       )}
 
       {showAddModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal glass-panel animate-fade-in product-form-modal">
+        <div className="admin-modal-overlay" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>
+          <div className="admin-modal glass-panel animate-fade-in product-form-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Thêm sản phẩm mới</h3>
-              <button className="btn-close" onClick={() => setShowAddModal(false)}>✕</button>
+              <h3>{productModalMode === 'create' ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'}</h3>
+              <button className="btn-close" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>✕</button>
             </div>
             <form className="modal-content" onSubmit={handleCreateProduct}>
               <div className="form-grid">
@@ -578,15 +1214,10 @@ const DashboardPage = () => {
                     required
                   >
                     <option value="">-- Chọn danh mục --</option>
-                    {categories.map(cat => (
-                      <React.Fragment key={cat.id}>
-                        <option value={cat.id}>{cat.name}</option>
-                        {cat.children && cat.children.map(sub => (
-                          <option key={sub.id} value={sub.id}>
-                            &nbsp;&nbsp;— {sub.name}
-                          </option>
-                        ))}
-                      </React.Fragment>
+                    {categoryOptions.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {`${'—'.repeat(c.depth)} ${c.name}`.trim()}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -629,9 +1260,9 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>Hủy bỏ</button>
+                <button type="button" className="btn-cancel" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>Hủy bỏ</button>
                 <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Đang lưu...' : 'Lưu sản phẩm'}
+                  {submitting ? 'Đang lưu...' : (productModalMode === 'create' ? 'Lưu sản phẩm' : 'Cập nhật')}
                 </button>
               </div>
             </form>
@@ -640,11 +1271,11 @@ const DashboardPage = () => {
       )}
 
       {showAddCategoryModal && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal glass-panel animate-fade-in product-form-modal">
+        <div className="admin-modal-overlay" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>
+          <div className="admin-modal glass-panel animate-fade-in product-form-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Thêm danh mục mới</h3>
-              <button className="btn-close" onClick={() => setShowAddCategoryModal(false)}>✕</button>
+              <h3>{categoryModalMode === 'create' ? 'Thêm danh mục mới' : 'Chỉnh sửa danh mục'}</h3>
+              <button className="btn-close" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>✕</button>
             </div>
             <form className="modal-content" onSubmit={handleCreateCategory}>
               <div className="form-grid">
@@ -678,9 +1309,13 @@ const DashboardPage = () => {
                     onChange={handleCategoryInputChange}
                   >
                     <option value="">-- Danh mục gốc --</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
+                    {categoryOptions
+                      .filter((c) => !editingCategory || c.id !== editingCategory.id)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {`${'—'.repeat(c.depth)} ${c.name}`.trim()}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="form-group checkbox-group">
@@ -696,9 +1331,9 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowAddCategoryModal(false)}>Hủy bỏ</button>
+                <button type="button" className="btn-cancel" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>Hủy bỏ</button>
                 <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Đang lưu...' : 'Lưu danh mục'}
+                  {submitting ? 'Đang lưu...' : (categoryModalMode === 'create' ? 'Lưu danh mục' : 'Cập nhật')}
                 </button>
               </div>
             </form>

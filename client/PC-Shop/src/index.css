@@ -1,18 +1,18 @@
 :root {
   /* Default - Premium Dark (Glossy) */
-  --bg-color: #050505;
-  --panel-bg: rgba(28, 28, 30, 0.7);
-  --card-bg: rgba(30, 30, 32, 0.6);
+  --bg-color: #07080a;
+  --panel-bg: rgba(24, 24, 28, 0.72);
+  --card-bg: rgba(24, 24, 28, 0.62);
   --text-primary: #ffffff;
-  --text-secondary: #a1a1a6;
+  --text-secondary: #b9b9c0;
   --accent-primary: #0071e3;
   --accent-secondary: #2997ff;
   --accent-gradient: linear-gradient(135deg, #0071e3 0%, #2997ff 100%);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --input-bg: rgba(255, 255, 255, 0.05);
-  --shadow-color: rgba(0, 0, 0, 0.6);
-  --glass-blur: 25px;
-  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.07);
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --glass-blur: 28px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.14);
   
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --heading: 'Inter', -apple-system, sans-serif;
@@ -22,7 +22,7 @@
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
-  font: 16px/1.5 var(--sans);
+  font: 16px/1.6 var(--sans);
   color-scheme: dark;
   color: var(--text-primary);
   background: var(--bg-color);
@@ -54,8 +54,8 @@ body {
   margin: 0;
   transition: background-color var(--transition-normal), color var(--transition-normal);
   background-attachment: fixed;
-  background-image: radial-gradient(circle at top right, rgba(0, 113, 227, 0.05), transparent 400px),
-                    radial-gradient(circle at bottom left, rgba(41, 151, 255, 0.05), transparent 400px);
+  background-image: radial-gradient(circle at top right, rgba(0, 113, 227, 0.08), transparent 460px),
+                    radial-gradient(circle at bottom left, rgba(41, 151, 255, 0.07), transparent 520px);
 }
 
 #root {
