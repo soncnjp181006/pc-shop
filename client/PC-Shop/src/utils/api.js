@@ -49,7 +49,7 @@ export const apiFetch = async (endpoint, options = {}) => {
           localStorage.removeItem('refresh_token');
           // Không tự động redirect nếu đang ở trang chủ
           if (window.location.pathname !== '/') {
-            window.location.href = '/';
+            // window.location.href = '/';
           }
         }
       } catch (error) {
@@ -57,14 +57,14 @@ export const apiFetch = async (endpoint, options = {}) => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         if (window.location.pathname !== '/') {
-          window.location.href = '/';
+          // window.location.href = '/';
         }
       }
     } else {
       // Không có refresh token
       localStorage.removeItem('access_token');
       if (window.location.pathname !== '/') {
-        window.location.href = '/';
+        // window.location.href = '/';
       }
     }
   }

@@ -37,9 +37,15 @@
 
 .theme-toggle-wrapper {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 15px;
+  right: 15px;
   z-index: 10;
+}
+@media (max-width: 480px) {
+  .theme-toggle-wrapper {
+    top: 10px;
+    right: 10px;
+  }
 }
 
 .theme-btn {
@@ -260,11 +266,24 @@
 
 @media (max-width: 480px) {
   .auth-box {
-    padding: 32px 24px;
+    padding: 40px 20px;
     border-radius: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    border: none;
+    background: var(--bg-color);
+  }
+  .auth-title {
+    font-size: 28px;
+  }
+  .auth-subtitle {
+    font-size: 14px;
+  }
+  .theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 }

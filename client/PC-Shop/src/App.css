@@ -8,47 +8,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Common UI Elements */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--accent-primary);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-weight: 600;
-  transition: all var(--transition-fast);
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: scale(1.02);
-}
-
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  transition: all var(--transition-fast);
-}
-
-.btn-secondary:hover {
-  background-color: var(--border-color);
-}
-
 /* Utility Classes */
 .text-center { text-align: center; }
 .mt-40 { margin-top: 40px; }

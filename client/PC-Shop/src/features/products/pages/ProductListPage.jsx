@@ -8,7 +8,7 @@ const ProductListPage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, limit: 12, pages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, pages: 1, total: 0 });
   const [expandedCategoryIds, setExpandedCategoryIds] = useState([]);
   
   const [filters, setFilters] = useState({
@@ -79,7 +79,7 @@ const ProductListPage = () => {
       if (response.ok) {
         const data = await response.json();
         setProducts(data.data);
-        setPagination(prev => ({ ...prev, pages: data.pages }));
+        setPagination(prev => ({ ...prev, pages: data.pages, total: data.total }));
       }
     } catch (error) {
       console.error('Lỗi khi tải sản phẩm:', error);
@@ -113,6 +113,26 @@ const ProductListPage = () => {
     setExpandedCategoryIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  const getPaginationItems = () => {
+    const totalPages = pagination.pages || 1;
+    const current = pagination.page;
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    const items = new Set([1, totalPages, current, current - 1, current + 1]);
+    const clipped = Array.from(items)
+      .filter((p) => p >= 1 && p <= totalPages)
+      .sort((a, b) => a - b);
+
+    const out = [];
+    for (let i = 0; i < clipped.length; i += 1) {
+      const p = clipped[i];
+      const prev = clipped[i - 1];
+      if (prev && p - prev > 1) out.push('…');
+      out.push(p);
+    }
+    return out;
   };
 
   const renderCategoryNode = (node, depth = 0) => {
@@ -265,14 +285,14 @@ const ProductListPage = () => {
       </aside>
 
       <div className="main-content-area animate-fade-in">
-        <div className="container">
+        <div className="product-list-container">
           <header className="list-header">
             <div className="header-main-info">
               <h1 className="list-title">Khám phá sản phẩm</h1>
               <p className="list-subtitle">Tìm kiếm linh kiện PC chất lượng nhất cho bộ máy của bạn</p>
             </div>
             <div className="list-controls">
-              <span className="results-count"><strong>{products.length}</strong> sản phẩm</span>
+              <span className="results-count"><strong>{pagination.total}</strong> sản phẩm</span>
               <div className="sort-wrapper glass-panel">
                 <label>Sắp xếp:</label>
                 <select name="sort" value={filters.sort} onChange={handleFilterChange}>
@@ -314,11 +334,10 @@ const ProductListPage = () => {
                           </div>
                         </div>
                         <div className="card-body">
-                          <span className="card-tag">Chính hãng</span>
+                          <span className="badge">Chính hãng</span>
                           <h4 className="card-name">{product.name}</h4>
                           <div className="card-footer">
                             <p className="card-price-modern">{product.base_price.toLocaleString()} ₫</p>
-                            <button className="quick-add">+</button>
                           </div>
                         </div>
                       </Link>
@@ -343,14 +362,18 @@ const ProductListPage = () => {
                       &larr;
                     </button>
                     <div className="page-numbers">
-                      {[...Array(pagination.pages)].map((_, i) => (
-                        <button 
-                          key={i+1}
-                          className={`page-index ${pagination.page === i+1 ? 'active' : ''}`}
-                          onClick={() => setPagination(prev => ({ ...prev, page: i+1 }))}
-                        >
-                          {i+1}
-                        </button>
+                      {getPaginationItems().map((item, idx) => (
+                        item === '…' ? (
+                          <span key={`dots-${idx}`} className="page-dots">…</span>
+                        ) : (
+                          <button 
+                            key={item}
+                            className={`page-index ${pagination.page === item ? 'active' : ''}`}
+                            onClick={() => setPagination(prev => ({ ...prev, page: item }))}
+                          >
+                            {item}
+                          </button>
+                        )
                       ))}
                     </div>
                     <button 

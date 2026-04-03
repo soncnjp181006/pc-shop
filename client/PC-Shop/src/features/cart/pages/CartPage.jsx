@@ -64,79 +64,101 @@ const CartPage = () => {
 
   return (
     <div className="cart-page animate-fade-in">
-      <div className="cart-container">
+      <div className="container cart-layout">
         <header className="cart-header">
-          <h1 className="cart-title">Giỏ hàng của bạn</h1>
-          {!isEmpty && <span className="cart-count">{cart.items.length} sản phẩm</span>}
+          <div className="header-text">
+            <h1 className="cart-title">Giỏ hàng <span className="accent">Của bạn</span></h1>
+            {!isEmpty && <span className="cart-count">Tất cả {cart.items.length} sản phẩm</span>}
+          </div>
+          <Link to="/products" className="continue-shopping">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+            Tiếp tục mua sắm
+          </Link>
         </header>
         
         {isEmpty ? (
-          <div className="empty-cart-card">
-            <div className="empty-icon">🛒</div>
-            <h2>Giỏ hàng đang trống</h2>
-            <p>Hãy khám phá những sản phẩm công nghệ tuyệt vời tại PC Shop.</p>
-            <Link to="/products" className="btn-primary">Mua sắm ngay</Link>
+          <div className="empty-cart-premium">
+            <div className="empty-icon-box">🛒</div>
+            <h2>Giỏ hàng chưa có gì</h2>
+            <p>Hàng ngàn sản phẩm công nghệ đỉnh cao đang chờ bạn khám phá.</p>
+            <Link to="/products" className="btn btn-primary btn-lg">Bắt đầu mua sắm</Link>
           </div>
         ) : (
           <div className="cart-grid">
-            <div className="cart-items-panel">
+            <div className="cart-items-section">
               {cart.items.map(item => (
-                <div key={item.id} className="cart-item-row">
-                  <div className="item-img-card">
-                    {item.variant.product?.image_url ? (
-                      <img src={getImageUrl(item.variant.product.image_url)} alt="product" className="cart-item-img" />
-                    ) : (
-                      "PC"
-                    )}
+                <div key={item.id} className="cart-item-premium">
+                  <div className="item-visual">
+                    <div className="item-img-wrapper">
+                      {item.variant.product?.image_url ? (
+                        <img src={getImageUrl(item.variant.product.image_url)} alt="product" />
+                      ) : (
+                        <span className="no-img">PC</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="item-info">
-                    <Link to={`/products/${item.variant.product_id}`} className="item-title">
+                  
+                  <div className="item-details">
+                    <Link to={`/products/${item.variant.product_id}`} className="item-name">
                       {item.variant.product?.name || `Sản phẩm #${item.variant.product_id}`}
                     </Link>
-                    <div className="item-variant-label">
-                      {Object.values(item.variant.attributes).join(' - ')}
+                    <div className="item-variant-info">
+                      {Object.values(item.variant.attributes).join(' • ')}
                     </div>
-                    <div className="item-price-each">
+                    <div className="item-price-unit">
                       {(item.variant.price_override || 0).toLocaleString()} VNĐ
                     </div>
                   </div>
-                  <div className="item-quantity-control">
-                    <button onClick={() => handleUpdateQty(item.id, item.quantity - 1)}>-</button>
-                    <span className="qty-val">{item.quantity}</span>
-                    <button onClick={() => handleUpdateQty(item.id, item.quantity + 1)}>+</button>
+
+                  <div className="item-controls">
+                    <div className="qty-stepper">
+                      <button className="step-btn" onClick={() => handleUpdateQty(item.id, item.quantity - 1)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14"/></svg>
+                      </button>
+                      <span className="qty-number">{item.quantity}</span>
+                      <button className="step-btn" onClick={() => handleUpdateQty(item.id, item.quantity + 1)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
+                      </button>
+                    </div>
+                    <button className="btn-remove-lite" onClick={() => handleDeleteItem(item.id)}>
+                      Xóa
+                    </button>
                   </div>
-                  <div className="item-subtotal">
+
+                  <div className="item-total-price">
                     {((item.variant.price_override || 0) * item.quantity).toLocaleString()} VNĐ
                   </div>
-                  <button className="btn-remove" onClick={() => handleDeleteItem(item.id)} title="Xóa">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
                 </div>
               ))}
             </div>
 
-            <aside className="cart-summary-panel">
-              <h3>Tóm tắt đơn hàng</h3>
-              <div className="summary-details">
-                <div className="summary-row">
-                  <span>Tạm tính</span>
-                  <span>{cart.total_price.toLocaleString()} VNĐ</span>
+            <aside className="cart-summary-section">
+              <div className="summary-card">
+                <h3>Chi tiết thanh toán</h3>
+                <div className="summary-rows">
+                  <div className="s-row">
+                    <span>Tạm tính</span>
+                    <span className="s-val">{cart.total_price.toLocaleString()} VNĐ</span>
+                  </div>
+                  <div className="s-row">
+                    <span>Vận chuyển</span>
+                    <span className="s-val free">Miễn phí</span>
+                  </div>
+                  <div className="s-divider"></div>
+                  <div className="s-row grand-total">
+                    <span>Tổng đơn hàng</span>
+                    <span className="s-val">{cart.total_price.toLocaleString()} VNĐ</span>
+                  </div>
                 </div>
-                <div className="summary-row">
-                  <span>Giao hàng</span>
-                  <span className="free">Miễn phí</span>
-                </div>
-                <div className="summary-divider"></div>
-                <div className="summary-row grand-total">
-                  <span>Tổng cộng</span>
-                  <span>{cart.total_price.toLocaleString()} VNĐ</span>
+                <button className="btn btn-primary btn-checkout">
+                  Thanh toán ngay
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                </button>
+                <div className="summary-meta">
+                  <p>💳 Hỗ trợ thẻ tín dụng, ví điện tử</p>
+                  <p>🛡️ Cam kết bảo mật 100%</p>
                 </div>
               </div>
-              <button className="btn-checkout">Tiến hành thanh toán</button>
-              <p className="secure-text">🔒 Thanh toán an toàn & bảo mật</p>
             </aside>
           </div>
         )}

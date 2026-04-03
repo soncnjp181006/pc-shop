@@ -8,6 +8,7 @@ import ProductListPage from './features/products/pages/ProductListPage';
 import ProductDetailPage from './features/products/pages/ProductDetailPage';
 import CartPage from './features/cart/pages/CartPage';
 import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 
 // Route bảo vệ chung (yêu cầu login)
 const ProtectedRoute = ({ children }) => {
@@ -18,7 +19,8 @@ const ProtectedRoute = ({ children }) => {
   return (
     <>
       <Header />
-      {children}
+      <main style={{ flex: 1 }}>{children}</main>
+      <Footer />
     </>
   );
 };
@@ -54,7 +56,8 @@ const SemiPublicRoute = ({ children }) => {
   return (
     <>
       <Header />
-      {children}
+      <main style={{ flex: 1 }}>{children}</main>
+      <Footer />
     </>
   );
 };
@@ -77,9 +80,9 @@ function App() {
         <Route 
           path="/home" 
           element={
-            <ProtectedRoute>
+            <SemiPublicRoute>
               <HomePage />
-            </ProtectedRoute>
+            </SemiPublicRoute>
           } 
         />
         <Route 
@@ -113,9 +116,9 @@ function App() {
         <Route 
           path="/cart" 
           element={
-            <ProtectedRoute>
+            <SemiPublicRoute>
               <CartPage />
-            </ProtectedRoute>
+            </SemiPublicRoute>
           } 
         />
 
