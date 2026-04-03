@@ -162,9 +162,13 @@ export const adminApi = {
 // API Cart
 export const cartApi = {
   getCart: () => apiFetch('/cart/'),
-  addItem: (variantId, quantity) => apiFetch('/cart/items', {
+  addItem: (variantId, quantity, productId) => apiFetch('/cart/items', {
     method: 'POST',
-    body: JSON.stringify({ variant_id: variantId, quantity }),
+    body: JSON.stringify({ 
+      variant_id: variantId || null, 
+      product_id: productId || null,
+      quantity 
+    }),
   }),
   updateItem: (itemId, quantity) => apiFetch(`/cart/items/${itemId}`, {
     method: 'PUT',

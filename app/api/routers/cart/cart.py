@@ -32,11 +32,11 @@ def add_item_to_cart(
     """
     Thêm sản phẩm vào giỏ hàng
     """
-    item = add_item_to_cart_service(db, current_user.id, item_in.variant_id, item_in.quantity)
+    item = add_item_to_cart_service(db, current_user.id, item_in.variant_id, item_in.quantity, item_in.product_id)
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product variant not found"
+            detail="Product or variant not found"
         )
     return item
 

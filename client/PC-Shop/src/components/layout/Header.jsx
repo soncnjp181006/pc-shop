@@ -46,6 +46,10 @@ const Header = () => {
     };
 
     fetchUser();
+
+    // Listen for cart updates
+    window.addEventListener('cartUpdated', fetchCartCount);
+    return () => window.removeEventListener('cartUpdated', fetchCartCount);
   }, [fetchCartCount]);
 
   useEffect(() => {

@@ -56,23 +56,37 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) {
+    // Nếu có variants nhưng chưa chọn
+    if (variants.length > 0 && !selectedVariant) {
       showToast('Vui lòng chọn một phiên bản sản phẩm.', 'error');
       return;
     }
 
+    const variantId = selectedVariant ? parseInt(selectedVariant.id) : null;
+    const productId = parseInt(id);
+
     setAddingToCart(true);
     try {
-      const response = await cartApi.addItem(selectedVariant.id, quantity);
+      console.log('Adding to cart:', { variantId, productId, quantity });
+      const response = await cartApi.addItem(variantId, quantity, productId);
+      
       if (response.ok) {
         showToast('Đã thêm sản phẩm vào giỏ hàng! 🛒', 'success');
-      } else if (response.status === 401) {
-        navigate('/');
+        // Dispatch custom event to notify Header to refresh cart count
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
-        showToast('Lỗi khi thêm vào giỏ hàng.', 'error');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Lỗi API thêm vào giỏ hàng:', response.status, errorData);
+        
+        if (response.status === 401) {
+          showToast('Vui lòng đăng nhập để thêm vào giỏ hàng.', 'error');
+          setTimeout(() => navigate('/'), 2000);
+        } else {
+          showToast(errorData.detail || 'Lỗi khi thêm vào giỏ hàng.', 'error');
+        }
       }
     } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error);
+      console.error('Lỗi kết nối khi thêm vào giỏ hàng:', error);
       showToast('Lỗi kết nối server.', 'error');
     } finally {
       setAddingToCart(false);
