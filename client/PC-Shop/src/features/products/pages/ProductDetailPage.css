@@ -644,19 +644,23 @@
 
 /* Stock Status Styles */
 .stock-status {
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 8px;
-  display: inline-block;
-  margin-top: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stock-info-small {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 .stock-status.in-stock {
   color: #34c759;
-  background: rgba(52, 199, 89, 0.1);
 }
 
 .stock-status.out-of-stock {

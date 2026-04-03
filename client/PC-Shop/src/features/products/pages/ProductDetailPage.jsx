@@ -62,6 +62,12 @@ const ProductDetailPage = () => {
       return;
     }
 
+    const currentAvailable = selectedVariant ? selectedVariant.available_stock : product.available_stock;
+    if (quantity > currentAvailable) {
+      showToast(`Chỉ còn ${currentAvailable} sản phẩm có sẵn. Một số đã được người khác thêm vào giỏ hàng.`, 'error');
+      return;
+    }
+
     const variantId = selectedVariant ? parseInt(selectedVariant.id) : null;
     const productId = parseInt(id);
 
@@ -226,8 +232,13 @@ const ProductDetailPage = () => {
               <div className="price-tag">
                 {(selectedVariant?.price_override || product.base_price).toLocaleString()} VNĐ
               </div>
-              <div className={`stock-status ${product.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                {product.stock_quantity > 0 ? `Còn hàng: ${product.stock_quantity}` : 'Hết hàng'}
+              <div className={`stock-status ${(selectedVariant?.available_stock ?? product.available_stock) > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                {(selectedVariant?.available_stock ?? product.available_stock) > 0 
+                  ? `Có sẵn: ${selectedVariant?.available_stock ?? product.available_stock}` 
+                  : 'Hết hàng (đã được đặt hết)'}
+              </div>
+              <div className="stock-info-small">
+                (Tổng kho: {selectedVariant?.stock_quantity ?? product.stock_quantity})
               </div>
             </header>
 
@@ -285,13 +296,13 @@ const ProductDetailPage = () => {
                 <button 
                   className="btn-add-cart" 
                   onClick={handleAddToCart}
-                  disabled={addingToCart || (product.stock_quantity <= 0 && (!selectedVariant || selectedVariant.stock_quantity <= 0))}
+                  disabled={addingToCart || (selectedVariant ? selectedVariant.available_stock <= 0 : product.available_stock <= 0)}
                 >
                   {addingToCart ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
                 </button>
                 <button 
                   className="btn-buy-now"
-                  disabled={(product.stock_quantity <= 0 && (!selectedVariant || selectedVariant.stock_quantity <= 0))}
+                  disabled={(selectedVariant ? selectedVariant.available_stock <= 0 : product.available_stock <= 0)}
                   onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
                 >
                   Mua ngay

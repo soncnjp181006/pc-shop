@@ -32,6 +32,7 @@ class ProductOut(ProductBase):
     id: int
     category_name: Optional[str] = None
     seller_name: Optional[str] = None
+    available_stock: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -43,5 +44,6 @@ class ProductSimple(BaseModel):
     image_url: Optional[str] = None
     base_price: float
     stock_quantity: Optional[int] = 0
+    available_stock: int = 0
 
     model_config = ConfigDict(from_attributes=True)

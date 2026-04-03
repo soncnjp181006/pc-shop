@@ -23,6 +23,7 @@ class ProductVariantUpdate(BaseModel):
 class ProductVariantOut(ProductVariantBase):
     id: int
     product_id: int
+    available_stock: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
     product: Optional[ProductSimple] = None

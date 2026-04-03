@@ -10,12 +10,29 @@ from app.repositories.product_repo.product_repo import (
     delete_product_repo,
     soft_delete_product_repo
 )
+from app.repositories.cart_repo import get_total_quantity_in_carts_repo
+
+def _inject_product_available_stock(db: Session, product: Product) -> Product:
+    if not product:
+        return None
+    
+    # Tính tổng số lượng đã đặt (trong giỏ hàng) của tất cả variants của sản phẩm này
+    total_reserved = 0
+    if product.variants:
+        for variant in product.variants:
+            total_reserved += get_total_quantity_in_carts_repo(db, variant.id)
+    
+    # available_stock của product = tổng stock - tổng reserved
+    product.available_stock = max(0, product.stock_quantity - total_reserved)
+    return product
 
 def create_product_service(db: Session, product_in: ProductCreate) -> Product:
-    return create_product_repo(db, product_in)
+    product = create_product_repo(db, product_in)
+    return _inject_product_available_stock(db, product)
 
 def get_product_by_id_service(db: Session, product_id: int) -> Optional[Product]:
-    return get_product_by_id_repo(db, product_id)
+    product = get_product_by_id_repo(db, product_id)
+    return _inject_product_available_stock(db, product)
 
 def get_all_products_service(
     db: Session, 
@@ -32,6 +49,11 @@ def get_all_products_service(
     data, total = get_all_products_repo(
         db, active_only, skip, limit, category_id, min_price, max_price, q, sort
     )
+    
+    # Inject available stock cho từng sản phẩm
+    for product in data:
+        _inject_product_available_stock(db, product)
+        
     pages = (total + limit - 1) // limit
     return {
         "data": data,
@@ -45,7 +67,8 @@ def update_product_service(db: Session, product_id: int, product_in: ProductUpda
     db_obj = get_product_by_id_repo(db, product_id)
     if not db_obj:
         return None
-    return update_product_repo(db, db_obj, product_in)
+    updated_product = update_product_repo(db, db_obj, product_in)
+    return _inject_product_available_stock(db, updated_product)
 
 def delete_product_service(db: Session, product_id: int) -> bool:
     db_obj = get_product_by_id_repo(db, product_id)

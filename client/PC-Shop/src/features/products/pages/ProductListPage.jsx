@@ -342,6 +342,11 @@ const ProductListPage = () => {
                         <div className="card-body">
                           <span className="badge">Chính hãng</span>
                           <h4 className="card-name">{product.name}</h4>
+                          <div className="card-stock-info">
+                            {product.available_stock > 0 
+                              ? `Sẵn có: ${product.available_stock}` 
+                              : <span className="out-of-stock-label">Hết hàng (đã được đặt)</span>}
+                          </div>
                           <div className="card-footer">
                             <p className="card-price-modern">{product.base_price.toLocaleString()} ₫</p>
                           </div>
