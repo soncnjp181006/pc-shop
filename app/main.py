@@ -29,8 +29,9 @@ from app.api.deps import admin
 app.include_router(admin)
 
 # endpoint categories
-from app.api.deps import category_router
+from app.api.deps import category_router, product_router
 app.include_router(category_router)
+app.include_router(product_router)
 
 
 if __name__ == "__main__":

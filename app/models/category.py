@@ -25,5 +25,8 @@ class Category(Base):
     parent = relationship("Category", remote_side=[id], back_populates="children")
     children = relationship("Category", back_populates="parent", cascade="all, delete-orphan")
 
+    # Quan hệ với Product
+    products = relationship("Product", back_populates="category")
+
     def __repr__(self):
         return f"<Category(id={self.id}, name={self.name}, slug={self.slug})>"

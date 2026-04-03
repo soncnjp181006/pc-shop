@@ -4,6 +4,7 @@ from app.api.routers.auth import auth_register, auth_login, auth_refresh
 from app.api.routers.user import get_me
 from app.api.routers.admin import manage_user
 from app.api.routers.category import category
+from app.api.routers.product import product
 
 # Health
 healthSys = APIRouter(prefix="/api/v1/health", tags=["Health"])
@@ -28,3 +29,7 @@ admin.include_router(manage_user.router)
 # Category
 category_router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
 category_router.include_router(category.router)
+
+# Product
+product_router = APIRouter(prefix="/api/v1/products", tags=["Products"])
+product_router.include_router(product.router)

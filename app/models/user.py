@@ -12,6 +12,7 @@ from sqlalchemy import (
     Boolean,
     DateTime
 )
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from sqlalchemy import func
 import enum # enum.Enum -> Giá trị mặc định (Dùng trong phân quyền người dùng)
@@ -32,6 +33,9 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     role = Column(String(20), nullable=False, default=UserRole.CUSTOMER.value)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Quan hệ với Product (Người bán)
+    products = relationship("Product", back_populates="seller")
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"
