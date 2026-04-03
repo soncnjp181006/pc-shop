@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from sqlalchemy import or_
+from typing import List, Optional, Tuple
 from app.models.product import Product
 from app.schemas.product.product import ProductCreate, ProductUpdate
 
@@ -21,11 +22,52 @@ def create_product_repo(db: Session, product_in: ProductCreate) -> Product:
 def get_product_by_id_repo(db: Session, product_id: int) -> Optional[Product]:
     return db.query(Product).filter(Product.id == product_id).first()
 
-def get_all_products_repo(db: Session, active_only: bool = True, skip: int = 0, limit: int = 100) -> List[Product]:
+def get_all_products_repo(
+    db: Session, 
+    active_only: bool = True, 
+    skip: int = 0, 
+    limit: int = 100,
+    category_id: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    q: Optional[str] = None,
+    sort: Optional[str] = None
+) -> Tuple[List[Product], int]:
     query = db.query(Product)
+    
+    # Filter by activity
     if active_only:
         query = query.filter(Product.is_active == True)
-    return query.offset(skip).limit(limit).all()
+    
+    # Filter by category
+    if category_id:
+        query = query.filter(Product.category_id == category_id)
+    
+    # Filter by price range
+    if min_price is not None:
+        query = query.filter(Product.base_price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.base_price <= max_price)
+    
+    # Search by name
+    if q:
+        query = query.filter(Product.name.ilike(f"%{q}%"))
+    
+    # Sorting
+    if sort == "price_asc":
+        query = query.order_by(Product.base_price.asc())
+    elif sort == "price_desc":
+        query = query.order_by(Product.base_price.desc())
+    elif sort == "newest":
+        query = query.order_by(Product.created_at.desc())
+    else:
+        # Default sort
+        query = query.order_by(Product.id.desc())
+
+    total = query.count()
+    data = query.offset(skip).limit(limit).all()
+    
+    return data, total
 
 def update_product_repo(db: Session, db_obj: Product, product_in: ProductUpdate) -> Product:
     update_data = product_in.model_dump(exclude_unset=True)

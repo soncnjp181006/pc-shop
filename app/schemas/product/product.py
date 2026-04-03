@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
+from app.schemas.common import PaginatedResponse
 
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)

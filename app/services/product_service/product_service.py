@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Tuple, Dict, Any
 from app.models.product import Product
 from app.schemas.product.product import ProductCreate, ProductUpdate
 from app.repositories.product_repo.product_repo import (
@@ -17,8 +17,29 @@ def create_product_service(db: Session, product_in: ProductCreate) -> Product:
 def get_product_by_id_service(db: Session, product_id: int) -> Optional[Product]:
     return get_product_by_id_repo(db, product_id)
 
-def get_all_products_service(db: Session, active_only: bool = True, skip: int = 0, limit: int = 100) -> List[Product]:
-    return get_all_products_repo(db, active_only, skip, limit)
+def get_all_products_service(
+    db: Session, 
+    active_only: bool = True, 
+    page: int = 1, 
+    limit: int = 100,
+    category_id: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    q: Optional[str] = None,
+    sort: Optional[str] = None
+) -> Dict[str, Any]:
+    skip = (page - 1) * limit
+    data, total = get_all_products_repo(
+        db, active_only, skip, limit, category_id, min_price, max_price, q, sort
+    )
+    pages = (total + limit - 1) // limit
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": pages
+    }
 
 def update_product_service(db: Session, product_id: int, product_in: ProductUpdate) -> Optional[Product]:
     db_obj = get_product_by_id_repo(db, product_id)

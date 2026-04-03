@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import get_db
-from app.schemas.product.product import ProductCreate, ProductUpdate, ProductOut
+from app.schemas.product.product import ProductCreate, ProductUpdate, ProductOut, PaginatedResponse
 from app.services.product_service.product_service import (
     create_product_service,
     get_product_by_id_service,
@@ -12,7 +12,7 @@ from app.services.product_service.product_service import (
     soft_delete_product_service
 )
 from app.services.category_service.category_service import get_category_by_id_service
-from app.services.user_service.user_id import get_user_by_id_service
+from app.services.user_service.user_id import get_user_by_id
 from app.dependencies.user.get_current_user import get_current_user
 from app.models.user import User
 
@@ -36,7 +36,7 @@ def create_product(
         )
     
     # Kiểm tra seller có tồn tại không
-    seller = get_user_by_id_service(db, product_in.seller_id)
+    seller = get_user_by_id(db, product_in.seller_id)
     if not seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -45,17 +45,24 @@ def create_product(
             
     return create_product_service(db, product_in)
 
-@router.get("/", response_model=List[ProductOut])
+@router.get("/", response_model=PaginatedResponse[ProductOut])
 def get_products(
     active_only: bool = True,
-    skip: int = 0,
-    limit: int = 100,
+    page: int = 1,
+    limit: int = 20,
+    category_id: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    q: Optional[str] = None,
+    sort: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Lấy danh sách Product
+    Lấy danh sách Product với phân trang, lọc và tìm kiếm
     """
-    return get_all_products_service(db, active_only, skip, limit)
+    return get_all_products_service(
+        db, active_only, page, limit, category_id, min_price, max_price, q, sort
+    )
 
 @router.get("/{id}", response_model=ProductOut)
 def get_product_by_id(
@@ -94,7 +101,7 @@ def update_product(
             
     # Kiểm tra seller có tồn tại không nếu có cập nhật
     if product_in.seller_id:
-        seller = get_user_by_id_service(db, product_in.seller_id)
+        seller = get_user_by_id(db, product_in.seller_id)
         if not seller:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
