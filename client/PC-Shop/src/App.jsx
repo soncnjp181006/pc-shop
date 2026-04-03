@@ -4,22 +4,51 @@ import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
 import ProfilePage from './features/home/pages/ProfilePage';
 
-function App() {
-  const isAuthenticated = !!localStorage.getItem('access_token');
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    return <Navigate to="/home" replace />;
+  }
+  return children;
+};
+
+function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<AuthPage />} />
+        <Route 
+          path="/" 
+          element={
+            <PublicRoute>
+              <AuthPage />
+            </PublicRoute>
+          } 
+        />
         <Route 
           path="/home" 
-          element={isAuthenticated ? <HomePage /> : <Navigate to="/" />} 
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/profile" 
-          element={isAuthenticated ? <ProfilePage /> : <Navigate to="/" />} 
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } 
         />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
