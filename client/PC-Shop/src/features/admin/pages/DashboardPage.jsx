@@ -32,6 +32,17 @@ const DashboardPage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    base_price: '',
+    category_id: '',
+    image_url: '',
+    is_active: true
+  });
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,6 +118,53 @@ const DashboardPage = () => {
       } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
       }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    // Tự động tạo slug từ tên sản phẩm
+    if (name === 'name') {
+      const slug = value.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Xóa dấu
+        .replace(/[^\w ]+/g, '') // Xóa ký tự đặc biệt
+        .replace(/ +/g, '-'); // Thay khoảng trắng bằng gạch ngang
+      setFormData(prev => ({ ...prev, slug }));
+    }
+  };
+
+  const handleCreateProduct = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...formData,
+        base_price: parseFloat(formData.base_price),
+        category_id: parseInt(formData.category_id)
+      };
+      
+      const response = await productsApi.create(payload);
+      if (response.ok) {
+        alert('Thêm sản phẩm thành công!');
+        setShowAddModal(false);
+        setFormData({
+          name: '', slug: '', description: '', base_price: '', category_id: '', image_url: '', is_active: true
+        });
+        fetchProducts(); // Tải lại danh sách
+      } else {
+        const error = await response.json();
+        alert('Lỗi: ' + (error.detail || 'Không thể thêm sản phẩm'));
+      }
+    } catch (error) {
+      console.error('Lỗi khi thêm sản phẩm:', error);
+      alert('Đã có lỗi xảy ra!');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -254,7 +312,7 @@ const DashboardPage = () => {
                 <div className="search-box glass-panel">
                   <input type="text" placeholder="Tìm tên sản phẩm, SKU..." />
                 </div>
-                <button className="btn-add-new">+ Thêm sản phẩm</button>
+                <button className="btn-add-new" onClick={() => setShowAddModal(true)}>+ Thêm sản phẩm</button>
               </div>
 
               <div className="admin-table-container glass-panel">
@@ -407,6 +465,115 @@ const DashboardPage = () => {
               )}
               <button className="btn-add-new mt-20">+ Thêm biến thể</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal glass-panel animate-fade-in product-form-modal">
+            <div className="modal-header">
+              <h3>Thêm sản phẩm mới</h3>
+              <button className="btn-close" onClick={() => setShowAddModal(false)}>✕</button>
+            </div>
+            <form className="modal-content" onSubmit={handleCreateProduct}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Tên sản phẩm</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Card đồ họa ASUS ROG Strix..."
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Đường dẫn (Slug)</label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    placeholder="asus-rog-strix"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Giá cơ bản (VNĐ)</label>
+                  <input
+                    type="number"
+                    name="base_price"
+                    value={formData.base_price}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: 15000000"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Danh mục</label>
+                  <select
+                    name="category_id"
+                    value={formData.category_id}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn danh mục --</option>
+                    {categories.map(cat => (
+                      <optgroup key={cat.id} label={cat.name}>
+                        {cat.children && cat.children.map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group full-width">
+                  <label>Link ảnh sản phẩm (Google Drive/URL)</label>
+                  <input
+                    type="text"
+                    name="image_url"
+                    value={formData.image_url}
+                    onChange={handleInputChange}
+                    placeholder="Dán link ảnh tại đây..."
+                  />
+                  {formData.image_url && (
+                    <div className="image-preview-container">
+                      <img src={getImageUrl(formData.image_url)} alt="Preview" />
+                      <span>Xem trước ảnh</span>
+                    </div>
+                  )}
+                </div>
+                <div className="form-group full-width">
+                  <label>Mô tả sản phẩm</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Nhập chi tiết về sản phẩm..."
+                    rows="4"
+                  ></textarea>
+                </div>
+                <div className="form-group checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="is_active"
+                      checked={formData.is_active}
+                      onChange={handleInputChange}
+                    />
+                    Cho phép bán sản phẩm này ngay lập tức
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>Hủy bỏ</button>
+                <button type="submit" className="btn-submit" disabled={submitting}>
+                  {submitting ? 'Đang lưu...' : 'Lưu sản phẩm'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
