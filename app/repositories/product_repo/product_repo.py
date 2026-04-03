@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import List, Optional, Tuple
 from app.models.product import Product
@@ -18,10 +18,11 @@ def create_product_repo(db: Session, product_in: ProductCreate) -> Product:
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+    # Load relationships after refresh
+    return db.query(Product).options(joinedload(Product.category), joinedload(Product.seller)).filter(Product.id == db_obj.id).first()
 
 def get_product_by_id_repo(db: Session, product_id: int) -> Optional[Product]:
-    return db.query(Product).filter(Product.id == product_id).first()
+    return db.query(Product).options(joinedload(Product.category), joinedload(Product.seller)).filter(Product.id == product_id).first()
 
 def get_all_products_repo(
     db: Session, 
@@ -34,7 +35,7 @@ def get_all_products_repo(
     q: Optional[str] = None,
     sort: Optional[str] = None
 ) -> Tuple[List[Product], int]:
-    query = db.query(Product)
+    query = db.query(Product).options(joinedload(Product.category), joinedload(Product.seller))
     
     # Filter by activity
     if active_only:

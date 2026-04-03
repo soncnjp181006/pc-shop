@@ -33,6 +33,7 @@ const DashboardPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -40,6 +41,12 @@ const DashboardPage = () => {
     base_price: '',
     category_id: '',
     image_url: '',
+    is_active: true
+  });
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: '',
+    slug: '',
+    parent_id: '',
     is_active: true
   });
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +73,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (activeTab === 'products') {
       fetchProducts();
+      fetchCategories(); // Cần lấy danh mục để chọn khi thêm sản phẩm
     } else if (activeTab === 'categories') {
       fetchCategories();
     }
@@ -138,14 +146,35 @@ const DashboardPage = () => {
     }
   };
 
+  const handleCategoryInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCategoryFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    if (name === 'name') {
+      const slug = value.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w ]+/g, '')
+        .replace(/ +/g, '-');
+      setCategoryFormData(prev => ({ ...prev, slug }));
+    }
+  };
+
   const handleCreateProduct = async (e) => {
     e.preventDefault();
+    if (!formData.category_id) {
+      alert('Vui lòng chọn danh mục sản phẩm!');
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
         ...formData,
         base_price: parseFloat(formData.base_price),
-        category_id: parseInt(formData.category_id)
+        category_id: parseInt(formData.category_id),
+        seller_id: user.id
       };
       
       const response = await productsApi.create(payload);
@@ -162,6 +191,35 @@ const DashboardPage = () => {
       }
     } catch (error) {
       console.error('Lỗi khi thêm sản phẩm:', error);
+      alert('Đã có lỗi xảy ra!');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...categoryFormData,
+        parent_id: categoryFormData.parent_id ? parseInt(categoryFormData.parent_id) : null
+      };
+      
+      const response = await categoriesApi.create(payload);
+      if (response.ok) {
+        alert('Thêm danh mục thành công!');
+        setShowAddCategoryModal(false);
+        setCategoryFormData({
+          name: '', slug: '', parent_id: '', is_active: true
+        });
+        fetchCategories();
+      } else {
+        const error = await response.json();
+        alert('Lỗi: ' + (error.detail || 'Không thể thêm danh mục'));
+      }
+    } catch (error) {
+      console.error('Lỗi khi thêm danh mục:', error);
       alert('Đã có lỗi xảy ra!');
     } finally {
       setSubmitting(false);
@@ -378,7 +436,7 @@ const DashboardPage = () => {
           {activeTab === 'categories' && (
             <div className="management-tab">
               <div className="table-header-actions">
-                <button className="btn-add-new">+ Thêm danh mục</button>
+                <button className="btn-add-new" onClick={() => setShowAddCategoryModal(true)}>+ Thêm danh mục</button>
               </div>
               <div className="category-tree-container glass-panel">
                 {loading ? (
@@ -521,11 +579,14 @@ const DashboardPage = () => {
                   >
                     <option value="">-- Chọn danh mục --</option>
                     {categories.map(cat => (
-                      <optgroup key={cat.id} label={cat.name}>
+                      <React.Fragment key={cat.id}>
+                        <option value={cat.id}>{cat.name}</option>
                         {cat.children && cat.children.map(sub => (
-                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                          <option key={sub.id} value={sub.id}>
+                            &nbsp;&nbsp;— {sub.name}
+                          </option>
                         ))}
-                      </optgroup>
+                      </React.Fragment>
                     ))}
                   </select>
                 </div>
@@ -571,6 +632,73 @@ const DashboardPage = () => {
                 <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>Hủy bỏ</button>
                 <button type="submit" className="btn-submit" disabled={submitting}>
                   {submitting ? 'Đang lưu...' : 'Lưu sản phẩm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddCategoryModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal glass-panel animate-fade-in product-form-modal">
+            <div className="modal-header">
+              <h3>Thêm danh mục mới</h3>
+              <button className="btn-close" onClick={() => setShowAddCategoryModal(false)}>✕</button>
+            </div>
+            <form className="modal-content" onSubmit={handleCreateCategory}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Tên danh mục</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={categoryFormData.name}
+                    onChange={handleCategoryInputChange}
+                    placeholder="Ví dụ: Linh kiện PC"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Đường dẫn (Slug)</label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={categoryFormData.slug}
+                    onChange={handleCategoryInputChange}
+                    placeholder="linh-kien-pc"
+                    required
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label>Danh mục cha (Để trống nếu là danh mục gốc)</label>
+                  <select
+                    name="parent_id"
+                    value={categoryFormData.parent_id}
+                    onChange={handleCategoryInputChange}
+                  >
+                    <option value="">-- Danh mục gốc --</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="is_active"
+                      checked={categoryFormData.is_active}
+                      onChange={handleCategoryInputChange}
+                    />
+                    Hiển thị danh mục này
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowAddCategoryModal(false)}>Hủy bỏ</button>
+                <button type="submit" className="btn-submit" disabled={submitting}>
+                  {submitting ? 'Đang lưu...' : 'Lưu danh mục'}
                 </button>
               </div>
             </form>

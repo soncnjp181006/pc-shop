@@ -28,6 +28,8 @@ class ProductUpdate(BaseModel):
 
 class ProductOut(ProductBase):
     id: int
+    category_name: Optional[str] = None
+    seller_name: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

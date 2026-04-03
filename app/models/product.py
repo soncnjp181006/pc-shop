@@ -27,5 +27,13 @@ class Product(Base):
     seller = relationship("User", back_populates="products")
     variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
 
+    @property
+    def category_name(self):
+        return self.category.name if self.category else None
+
+    @property
+    def seller_name(self):
+        return self.seller.username if self.seller else None
+
     def __repr__(self):
         return f"<Product(id={self.id}, name={self.name}, slug={self.slug})>"
