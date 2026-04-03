@@ -75,16 +75,52 @@ export const apiFetch = async (endpoint, options = {}) => {
 // API Products
 export const productsApi = {
   getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/products/?${query}`);
+    const query = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key]) query.append(key, params[key]);
+    });
+    return apiFetch(`/products/?${query.toString()}`);
   },
   getById: (id) => apiFetch(`/products/${id}`),
+  create: (data) => apiFetch('/products/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id, data) => apiFetch(`/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id) => apiFetch(`/products/${id}`, {
+    method: 'DELETE',
+  }),
   getVariants: (productId) => apiFetch(`/products/${productId}/variants/`),
+  createVariant: (productId, data) => apiFetch(`/products/${productId}/variants/`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateVariant: (productId, variantId, data) => apiFetch(`/products/${productId}/variants/${variantId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteVariant: (productId, variantId) => apiFetch(`/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  }),
 };
 
 // API Categories
 export const categoriesApi = {
   getTree: () => apiFetch('/categories/tree'),
+  create: (data) => apiFetch('/categories/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id, data) => apiFetch(`/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id) => apiFetch(`/categories/${id}`, {
+    method: 'DELETE',
+  }),
 };
 
 // API Cart
