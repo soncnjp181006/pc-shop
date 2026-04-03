@@ -12,6 +12,7 @@ def create_product_repo(db: Session, product_in: ProductCreate) -> Product:
         base_price=product_in.base_price,
         category_id=product_in.category_id,
         seller_id=product_in.seller_id,
+        image_url=product_in.image_url,
         is_active=product_in.is_active
     )
     db.add(db_obj)

@@ -37,5 +37,8 @@ class User(Base):
     # Quan hệ với Product (Người bán)
     products = relationship("Product", back_populates="seller")
 
+    # Quan hệ với Cart
+    cart = relationship("Cart", back_populates="user", uselist=False)
+
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"

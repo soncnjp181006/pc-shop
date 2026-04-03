@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
+from app.schemas.product.product import ProductSimple
 
 class ProductVariantBase(BaseModel):
     sku: str = Field(..., min_length=1, max_length=100)
@@ -24,5 +25,6 @@ class ProductVariantOut(ProductVariantBase):
     product_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    product: Optional[ProductSimple] = None
 
     model_config = ConfigDict(from_attributes=True)

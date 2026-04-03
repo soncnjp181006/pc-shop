@@ -47,20 +47,73 @@ export const apiFetch = async (endpoint, options = {}) => {
           // Refresh token cũng hết hạn hoặc không hợp lệ
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/';
+          // Không tự động redirect nếu đang ở trang chủ
+          if (window.location.pathname !== '/') {
+            window.location.href = '/';
+          }
         }
       } catch (error) {
         console.error('Lỗi khi refresh token:', error);
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/';
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
       }
     } else {
-      // Không có refresh token, yêu cầu login lại
+      // Không có refresh token
       localStorage.removeItem('access_token');
-      window.location.href = '/';
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     }
   }
 
   return response;
+};
+
+// API Products
+export const productsApi = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/products/?${query}`);
+  },
+  getById: (id) => apiFetch(`/products/${id}`),
+  getVariants: (productId) => apiFetch(`/products/${productId}/variants/`),
+};
+
+// API Categories
+export const categoriesApi = {
+  getTree: () => apiFetch('/categories/tree'),
+};
+
+// API Cart
+export const cartApi = {
+  getCart: () => apiFetch('/cart/'),
+  addItem: (variantId, quantity) => apiFetch('/cart/items', {
+    method: 'POST',
+    body: JSON.stringify({ variant_id: variantId, quantity }),
+  }),
+  updateItem: (itemId, quantity) => apiFetch(`/cart/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ quantity }),
+  }),
+  deleteItem: (itemId) => apiFetch(`/cart/items/${itemId}`, {
+    method: 'DELETE',
+  }),
+};
+
+// Helper để xử lý link ảnh (đặc biệt là Google Drive)
+export const getImageUrl = (url) => {
+  if (!url) return '/hero.png'; // Ảnh mặc định nếu không có link
+  
+  // Xử lý link Google Drive
+  if (url.includes('drive.google.com')) {
+    const fileId = url.match(/\/d\/([^/]+)/)?.[1] || url.match(/id=([^&]+)/)?.[1];
+    if (fileId) {
+      return `https://lh3.googleusercontent.com/d/${fileId}`;
+    }
+  }
+  
+  return url;
 };

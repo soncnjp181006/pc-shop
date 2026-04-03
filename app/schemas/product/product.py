@@ -10,6 +10,7 @@ class ProductBase(BaseModel):
     base_price: float = Field(..., gt=0)
     category_id: int
     seller_id: int
+    image_url: Optional[str] = None
     is_active: bool = True
 
 class ProductCreate(ProductBase):
@@ -22,11 +23,20 @@ class ProductUpdate(BaseModel):
     base_price: Optional[float] = Field(None, gt=0)
     category_id: Optional[int] = None
     seller_id: Optional[int] = None
+    image_url: Optional[str] = None
     is_active: Optional[bool] = None
 
 class ProductOut(ProductBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ProductSimple(BaseModel):
+    id: int
+    name: str
+    image_url: Optional[str] = None
+    base_price: float
 
     model_config = ConfigDict(from_attributes=True)

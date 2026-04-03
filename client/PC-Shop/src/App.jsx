@@ -4,6 +4,10 @@ import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
 import ProfilePage from './features/home/pages/ProfilePage';
 import DashboardPage from './features/admin/pages/DashboardPage';
+import ProductListPage from './features/products/pages/ProductListPage';
+import ProductDetailPage from './features/products/pages/ProductDetailPage';
+import CartPage from './features/cart/pages/CartPage';
+import Header from './components/layout/Header';
 
 // Route bảo vệ chung (yêu cầu login)
 const ProtectedRoute = ({ children }) => {
@@ -11,7 +15,12 @@ const ProtectedRoute = ({ children }) => {
   if (!token) {
     return <Navigate to="/" replace />;
   }
-  return children;
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
 };
 
 // Route bảo vệ theo Role (Admin/Seller)
@@ -38,6 +47,16 @@ const PublicRoute = ({ children }) => {
     return <Navigate to="/home" replace />;
   }
   return children;
+};
+
+// Route bán công khai (xem được khi chưa login, nhưng có Header nếu đã login)
+const SemiPublicRoute = ({ children }) => {
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
 };
 
 function App() {
@@ -68,6 +87,34 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Product Routes */}
+        <Route 
+          path="/products" 
+          element={
+            <SemiPublicRoute>
+              <ProductListPage />
+            </SemiPublicRoute>
+          } 
+        />
+        <Route 
+          path="/products/:id" 
+          element={
+            <SemiPublicRoute>
+              <ProductDetailPage />
+            </SemiPublicRoute>
+          } 
+        />
+
+        {/* Cart Route */}
+        <Route 
+          path="/cart" 
+          element={
+            <ProtectedRoute>
+              <CartPage />
             </ProtectedRoute>
           } 
         />
