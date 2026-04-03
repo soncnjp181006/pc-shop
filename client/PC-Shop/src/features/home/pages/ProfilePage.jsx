@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import heroLogo from '../../../assets/hero.png';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -75,7 +74,7 @@ const ProfilePage = () => {
       <header className="main-header">
         <div className="header-content">
           <Link to="/home" className="logo-section">
-            <img src={heroLogo} alt="PC Shop Logo" className="header-logo" />
+            <img src="/hero.png" alt="PC Shop Logo" className="header-logo" />
             <span className="logo-text">PC SHOP</span>
           </Link>
           <div className="header-actions">

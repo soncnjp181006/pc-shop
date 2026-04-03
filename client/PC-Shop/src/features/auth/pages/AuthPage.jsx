@@ -53,6 +53,9 @@ const AuthPage = () => {
         </div>
 
         <div className="auth-header">
+          <div className="auth-logo-wrapper">
+            <img src="/hero.png" alt="PC Shop Logo" className="auth-logo" />
+          </div>
           <h2 className="auth-title">
             <span className="gradient-text">PC SHOP</span>
           </h2>
