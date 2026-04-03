@@ -21,6 +21,11 @@ const ProductListPage = () => {
   });
 
   const brands = ["Apple", "ASUS", "MSI", "Gigabyte", "Dell", "HP", "Lenovo", "Razer"];
+  const quickCategories = [
+    { id: 'ram', name: 'RAM', icon: '⚡' },
+    { id: 'monitor', name: 'Màn hình', icon: '🖥️' },
+    { id: 'accessories', name: 'Phụ kiện', icon: '🖱️' }
+  ];
 
   useEffect(() => {
     fetchCategories();
@@ -101,6 +106,22 @@ const ProductListPage = () => {
               placeholder="Nhập tên sản phẩm..."
             />
             <span className="search-icon">🔍</span>
+          </div>
+        </div>
+
+        <div className="sidebar-section">
+          <h3>Truy cập nhanh</h3>
+          <div className="quick-cat-grid">
+            {quickCategories.map(cat => (
+              <button 
+                key={cat.id}
+                className={`quick-cat-item glass-panel ${filters.q.toLowerCase().includes(cat.id) ? 'active' : ''}`}
+                onClick={() => handleFilterChange({ target: { name: 'q', value: cat.name } })}
+              >
+                <span className="quick-cat-icon">{cat.icon}</span>
+                <span className="quick-cat-name">{cat.name}</span>
+              </button>
+            ))}
           </div>
         </div>
 
