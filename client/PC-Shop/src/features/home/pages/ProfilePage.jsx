@@ -36,13 +36,15 @@ const ProfilePage = () => {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-        } else {
+        } else if (response.status === 401) {
           localStorage.removeItem('access_token');
           navigate('/');
+        } else {
+          console.error('Lỗi khi lấy thông tin user:', response.status);
+          // Cho phép ở lại trang profile để tránh bị đá về login vô lý
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        navigate('/');
       }
     };
 

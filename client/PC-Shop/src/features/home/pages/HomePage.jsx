@@ -36,13 +36,16 @@ const HomePage = () => {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-        } else {
+        } else if (response.status === 401) {
+          // Chỉ xóa token và chuyển hướng nếu thực sự hết hạn phiên
           localStorage.removeItem('access_token');
           navigate('/');
+        } else {
+          console.error('Lỗi khi lấy thông tin user:', response.status);
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        navigate('/');
+        // Không navigate về / khi gặp lỗi mạng để tránh thoát ra ngoài vô lý
       }
     };
 
@@ -135,7 +138,10 @@ const HomePage = () => {
               <span>Giỏ hàng</span>
             </div>
 
-            <div className="header-item user-item-wrapper" onClick={() => navigate('/profile')}>
+            <div className="header-item user-item-wrapper" onClick={(e) => {
+              e.preventDefault();
+              navigate('/profile');
+            }}>
               <div className="icon-wrapper user-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"></path>
