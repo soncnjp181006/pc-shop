@@ -14,6 +14,8 @@ const ProductDetailPage = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
+  const [activeMediaIdx, setActiveMediaIdx] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -114,44 +116,91 @@ const ProductDetailPage = () => {
 
         <div className="product-grid-detail">
           <div className="product-gallery">
-            <div className="main-image-card">
-              {product.image_url ? (
-                <img src={getImageUrl(product.image_url)} alt={product.name} className="detail-img" />
-              ) : (
-                <div className="image-placeholder-large">PC</div>
-              )}
-            </div>
-            
-            {/* Gallery bổ sung từ description MEDIA tag */}
             {(() => {
+              // Hợp nhất ảnh chính và ảnh bổ sung
               const mediaMatch = (product.description || '').match(/\[MEDIA:(.*?)\]/);
-              if (!mediaMatch) return (
-                <div className="thumbnail-grid">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="thumb-card">PC</div>
-                  ))}
-                </div>
+              const extraLinks = mediaMatch ? mediaMatch[1].split(';').filter(l => l.trim()) : [];
+              const mediaList = [product.image_url, ...extraLinks].filter(Boolean);
+              
+              if (mediaList.length === 0) return (
+                <div className="main-image-card placeholder">PC Shop</div>
               );
 
-              const mediaLinks = mediaMatch[1].split(';').filter(l => l.trim());
+              const currentMedia = mediaList[activeMediaIdx];
+              const isVideo = (url) => url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4');
+
               return (
-                <div className="media-gallery-premium">
-                  {mediaLinks.map((link, idx) => {
-                    const isVideo = link.includes('youtube.com') || link.includes('youtu.be') || link.includes('.mp4');
-                    return (
-                      <div key={idx} className={`media-item-card ${isVideo ? 'video-type' : ''}`}>
-                         {isVideo ? (
-                           <div className="video-thumb">
-                             <span className="play-icon">▶</span>
-                             <img src="/hero.png" alt="Video" />
-                           </div>
-                         ) : (
-                           <img src={getImageUrl(link)} alt={`Gallery ${idx}`} onClick={() => window.open(link, '_blank')} />
-                         )}
+                <>
+                  <div className="main-image-card">
+                    {isVideo(currentMedia) ? (
+                      <div className="video-main-container">
+                        <iframe
+                          src={currentMedia.replace('watch?v=', 'embed/')}
+                          title="Product Video"
+                          frameBorder="0"
+                          allowFullScreen
+                        ></iframe>
                       </div>
-                    );
-                  })}
-                </div>
+                    ) : (
+                      <img 
+                        src={getImageUrl(currentMedia)} 
+                        alt={product.name} 
+                        className="detail-img" 
+                        onClick={() => setLightboxIndex(activeMediaIdx)}
+                      />
+                    )}
+                    
+                    {mediaList.length > 1 && (
+                      <div className="slider-controls">
+                        <button className="slider-btn prev" onClick={() => setActiveMediaIdx(i => (i - 1 + mediaList.length) % mediaList.length)}>‹</button>
+                        <button className="slider-btn next" onClick={() => setActiveMediaIdx(i => (i + 1) % mediaList.length)}>›</button>
+                      </div>
+                    )}
+                  </div>
+
+                  {mediaList.length > 1 && (
+                    <div className="media-gallery-premium">
+                      {mediaList.map((link, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`media-item-card ${idx === activeMediaIdx ? 'active' : ''} ${isVideo(link) ? 'video-type' : ''}`}
+                          onClick={() => {
+                            setActiveMediaIdx(idx);
+                            setLightboxIndex(idx);
+                          }}
+                        >
+                          {isVideo(link) ? (
+                            <div className="video-thumb">
+                              <span className="play-icon">▶</span>
+                              <img src="/hero.png" alt="Video" />
+                            </div>
+                          ) : (
+                            <img src={getImageUrl(link)} alt={`Thumb ${idx}`} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Lightbox Modal */}
+                  {lightboxIndex !== null && (
+                    <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
+                      <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+                        <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>&times;</button>
+                        {isVideo(mediaList[lightboxIndex]) ? (
+                          <iframe
+                            src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
+                            title="Lightbox Video"
+                            frameBorder="0"
+                            allowFullScreen
+                          ></iframe>
+                        ) : (
+                          <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
               );
             })()}
           </div>

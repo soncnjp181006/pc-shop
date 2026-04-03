@@ -511,12 +511,22 @@ const DashboardPage = () => {
     try {
       // Chuẩn bị description với media links ẩn
       let finalDescription = formData.description || '';
-      if (formData.additional_media.trim()) {
-        const links = formData.additional_media.split('\n')
-          .map(l => l.trim())
-          .filter(l => l)
-          .join(';');
+      
+      // Xử lý image_url: Dòng đầu là ảnh chính, các dòng sau là media bổ sung
+      const primaryUrlLines = (formData.image_url || '').split('\n').map(l => l.trim()).filter(l => l);
+      const mainImageUrl = primaryUrlLines[0] || null;
+      const extraFromPrimary = primaryUrlLines.slice(1);
+      
+      const additionalLines = (formData.additional_media || '').split('\n').map(l => l.trim()).filter(l => l);
+      
+      // Gộp tất cả media bổ sung (từ primary textarea dòng 2+ và từ additional_media textarea)
+      const allExtraMedia = [...extraFromPrimary, ...additionalLines];
+      
+      if (allExtraMedia.length > 0) {
+        const links = allExtraMedia.join(';');
         if (links) {
+          // Xóa tag MEDIA cũ nếu có để tránh trùng lặp
+          finalDescription = finalDescription.replace(/\[MEDIA:.*?\]/, '');
           finalDescription += `\n\n[MEDIA:${links}]`;
         }
       }
@@ -527,7 +537,7 @@ const DashboardPage = () => {
         description: finalDescription || null,
         base_price: parseFloat(formData.base_price),
         category_id: parseInt(formData.category_id),
-        image_url: formData.image_url || null,
+        image_url: mainImageUrl,
         is_active: !!formData.is_active
       };
 
@@ -1245,13 +1255,13 @@ const DashboardPage = () => {
                 </div>
                 <div className="form-group full-width">
                   <label>Link ảnh sản phẩm (Google Drive/URL)</label>
-                  <input
-                    type="text"
+                  <textarea
                     name="image_url"
                     value={formData.image_url}
                     onChange={handleInputChange}
-                    placeholder="Dán link ảnh tại đây..."
-                  />
+                    placeholder="Dán link ảnh tại đây (Mỗi link một dòng)..."
+                    className="media-textarea"
+                  ></textarea>
                   {formData.image_url && (
                     <div className="image-preview-container">
                       <img src={getImageUrl(formData.image_url)} alt="Preview" />

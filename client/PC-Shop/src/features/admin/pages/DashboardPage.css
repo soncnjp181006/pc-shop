@@ -332,6 +332,13 @@
   padding: 10px 12px;
   font-weight: 700;
   outline: none;
+  cursor: pointer;
+}
+
+.admin-select option {
+  background-color: #1a1a1b;
+  color: #ffffff;
+  padding: 10px;
 }
 
 .admin-select.small {
@@ -842,10 +849,11 @@
   border-color: rgba(255, 59, 48, 0.35);
 }
 
- .modal-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
+.media-textarea {
+  min-height: 120px;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: vertical;
 }
 
 .variant-form {
