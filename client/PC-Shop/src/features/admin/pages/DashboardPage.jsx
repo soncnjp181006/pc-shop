@@ -296,6 +296,7 @@ const DashboardPage = () => {
       base_price: String(p.base_price ?? ''),
       category_id: String(p.category_id ?? ''),
       image_url: p.image_url || '',
+      stock_quantity: p.stock_quantity ?? 0,
       is_active: !!p.is_active
     });
     setShowAddModal(true);
@@ -538,6 +539,7 @@ const DashboardPage = () => {
         base_price: parseFloat(formData.base_price),
         category_id: parseInt(formData.category_id),
         image_url: mainImageUrl,
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
         is_active: !!formData.is_active
       };
 
@@ -550,7 +552,7 @@ const DashboardPage = () => {
         setShowAddModal(false);
         setEditingProduct(null);
         setProductModalMode('create');
-        setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', is_active: true });
+        setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', stock_quantity: 0, is_active: true });
         fetchProducts();
       } else {
         const error = await response.json();
@@ -1234,6 +1236,18 @@ const DashboardPage = () => {
                     value={formData.base_price}
                     onChange={handleInputChange}
                     placeholder="Ví dụ: 15000000"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Số lượng tồn kho</label>
+                  <input
+                    type="number"
+                    name="stock_quantity"
+                    value={formData.stock_quantity}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: 50"
+                    min="0"
                     required
                   />
                 </div>

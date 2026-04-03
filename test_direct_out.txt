@@ -1,0 +1,26 @@
+Testing POST /api/v1/products/
+2026-04-04 03:31:32,900 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-04-04 03:31:32,900 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:31:32,901 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-04-04 03:31:32,901 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:31:32,901 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-04-04 03:31:32,901 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:31:32,901 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-04-04 03:31:32,903 INFO sqlalchemy.engine.Engine SELECT categories.id AS categories_id, categories.name AS categories_name, categories.slug AS categories_slug, categories.parent_id AS categories_parent_id, categories.is_active AS categories_is_active, categories.created_at AS categories_created_at, categories.updated_at AS categories_updated_at 
+FROM categories 
+WHERE categories.id = %(id_1)s 
+ LIMIT %(param_1)s
+2026-04-04 03:31:32,903 INFO sqlalchemy.engine.Engine [generated in 0.00012s] {'id_1': 1, 'param_1': 1}
+2026-04-04 03:31:32,904 INFO sqlalchemy.engine.Engine ROLLBACK
+Status POST: 404
+Body POST: {"detail":"Category not found"}
+Testing PUT /api/v1/products/1
+2026-04-04 03:31:32,911 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-04-04 03:31:32,914 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.name AS products_name, products.slug AS products_slug, products.description AS products_description, products.base_price AS products_base_price, products.category_id AS products_category_id, products.seller_id AS products_seller_id, products.image_url AS products_image_url, products.stock_quantity AS products_stock_quantity, products.is_active AS products_is_active, products.created_at AS products_created_at, products.updated_at AS products_updated_at, categories_1.id AS categories_1_id, categories_1.name AS categories_1_name, categories_1.slug AS categories_1_slug, categories_1.parent_id AS categories_1_parent_id, categories_1.is_active AS categories_1_is_active, categories_1.created_at AS categories_1_created_at, categories_1.updated_at AS categories_1_updated_at, users_1.id AS users_1_id, users_1.username AS users_1_username, users_1.email AS users_1_email, users_1.hashed_password AS users_1_hashed_password, users_1.is_active AS users_1_is_active, users_1.`role` AS users_1_role, users_1.created_at AS users_1_created_at 
+FROM products LEFT OUTER JOIN categories AS categories_1 ON categories_1.id = products.category_id LEFT OUTER JOIN users AS users_1 ON users_1.id = products.seller_id 
+WHERE products.id = %(id_1)s 
+ LIMIT %(param_1)s
+2026-04-04 03:31:32,914 INFO sqlalchemy.engine.Engine [generated in 0.00011s] {'id_1': 1, 'param_1': 1}
+2026-04-04 03:31:32,916 INFO sqlalchemy.engine.Engine ROLLBACK
+Status PUT: 404
+Body PUT: {"detail":"Product not found"}

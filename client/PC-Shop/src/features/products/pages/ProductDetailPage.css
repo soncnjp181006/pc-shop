@@ -642,3 +642,33 @@
   .action-buttons { flex-direction: column; }
 }
 
+/* Stock Status Styles */
+.stock-status {
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.stock-status.in-stock {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.1);
+}
+
+.stock-status.out-of-stock {
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px dashed rgba(255, 59, 48, 0.3);
+}
+
+.btn-add-cart:disabled, .btn-buy-now:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}
+

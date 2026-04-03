@@ -1,0 +1,27 @@
+2026-04-04 03:32:10,577 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-04-04 03:32:10,577 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:32:10,578 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-04-04 03:32:10,578 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:32:10,578 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-04-04 03:32:10,582 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-04-04 03:32:10,582 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-04-04 03:32:10,584 INFO sqlalchemy.engine.Engine SELECT categories.id AS categories_id, categories.name AS categories_name, categories.slug AS categories_slug, categories.parent_id AS categories_parent_id, categories.is_active AS categories_is_active, categories.created_at AS categories_created_at, categories.updated_at AS categories_updated_at 
+FROM categories 
+ LIMIT %(param_1)s
+2026-04-04 03:32:10,584 INFO sqlalchemy.engine.Engine [generated in 0.00010s] {'param_1': 1}
+Found category 12
+Testing POST /api/v1/products/
+2026-04-04 03:32:11,000 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-04-04 03:32:11,001 INFO sqlalchemy.engine.Engine SELECT categories.id AS categories_id, categories.name AS categories_name, categories.slug AS categories_slug, categories.parent_id AS categories_parent_id, categories.is_active AS categories_is_active, categories.created_at AS categories_created_at, categories.updated_at AS categories_updated_at 
+FROM categories 
+WHERE categories.id = %(id_1)s 
+ LIMIT %(param_1)s
+2026-04-04 03:32:11,001 INFO sqlalchemy.engine.Engine [generated in 0.00012s] {'id_1': 12, 'param_1': 1}
+2026-04-04 03:32:11,003 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.hashed_password AS users_hashed_password, users.is_active AS users_is_active, users.`role` AS users_role, users.created_at AS users_created_at 
+FROM users 
+WHERE users.id = %(id_1)s 
+ LIMIT %(param_1)s
+2026-04-04 03:32:11,003 INFO sqlalchemy.engine.Engine [generated in 0.00009s] {'id_1': 1, 'param_1': 1}
+2026-04-04 03:32:11,003 INFO sqlalchemy.engine.Engine ROLLBACK
+Status POST: 404
+Body POST: {"detail":"Seller not found"}

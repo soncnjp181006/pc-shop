@@ -212,6 +212,9 @@ const ProductDetailPage = () => {
               <div className="price-tag">
                 {(selectedVariant?.price_override || product.base_price).toLocaleString()} VNĐ
               </div>
+              <div className={`stock-status ${product.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                {product.stock_quantity > 0 ? `Còn hàng: ${product.stock_quantity}` : 'Hết hàng'}
+              </div>
             </header>
 
             <section className="product-description-section">
@@ -268,11 +271,17 @@ const ProductDetailPage = () => {
                 <button 
                   className="btn-add-cart" 
                   onClick={handleAddToCart}
-                  disabled={addingToCart}
+                  disabled={addingToCart || (product.stock_quantity <= 0 && (!selectedVariant || selectedVariant.stock_quantity <= 0))}
                 >
                   {addingToCart ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
                 </button>
-                <button className="btn-buy-now">Mua ngay</button>
+                <button 
+                  className="btn-buy-now"
+                  disabled={(product.stock_quantity <= 0 && (!selectedVariant || selectedVariant.stock_quantity <= 0))}
+                  onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
+                >
+                  Mua ngay
+                </button>
               </div>
             </div>
 
@@ -281,7 +290,7 @@ const ProductDetailPage = () => {
                 <strong>SKU:</strong> {selectedVariant?.sku || 'N/A'}
               </div>
               <div className="meta-item">
-                <strong>Tình trạng:</strong> {selectedVariant?.stock_quantity > 0 ? 'Còn hàng' : 'Hết hàng'}
+                <strong>Tình trạng:</strong> {(selectedVariant?.stock_quantity ?? product.stock_quantity) > 0 ? 'Còn hàng' : 'Hết hàng'}
               </div>
               <div className="meta-item">
                 <strong>Vận chuyển:</strong> Miễn phí nội thành

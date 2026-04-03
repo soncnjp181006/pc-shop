@@ -18,6 +18,7 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     image_url = Column(String(500), nullable=True)  # Link ảnh sản phẩm (Drive, v.v.)
+    stock_quantity = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
