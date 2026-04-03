@@ -95,28 +95,15 @@ const ProductListPage = () => {
   return (
     <div className="product-list-page">
       <aside className="sidebar-fixed glass-panel">
-        <div className="sidebar-section">
-          <h3>Tìm kiếm</h3>
-          <div className="search-input-wrapper">
-            <input
-              type="text"
-              name="q"
-              value={filters.q}
-              onChange={handleFilterChange}
-              placeholder="Nhập tên sản phẩm..."
-            />
-            <span className="search-icon">🔍</span>
-          </div>
-        </div>
-
-        <div className="sidebar-section">
-          <h3>Truy cập nhanh</h3>
+        <div className="sidebar-group">
+          <h3 className="group-label">Khám phá nhanh</h3>
           <div className="quick-cat-grid">
             {quickCategories.map(cat => (
               <button 
                 key={cat.id}
-                className={`quick-cat-item glass-panel ${filters.q.toLowerCase().includes(cat.id) ? 'active' : ''}`}
+                className={`quick-cat-item ${filters.q.toLowerCase().includes(cat.id) ? 'active' : ''}`}
                 onClick={() => handleFilterChange({ target: { name: 'q', value: cat.name } })}
+                title={cat.name}
               >
                 <span className="quick-cat-icon">{cat.icon}</span>
                 <span className="quick-cat-name">{cat.name}</span>
@@ -125,8 +112,8 @@ const ProductListPage = () => {
           </div>
         </div>
 
-        <div className="sidebar-section">
-          <h3>Danh mục</h3>
+        <div className="sidebar-group">
+          <h3 className="group-label">Danh mục</h3>
           <div className="category-list">
             <button 
               className={`category-item ${filters.category_id === '' ? 'active' : ''}`}
@@ -146,84 +133,88 @@ const ProductListPage = () => {
           </div>
         </div>
 
-        <div className="sidebar-section hover-popover">
-          <div className="section-header">
-            <h3>Thương hiệu</h3>
-            <span className="selected-value">{filters.brand || 'Tất cả'}</span>
-          </div>
-          <div className="popover-content glass-panel">
-            <div className="brand-grid">
-              <label className="brand-option">
-                <input 
-                  type="radio" 
-                  name="brand" 
-                  value="" 
-                  checked={filters.brand === ''}
-                  onChange={handleFilterChange}
-                />
-                <span>Tất cả</span>
-              </label>
-              {brands.map(brand => (
-                <label key={brand} className="brand-option">
+        <div className="sidebar-group filter-group">
+          <h3 className="group-label">Bộ lọc chi tiết</h3>
+          
+          <div className="sidebar-section hover-popover">
+            <div className="section-header">
+              <span className="section-title">Thương hiệu</span>
+              <span className="selected-value">{filters.brand || 'Tất cả'}</span>
+            </div>
+            <div className="popover-content glass-panel">
+              <div className="brand-grid">
+                <label className="brand-option">
                   <input 
                     type="radio" 
                     name="brand" 
-                    value={brand} 
-                    checked={filters.brand === brand}
+                    value="" 
+                    checked={filters.brand === ''}
                     onChange={handleFilterChange}
                   />
-                  <span>{brand}</span>
+                  <span>Tất cả</span>
                 </label>
-              ))}
+                {brands.map(brand => (
+                  <label key={brand} className="brand-option">
+                    <input 
+                      type="radio" 
+                      name="brand" 
+                      value={brand} 
+                      checked={filters.brand === brand}
+                      onChange={handleFilterChange}
+                    />
+                    <span>{brand}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="sidebar-section hover-popover">
-          <div className="section-header">
-            <h3>Khoảng giá (VNĐ)</h3>
-            <span className="selected-value">
-              {filters.min_price || filters.max_price 
-                ? `${Number(filters.min_price || 0).toLocaleString()} - ${filters.max_price ? Number(filters.max_price).toLocaleString() : '...'}`
-                : 'Tất cả'}
-            </span>
-          </div>
-          <div className="popover-content glass-panel">
-            <div className="price-inputs">
-              <input
-                type="number"
-                name="min_price"
-                value={filters.min_price}
-                onChange={handleFilterChange}
-                placeholder="Từ"
-              />
-              <span className="separator"></span>
-              <input
-                type="number"
-                name="max_price"
-                value={filters.max_price}
-                onChange={handleFilterChange}
-                placeholder="Đến"
-              />
+          <div className="sidebar-section hover-popover">
+            <div className="section-header">
+              <span className="section-title">Khoảng giá (VNĐ)</span>
+              <span className="selected-value">
+                {filters.min_price || filters.max_price 
+                  ? `${Number(filters.min_price || 0).toLocaleString()} - ${filters.max_price ? Number(filters.max_price).toLocaleString() : '...'}`
+                  : 'Tất cả'}
+              </span>
+            </div>
+            <div className="popover-content glass-panel">
+              <div className="price-inputs">
+                <input
+                  type="number"
+                  name="min_price"
+                  value={filters.min_price}
+                  onChange={handleFilterChange}
+                  placeholder="Từ"
+                />
+                <span className="separator"></span>
+                <input
+                  type="number"
+                  name="max_price"
+                  value={filters.max_price}
+                  onChange={handleFilterChange}
+                  placeholder="Đến"
+                />
+              </div>
             </div>
           </div>
+
+          <div className="sidebar-section">
+            <label className="checkbox-filter">
+              <input 
+                type="checkbox" 
+                name="in_stock" 
+                checked={filters.in_stock}
+                onChange={handleFilterChange}
+              />
+              <span className="checkmark"></span>
+              Sản phẩm còn hàng
+            </label>
+          </div>
         </div>
 
-        <div className="sidebar-section">
-          <label className="checkbox-filter">
-            <input 
-              type="checkbox" 
-              name="in_stock" 
-              checked={filters.in_stock}
-              onChange={handleFilterChange}
-            />
-            <span className="checkmark"></span>
-            Còn hàng
-          </label>
-        </div>
-
-        <button className="btn-clear-modern" onClick={clearFilters}>
-          Làm mới bộ lọc
+        <button className="btn-clear-sidebar" onClick={clearFilters}>
+          Xóa tất cả bộ lọc
         </button>
       </aside>
 
