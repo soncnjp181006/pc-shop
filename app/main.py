@@ -24,6 +24,10 @@ app.include_router(auth)
 from app.api.deps import user
 app.include_router(user)
 
+# endpoint admin
+from app.api.deps import admin
+app.include_router(admin)
+
 
 if __name__ == "__main__":
     import uvicorn

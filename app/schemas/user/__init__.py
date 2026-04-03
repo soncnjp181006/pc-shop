@@ -4,6 +4,7 @@ from ..user.user_out import UserOut
 from ..user.token_out import TokenOut
 from ..user.user_login import UserLogin
 from ..user.refresh_token import RefreshToken, RefreshTokenResponse
+from ..user.user_role_update import UserRoleUpdate
 
 __all__ = [
     'UserCreate',
@@ -12,5 +13,6 @@ __all__ = [
     'UserLogin',
     'TokenOut',
     'RefreshToken',
-    'RefreshTokenResponse'
+    'RefreshTokenResponse',
+    'UserRoleUpdate'
 ]
