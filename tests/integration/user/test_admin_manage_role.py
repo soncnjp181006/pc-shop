@@ -36,6 +36,8 @@ def test_admin_update_user_role_success(client, registered_user, db_session: Ses
         "/api/v1/auth/login",
         data={"username": "admin@example.com", "password": "AdminPassword123!"}
     )
+    assert "role" in login_response.json()
+    assert login_response.json()["role"] == UserRole.ADMIN.value
     admin_token = login_response.json()["access_token"]
 
     # 3. ADMIN gọi API cập nhật role cho user_to_update thành SELLER

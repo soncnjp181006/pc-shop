@@ -92,6 +92,9 @@ def test_login_success(client, registered_user):
 
     body = response.json()
     assert "access_token" in body
+    assert "refresh_token" in body
+    assert "role" in body
+    assert body["role"] == "CUSTOMER"
     assert body["token_type"] == "bearer"
 
     # Decode token để kiểm tra payload bên trong

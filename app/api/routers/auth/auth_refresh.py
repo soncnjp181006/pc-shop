@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.user import RefreshToken, TokenOut
 from app.security import decode_token, create_access_token, create_refresh_token
+from app.services.user_service import get_user_by_id
 from jose import JWTError, ExpiredSignatureError
 
 router = APIRouter()
@@ -31,6 +32,15 @@ def refresh_token(
                 detail="Invalid refresh token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
+        # Lấy thông tin user để trả về role
+        user = get_user_by_id(db=db, user_id=int(user_id))
+        if not user:
+             raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
             
         # Tạo cặp token mới
         new_access_token = create_access_token(user_id=int(user_id))
@@ -38,7 +48,8 @@ def refresh_token(
         
         return TokenOut(
             access_token=new_access_token,
-            refresh_token=new_refresh_token
+            refresh_token=new_refresh_token,
+            role=user.role
         )
         
     except ExpiredSignatureError:

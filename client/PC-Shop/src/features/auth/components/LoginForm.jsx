@@ -42,9 +42,14 @@ const LoginForm = ({ toggleMode }) => {
       console.log('Đăng nhập thành công:', data);
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('user_role', data.role);
       
-      // Chuyển hướng sang trang chủ sau khi login thành công
-      navigate('/home');
+      // Chuyển hướng dựa trên Role
+      if (data.role === 'ADMIN' || data.role === 'SELLER') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
       
     } catch (err) {
       console.error('Lỗi login:', err);
