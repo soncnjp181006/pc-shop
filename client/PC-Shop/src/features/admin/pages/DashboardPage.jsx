@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
-import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square } from 'lucide-react';
+import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square, X } from 'lucide-react';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -221,9 +221,9 @@ const DashboardPage = () => {
     if (loading && products.length === 0) {
       return (
         <tr>
-          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+          <td colSpan="9" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
             <div className="loader" style={{ margin: '0 auto' }}></div>
-            <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>Đang tải dữ liệu sản phẩm...</p>
+            <p style={{ marginTop: '20px', color: 'var(--admin-text-secondary-dark)' }}>Đang tải dữ liệu sản phẩm...</p>
           </td>
         </tr>
       );
@@ -233,8 +233,8 @@ const DashboardPage = () => {
     if (!loading && products.length === 0) {
       return (
         <tr>
-          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+          <td colSpan="9" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+            <div style={{ color: 'var(--admin-text-secondary-dark)', fontSize: '1.1rem' }}>
               {productSearch.trim() ? 'Không tìm thấy sản phẩm nào khớp với từ khóa.' : 'Danh sách sản phẩm hiện đang trống.'}
             </div>
           </td>
@@ -252,9 +252,9 @@ const DashboardPage = () => {
                 e.stopPropagation();
                 toggleSelectProduct(p.id);
               }} 
-              style={{ background: 'none', border: 'none', color: isSelected ? '#0071e3' : 'inherit', padding: 0, cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', color: isSelected ? 'var(--admin-accent)' : 'inherit', padding: 0, cursor: 'pointer' }}
             >
-              {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
+              {isSelected ? <CheckSquare size={20} /> : <Square size={20} />}
             </button>
           </td>
           <td>
@@ -263,63 +263,57 @@ const DashboardPage = () => {
           <td title={p.name}>
             <div className="table-product-info">
               <strong>{p.name}</strong>
-              <span>ID: {p.id} | Slug: {p.slug}</span>
+              <span>ID: {p.id} | {p.category_name || 'Không có danh mục'}</span>
+              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>Slug: {p.slug}</span>
             </div>
           </td>
           <td>
             <span className="admin-chip small">{p.brand || '—'}</span>
           </td>
           <td>
-            <span className="admin-chip small info" style={{ fontSize: '0.7rem' }}>{p.product_condition || '—'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span className="admin-chip small info">{p.product_condition || 'Mới'}</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--admin-text-secondary-dark)' }}>{p.origin || 'Chính hãng'}</span>
+            </div>
           </td>
           <td>
-            <span className="admin-chip small success" style={{ fontSize: '0.7rem' }}>{p.origin || '—'}</span>
+            <strong style={{ color: 'var(--admin-accent)', fontSize: '1.1rem' }}>{p.base_price.toLocaleString()}</strong>
+            <span style={{ fontSize: '0.7rem', marginLeft: '4px', opacity: 0.8 }}>₫</span>
           </td>
-          <td title={p.category_name || 'N/A'}>{p.category_name || 'N/A'}</td>
-          <td>{p.base_price.toLocaleString()} ₫</td>
           <td>
             <span className={`admin-chip small ${p.stock_quantity > 0 ? 'success' : 'danger'}`}>
               {p.stock_quantity}
             </span>
           </td>
           <td>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-              <select
-                className={`admin-select small ${p.is_active ? 'success' : 'danger'}`}
-                style={{ 
-                  padding: '4px 28px 4px 12px', 
-                  fontSize: '0.75rem', 
-                  borderRadius: '20px',
-                  border: 'none',
-                  backgroundPosition: 'right 8px center',
-                  color: p.is_active ? '#34c759' : '#ff3b30',
-                  backgroundColor: p.is_active ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)',
-                  fontWeight: '700'
-                }}
-                value={p.is_active ? 'true' : 'false'}
-                onChange={() => handleToggleProductActive(p)}
-              >
-                <option value="true">Đang bán</option>
-                <option value="false">Ngừng bán</option>
-              </select>
-            </div>
+            <select
+              className={`admin-select small ${p.is_active ? 'success' : 'danger'}`}
+              style={{ 
+                border: 'none',
+                color: p.is_active ? 'var(--admin-success)' : 'var(--admin-danger)',
+                backgroundColor: p.is_active ? 'rgba(52, 199, 89, 0.12)' : 'rgba(255, 59, 48, 0.12)',
+                fontWeight: '800'
+              }}
+              value={p.is_active ? 'true' : 'false'}
+              onChange={() => handleToggleProductActive(p)}
+            >
+              <option value="true">Đang bán</option>
+              <option value="false">Ngừng bán</option>
+            </select>
           </td>
           <td>
             <div className="table-actions">
               <button 
                 className="btn-variants" 
-                title="Biến thể"
+                title="Biến thể sản phẩm"
                 onClick={() => handleShowVariants(p)}
-              ><Diamond size={16} /></button>
-              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={16} /></button>
-              <button className="btn-toggle" title={p.is_active ? 'Ngừng bán' : 'Cho phép bán'} onClick={() => handleToggleProductActive(p)}>
-                {p.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              ><Diamond size={18} /></button>
+              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={18} /></button>
               <button 
                 className="btn-delete" 
-                title="Xóa"
+                title="Xóa sản phẩm"
                 onClick={() => handleDeleteProduct(p.id)}
-              ><Trash2 size={16} /></button>
+              ><Trash2 size={18} /></button>
             </div>
           </td>
         </tr>
@@ -963,12 +957,12 @@ const DashboardPage = () => {
 
   return (
     <div className="admin-dashboard">
-      <aside className={`admin-sidebar glass-panel ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <aside className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="admin-logo-section">
           <img src="/hero.png" alt="PC SHOP" className="admin-logo" />
           <div className="admin-logo-text">
             <span>PC SHOP</span>
-            <strong>ADMIN PORTAL</strong>
+            <strong>QUẢN TRỊ VIÊN</strong>
           </div>
         </div>
 
@@ -976,75 +970,71 @@ const DashboardPage = () => {
           <button 
             className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
-            title={isSidebarCollapsed ? 'Tổng quan' : ''}
           >
-            <span className="nav-icon"><BarChart2 size={18} /></span>
+            <span className="nav-icon"><BarChart2 size={20} /></span>
             <span>Tổng quan</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
-            title={isSidebarCollapsed ? 'Quản lý sản phẩm' : ''}
           >
-            <span className="nav-icon"><Package size={18} /></span>
-            <span>Quản lý sản phẩm</span>
+            <span className="nav-icon"><Package size={20} /></span>
+            <span>Kho hàng</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
-            title={isSidebarCollapsed ? 'Danh mục hệ thống' : ''}
           >
-            <span className="nav-icon"><Folder size={18} /></span>
-            <span>Danh mục hệ thống</span>
+            <span className="nav-icon"><Folder size={20} /></span>
+            <span>Danh mục</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
-            title={isSidebarCollapsed ? 'Người dùng & Seller' : ''}
           >
-            <span className="nav-icon"><Users size={18} /></span>
-            <span>Người dùng & Seller</span>
+            <span className="nav-icon"><Users size={20} /></span>
+            <span>Người dùng</span>
           </button>
         </nav>
 
         <div className="admin-sidebar-footer">
-          <div className="admin-user-card glass-panel">
+          <div className="admin-user-card">
             <div className="user-avatar">{user.username.charAt(0).toUpperCase()}</div>
             <div className="user-details">
               <strong>{user.username}</strong>
-              <span>{user.role}</span>
+              <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>{user.role}</span>
             </div>
           </div>
           <button onClick={handleLogout} className="admin-logout-btn">
-            <span className="nav-icon"><Unlock size={16} /></span>
+            <span className="nav-icon"><Unlock size={18} /></span>
             <span>Đăng xuất</span>
           </button>
         </div>
       </aside>
 
       <main className={`admin-main ${isSidebarCollapsed ? 'expanded' : ''}`}>
-        <header className="admin-header admin-header-sticky animate-fade-in">
-          <div className="header-info" style={{ display: 'flex', alignItems: 'center' }}>
-            <button className="sidebar-toggle-btn" onClick={toggleSidebar} title={isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}>
+        <header className="admin-header-sticky animate-fade-in">
+          <div className="header-info">
+            <button className="sidebar-toggle-btn" onClick={toggleSidebar}>
               {isSidebarCollapsed ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
             <div>
               <h1>{activeTab === 'overview' ? 'Bảng điều khiển' : 
                    activeTab === 'products' ? 'Quản lý kho hàng' : 
-                   activeTab === 'categories' ? 'Cấu trúc danh mục' : 'Quản trị hệ thống'}</h1>
-              <p>Chào mừng trở lại, {user.username}!</p>
+                   activeTab === 'categories' ? 'Cấu trúc danh mục' : 'Người dùng & Quyền'}</h1>
+              <p>Hệ thống quản lý PC Shop - Apple Design Style</p>
             </div>
           </div>
           <div className="header-actions">
-            <button className="admin-theme-toggle" onClick={toggleTheme} title="Đổi giao diện Sáng/Tối">
+            <button className="admin-theme-toggle" onClick={toggleTheme}>
               {isDarkMode ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
               )}
             </button>
             <button className="btn-view-shop" onClick={() => navigate('/home')}>
-              <span><Eye size={16} /></span> Xem shop
+              <Eye size={18} /> Xem cửa hàng
             </button>
           </div>
         </header>
@@ -1053,63 +1043,58 @@ const DashboardPage = () => {
           {activeTab === 'overview' && (
             <div className="overview-tab">
               <div className="stats-grid">
-                <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon products-icon"><Package size={24} /></div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon products-icon"><Package size={28} /></div>
                   <div className="stat-info">
                     <h3>Sản phẩm</h3>
                     <p>{overviewStats.products.toLocaleString()}</p>
-                    <span className="stat-trend up">Tổng sản phẩm</span>
+                    <span className="stat-trend up">Sẵn sàng bán</span>
                   </div>
                 </div>
-                <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon users-icon"><Users size={24} /></div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon users-icon"><Users size={28} /></div>
                   <div className="stat-info">
-                    <h3>Người dùng</h3>
+                    <h3>Khách hàng</h3>
                     <p>{overviewStats.users.toLocaleString()}</p>
-                    <span className="stat-trend up">Tổng người dùng</span>
+                    <span className="stat-trend up">Thành viên hệ thống</span>
                   </div>
                 </div>
-                <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon orders-icon"><Folder size={24} /></div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon orders-icon"><Folder size={28} /></div>
                   <div className="stat-info">
                     <h3>Danh mục</h3>
                     <p>{overviewStats.categories.toLocaleString()}</p>
-                    <span className="stat-trend up">Tổng danh mục</span>
+                    <span className="stat-trend up">Đã phân loại</span>
                   </div>
                 </div>
-                <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon revenue-icon"><DollarSign size={24} /></div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon revenue-icon"><DollarSign size={28} /></div>
                   <div className="stat-info">
-                    <h3>Doanh thu</h3>
+                    <h3>Ước tính</h3>
                     <p>—</p>
-                    <span className="stat-trend">Chưa tích hợp</span>
+                    <span className="stat-trend" style={{ background: 'rgba(255,255,255,0.05)' }}>Chưa kích hoạt</span>
                   </div>
                 </div>
               </div>
 
-              <div className="recent-activity-section glass-panel">
-                <h2>Hoạt động gần đây</h2>
-                <div className="activity-list">
-                  <div className="activity-item">
-                    <div className="activity-indicator add"></div>
-                    <div className="activity-desc">
-                      <strong>Thêm sản phẩm mới</strong>: RTX 5090 Ti đã được cập nhật vào kho.
-                      <span>15 phút trước</span>
+              <div className="glass-panel animate-fade-in" style={{ padding: '40px' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px' }}>Hoạt động hệ thống</h2>
+                <div className="activity-list" style={{ background: 'transparent', padding: 0 }}>
+                  <div className="cat-node-content" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="stat-icon products-icon" style={{ width: '40px', height: '40px', fontSize: '1rem' }}><Package size={18} /></div>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: 'block' }}>Cập nhật kho hàng</strong>
+                      <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Sản phẩm "MacBook Pro M3" vừa được cập nhật số lượng tồn kho.</span>
                     </div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>10 phút trước</span>
                   </div>
-                  <div className="activity-item">
-                    <div className="activity-indicator update"></div>
-                    <div className="activity-desc">
-                      <strong>Cập nhật tồn kho</strong>: 15 màn hình Dell UltraSharp vừa được nhập kho.
-                      <span>1 giờ trước</span>
+                  <div className="cat-node-content" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="stat-icon users-icon" style={{ width: '40px', height: '40px', fontSize: '1rem' }}><Users size={18} /></div>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: 'block' }}>Người dùng mới</strong>
+                      <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Một tài khoản khách hàng mới vừa đăng ký thành công.</span>
                     </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="activity-indicator user"></div>
-                    <div className="activity-desc">
-                      <strong>Người dùng mới</strong>: Nguyen Van A vừa đăng ký tài khoản.
-                      <span>2 giờ trước</span>
-                    </div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>1 giờ trước</span>
                   </div>
                 </div>
               </div>
@@ -1118,16 +1103,16 @@ const DashboardPage = () => {
 
           {activeTab === 'products' && (
             <div className="management-tab">
-              {/* Cấu hình danh sách */}
-              <div className="admin-config-section glass-panel animate-fade-in" style={{ marginBottom: '24px', padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showConfigPanel ? '20px' : '0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: 'var(--accent-gradient)', width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                      <FileText size={20} />
+              {/* Ô cấu hình to, hiện đại */}
+              <div className="admin-config-section glass-panel animate-fade-in">
+                <div className="config-header">
+                  <div className="config-title">
+                    <div className="config-icon-box">
+                      <FileText size={24} />
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Cấu hình danh mục nhanh</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Quản lý danh sách Hãng sản xuất và Trạng thái hiển thị trong form</p>
+                      <h3>Cấu hình Danh mục & Hãng</h3>
+                      <p>Quản lý các tùy chọn nhanh cho sản phẩm (Hãng, Trạng thái, Loại hàng, Nguồn gốc)</p>
                     </div>
                   </div>
                   <button 
@@ -1137,84 +1122,75 @@ const DashboardPage = () => {
                       if (!showConfigPanel) setTempConfig(configData);
                     }}
                   >
-                    {showConfigPanel ? 'Đóng cấu hình' : 'Mở cấu hình'}
+                    {showConfigPanel ? 'Đóng cấu hình' : 'Mở bảng điều khiển'}
                   </button>
                 </div>
 
                 {showConfigPanel && (
-                  <div className="config-grid animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+                  <div className="config-grid animate-fade-in">
                     <div className="form-group">
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <Diamond size={16} /> Hãng sản xuất
-                      </label>
+                      <label><Diamond size={14} /> Hãng sản xuất</label>
                       <textarea
-                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.brands}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, brands: e.target.value }))}
                         placeholder="ASUS&#10;MSI..."
+                        rows="6"
                       />
                     </div>
                     <div className="form-group">
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <CheckSquare size={16} /> Tình trạng kinh doanh
-                      </label>
+                      <label><CheckSquare size={14} /> Trạng thái kinh doanh</label>
                       <textarea
-                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.statuses}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, statuses: e.target.value }))}
                         placeholder="Đang kinh doanh..."
+                        rows="6"
                       />
                     </div>
                     <div className="form-group">
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <Package size={16} /> Loại hàng (Mới/Cũ)
-                      </label>
+                      <label><Package size={14} /> Loại hàng (Mới/Cũ)</label>
                       <textarea
-                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.conditions}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, conditions: e.target.value }))}
                         placeholder="Mới 100%&#10;Cũ..."
+                        rows="6"
                       />
                     </div>
                     <div className="form-group">
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <Users size={16} /> Nguồn gốc / Bảo hành
-                      </label>
+                      <label><Users size={14} /> Nguồn gốc / Bảo hành</label>
                       <textarea
-                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.origins}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, origins: e.target.value }))}
                         placeholder="Chính hãng&#10;Xách tay..."
+                        rows="6"
                       />
                     </div>
-                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginTop: '10px' }}>
-                      <button className="btn-view-shop" style={{ marginRight: 'auto' }} onClick={resetConfigToDefault}>Mặc định</button>
+                    <div className="modal-footer" style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+                      <button className="btn-page" style={{ marginRight: 'auto' }} onClick={resetConfigToDefault}>Mặc định</button>
                       <button className="btn-cancel" onClick={() => setShowConfigPanel(false)}>Hủy</button>
-                      <button className="btn-submit" onClick={handleSaveConfig}>Lưu cấu hình</button>
+                      <button className="btn-add-new" onClick={handleSaveConfig}>Lưu cấu hình hệ thống</button>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="table-header-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
-                <div className="table-top-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                  <div className="search-box glass-panel" style={{ flex: '1', maxWidth: '500px', margin: 0 }}>
+              <div className="table-header-container">
+                <div className="table-top-actions">
+                  <div className="search-box glass-panel">
                     <input
                       type="text"
-                      placeholder="Tìm tên, SKU, ID..."
+                      placeholder="Tìm kiếm theo tên, hãng hoặc ID sản phẩm..."
                       value={productSearch}
                       onChange={(e) => {
                         setProductSearch(e.target.value);
                         setProductPaging((prev) => ({ ...prev, page: 1 }));
                       }}
-                      style={{ padding: '12px 20px', fontSize: '0.95rem' }}
                     />
                   </div>
                   <div className="header-button-group" style={{ display: 'flex', gap: '12px' }}>
                     <button
                       className="btn-view-shop"
                       onClick={handleExportCSV}
-                      title="Xuất CSV"
+                      title="Xuất dữ liệu Excel"
                     >
                       <Download size={18} /> <span>Xuất Excel</span>
                     </button>
@@ -1222,27 +1198,26 @@ const DashboardPage = () => {
                       className="btn-add-new"
                       onClick={openCreateProductModal}
                     >
-                      + Thêm sản phẩm
+                      + Thêm sản phẩm mới
                     </button>
                   </div>
                 </div>
 
                 <div className={`bulk-actions-wrapper ${selectedProductIds.length > 0 ? 'active' : ''}`}>
-                  {selectedProductIds.length > 0 && (
-                    <div className="bulk-actions-toolbar glass-panel animate-fade-in">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <strong style={{ color: '#0071e3' }}>Đã chọn {selectedProductIds.length} mục</strong>
-                        <div style={{ height: '20px', width: '1px', background: 'rgba(0, 113, 227, 0.2)' }}></div>
-                        <button className="btn-small" onClick={() => handleBulkToggleStatus(true)} style={{ color: '#34c759' }}>Hiện tất cả</button>
-                        <button className="btn-small" onClick={() => handleBulkToggleStatus(false)} style={{ color: '#ff3b30' }}>Ẩn tất cả</button>
-                      </div>
-                      <button className="btn-small danger" onClick={handleBulkDelete}>Xóa {selectedProductIds.length} mục</button>
+                  <div className="bulk-actions-toolbar glass-panel animate-fade-in">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                      <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>{selectedProductIds.length}</div>
+                      <strong style={{ fontSize: '1rem' }}>Sản phẩm đã chọn</strong>
+                      <div style={{ height: '24px', width: '1px', background: 'var(--admin-border-dark)' }}></div>
+                      <button className="btn-page" style={{ padding: '6px 16px', fontSize: '0.8rem' }} onClick={() => handleBulkToggleStatus(true)}>Hiện tất cả</button>
+                      <button className="btn-page" style={{ padding: '6px 16px', fontSize: '0.8rem' }} onClick={() => handleBulkToggleStatus(false)}>Ẩn tất cả</button>
                     </div>
-                  )}
+                    <button className="btn-logout-btn" style={{ padding: '8px 20px', fontSize: '0.85rem' }} onClick={handleBulkDelete}>Xóa vĩnh viễn {selectedProductIds.length} mục</button>
+                  </div>
                 </div>
 
-                <div className="table-filters glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 24px' }}>
-                  <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '12px', marginBottom: 0}}>
+                <div className="table-filters glass-panel">
+                  <div className="admin-toolbar">
                     <select
                       className="admin-select"
                       value={productPaging.category_id || ''}
@@ -1261,7 +1236,7 @@ const DashboardPage = () => {
                       value={productPaging.brand || ''}
                       onChange={(e) => setProductPaging((prev) => ({ ...prev, brand: e.target.value, page: 1 }))}
                     >
-                      <option value="">Tất cả hãng</option>
+                      <option value="">Hãng sản xuất</option>
                       {brandsList.map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}
@@ -1272,20 +1247,9 @@ const DashboardPage = () => {
                       value={productPaging.product_condition || ''}
                       onChange={(e) => setProductPaging((prev) => ({ ...prev, product_condition: e.target.value, page: 1 }))}
                     >
-                      <option value="">Tất cả loại hàng</option>
+                      <option value="">Loại hàng</option>
                       {conditionsList.map(c => (
                         <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-
-                    <select
-                      className="admin-select"
-                      value={productPaging.origin || ''}
-                      onChange={(e) => setProductPaging((prev) => ({ ...prev, origin: e.target.value, page: 1 }))}
-                    >
-                      <option value="">Tất cả nguồn gốc</option>
-                      {originsList.map(o => (
-                        <option key={o} value={o}>{o}</option>
                       ))}
                     </select>
 
@@ -1294,9 +1258,9 @@ const DashboardPage = () => {
                       value={productPaging.in_stock || ''}
                       onChange={(e) => setProductPaging((prev) => ({ ...prev, in_stock: e.target.value, page: 1 }))}
                     >
-                      <option value="">Tình trạng kho</option>
-                      <option value="true">Còn hàng (&gt;0)</option>
-                      <option value="false">Hết hàng (0)</option>
+                      <option value="">Tồn kho</option>
+                      <option value="true">Còn hàng</option>
+                      <option value="false">Hết hàng</option>
                     </select>
 
                     <select
@@ -1305,24 +1269,13 @@ const DashboardPage = () => {
                       onChange={(e) => setProductPaging((prev) => ({ ...prev, sort: e.target.value, page: 1 }))}
                     >
                       <option value="newest">Mới nhất</option>
-                      <option value="price_asc">Giá tăng dần</option>
-                      <option value="price_desc">Giá giảm dần</option>
-                      <option value="name_asc">Tên (A-Z)</option>
-                    </select>
-
-                    <select
-                      className="admin-select"
-                      value={productPaging.status}
-                      onChange={(e) => setProductPaging((prev) => ({ ...prev, status: e.target.value, page: 1 }))}
-                    >
-                      <option value="all">Tất cả trạng thái</option>
-                      <option value="active">Đang bán</option>
-                      <option value="inactive">Ngừng bán</option>
+                      <option value="price_asc">Giá tăng</option>
+                      <option value="price_desc">Giá giảm</option>
                     </select>
                   </div>
                   
                   <div className="admin-chips">
-                    <span className="admin-chip info" style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3', borderColor: 'rgba(0, 113, 227, 0.2)' }}>Tổng cộng: {productPaging.total}</span>
+                    <span className="admin-chip info">Tổng {productPaging.total} sản phẩm</span>
                     <span className="admin-chip">Trang {productPaging.page}/{productPaging.pages}</span>
                   </div>
                 </div>
@@ -1332,21 +1285,19 @@ const DashboardPage = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '40px' }}>
-                        <button onClick={toggleSelectAll} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
-                          {selectedProductIds.length === products.length && products.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                      <th style={{ width: '60px' }}>
+                        <button onClick={toggleSelectAll} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, cursor: 'pointer' }}>
+                          {selectedProductIds.length === products.length && products.length > 0 ? <CheckSquare size={20} color="var(--admin-accent)" /> : <Square size={20} />}
                         </button>
                       </th>
-                      <th>Ảnh</th>
-                      <th>Sản phẩm</th>
-                      <th>Hãng</th>
-                      <th>Loại hàng</th>
-                      <th>Nguồn gốc</th>
-                      <th>Danh mục</th>
-                      <th>Giá cơ bản</th>
-                      <th>Kho</th>
-                      <th>Trạng thái</th>
-                      <th>Hành động</th>
+                      <th style={{ width: '100px' }}>Ảnh</th>
+                      <th>Thông tin sản phẩm</th>
+                      <th style={{ width: '140px' }}>Hãng</th>
+                      <th style={{ width: '140px' }}>Loại hàng</th>
+                      <th style={{ width: '180px' }}>Giá cơ bản</th>
+                      <th style={{ width: '100px' }}>Kho</th>
+                      <th style={{ width: '150px' }}>Trạng thái</th>
+                      <th style={{ width: '180px' }}>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1361,17 +1312,17 @@ const DashboardPage = () => {
                   disabled={productPaging.page <= 1 || loading}
                   onClick={() => setProductPaging((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                 >
-                  Trước
+                  ← Trước
                 </button>
-                <span className="page-meta">
-                  Trang {productPaging.page} / {productPaging.pages}
-                </span>
+                <div className="admin-chips">
+                   <span className="admin-chip">Trang <strong>{productPaging.page}</strong> / {productPaging.pages}</span>
+                </div>
                 <button
                   className="btn-page"
                   disabled={productPaging.page >= productPaging.pages || loading}
                   onClick={() => setProductPaging((prev) => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
                 >
-                  Sau
+                  Sau →
                 </button>
               </div>
             </div>
@@ -1379,39 +1330,50 @@ const DashboardPage = () => {
 
           {activeTab === 'categories' && (
             <div className="management-tab">
-              <div className="table-header-actions">
-                <div className="search-box glass-panel">
-                  <input
-                    type="text"
-                    placeholder="Tìm danh mục..."
-                    value={categorySearch}
-                    onChange={(e) => setCategorySearch(e.target.value)}
-                  />
+              <div className="table-header-container">
+                <div className="table-top-actions">
+                  <div className="search-box glass-panel">
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm danh mục nhanh..."
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    className="btn-add-new"
+                    onClick={openCreateCategoryModal}
+                  >
+                    + Thêm danh mục mới
+                  </button>
                 </div>
-                <button
-                  className="btn-add-new"
-                  onClick={openCreateCategoryModal}
-                >
-                  + Thêm danh mục
-                </button>
               </div>
-              <div className="category-tree-container glass-panel">
+
+              <div className="glass-panel animate-fade-in" style={{ padding: '40px' }}>
                 {loading ? (
-                  <p className="text-center">Đang tải...</p>
+                  <div className="text-center" style={{ padding: '60px' }}>
+                    <div className="loader" style={{ margin: '0 auto' }}></div>
+                    <p style={{ marginTop: '20px', color: 'var(--admin-text-secondary-dark)' }}>Đang tải cấu trúc danh mục...</p>
+                  </div>
                 ) : visibleCategories.length > 0 ? (
                   <div className="cat-tree">
                     {visibleCategories.map(cat => (
                       <div key={cat.id} className="cat-node">
                         <div className="cat-node-content">
-                          <span className="cat-icon"><Folder size={16} /></span>
-                          <strong>{cat.name}</strong>
-                          <div className="cat-actions">
-                            <button className="btn-small" onClick={() => openEditCategoryModal(cat)}>Sửa</button>
-                            <button className="btn-small danger" onClick={() => handleDeleteCategory(cat.id)}>Xóa</button>
+                          <div className="config-icon-box" style={{ width: '40px', height: '40px', background: 'rgba(0,113,227,0.1)', color: 'var(--admin-accent)', boxShadow: 'none' }}>
+                            <Folder size={20} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <strong style={{ fontSize: '1.1rem' }}>{cat.name}</strong>
+                            <span style={{ fontSize: '0.75rem', opacity: 0.6, display: 'block' }}>Slug: {cat.slug} | ID: {cat.id}</span>
+                          </div>
+                          <div className="table-actions">
+                            <button className="btn-edit" onClick={() => openEditCategoryModal(cat)}><Edit size={16} /></button>
+                            <button className="btn-delete" onClick={() => handleDeleteCategory(cat.id)}><Trash2 size={16} /></button>
                           </div>
                         </div>
                         {cat.children && cat.children.length > 0 && (
-                          <div className="cat-children">
+                          <div className="cat-children" style={{ marginLeft: '60px', borderLeft: '2px solid var(--admin-border-dark)', paddingLeft: '24px' }}>
                             {cat.children
                               .filter((sub) => {
                                 if (!categorySearch.trim()) return true;
@@ -1419,11 +1381,15 @@ const DashboardPage = () => {
                               })
                               .map(sub => (
                               <div key={sub.id} className="cat-node sub">
-                                <span className="cat-icon"><FileText size={16} /></span>
-                                {sub.name}
-                                <div className="cat-actions">
-                                  <button className="btn-small" onClick={() => openEditCategoryModal(sub)}>Sửa</button>
-                                  <button className="btn-small danger" onClick={() => handleDeleteCategory(sub.id)}>Xóa</button>
+                                <div className="cat-node-content" style={{ padding: '12px 20px', borderRadius: '16px' }}>
+                                  <FileText size={16} style={{ color: 'var(--admin-text-secondary-dark)' }} />
+                                  <div style={{ flex: 1 }}>
+                                    <span style={{ fontWeight: 600 }}>{sub.name}</span>
+                                  </div>
+                                  <div className="table-actions">
+                                    <button className="btn-edit" style={{ width: '32px', height: '32px' }} onClick={() => openEditCategoryModal(sub)}><Edit size={14} /></button>
+                                    <button className="btn-delete" style={{ width: '32px', height: '32px' }} onClick={() => handleDeleteCategory(sub.id)}><Trash2 size={14} /></button>
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -1433,9 +1399,12 @@ const DashboardPage = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center">
-                    {categorySearch.trim() ? 'Không có danh mục khớp tìm kiếm.' : 'Không có danh mục nào.'}
-                  </p>
+                  <div className="text-center" style={{ padding: '100px' }}>
+                    <Folder size={48} style={{ opacity: 0.2, marginBottom: '20px' }} />
+                    <p style={{ color: 'var(--admin-text-secondary-dark)' }}>
+                      {categorySearch.trim() ? 'Không tìm thấy danh mục nào phù hợp.' : 'Hệ thống chưa có danh mục nào.'}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1443,45 +1412,47 @@ const DashboardPage = () => {
 
           {activeTab === 'users' && (
             <div className="management-tab">
-              <div className="table-header-actions">
-                <div className="search-box glass-panel">
-                  <input
-                    type="text"
-                    placeholder="Tìm theo username/email..."
-                    value={usersSearch}
-                    onChange={(e) => {
-                      setUsersSearch(e.target.value);
-                      setUsersPaging((prev) => ({ ...prev, page: 1 }));
-                    }}
-                  />
-                </div>
-                <div className="table-actions-right">
-                  <div className="admin-toolbar">
-                    <select
-                      className="admin-select"
-                      value={usersRole}
+              <div className="table-header-container">
+                <div className="table-top-actions">
+                  <div className="search-box glass-panel">
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm người dùng, email..."
+                      value={usersSearch}
                       onChange={(e) => {
-                        setUsersRole(e.target.value);
+                        setUsersSearch(e.target.value);
                         setUsersPaging((prev) => ({ ...prev, page: 1 }));
                       }}
-                    >
-                      <option value="">Tất cả role</option>
-                      <option value="CUSTOMER">CUSTOMER</option>
-                      <option value="SELLER">SELLER</option>
-                      <option value="ADMIN">ADMIN</option>
-                    </select>
-                    <select
-                      className="admin-select"
-                      value={usersActive}
-                      onChange={(e) => {
-                        setUsersActive(e.target.value);
-                        setUsersPaging((prev) => ({ ...prev, page: 1 }));
-                      }}
-                    >
-                      <option value="">Tất cả trạng thái</option>
-                      <option value="true">Đang hoạt động</option>
-                      <option value="false">Bị khóa</option>
-                    </select>
+                    />
+                  </div>
+                  <div className="table-actions-right">
+                    <div className="admin-toolbar">
+                      <select
+                        className="admin-select"
+                        value={usersRole}
+                        onChange={(e) => {
+                          setUsersRole(e.target.value);
+                          setUsersPaging((prev) => ({ ...prev, page: 1 }));
+                        }}
+                      >
+                        <option value="">Tất cả quyền</option>
+                        <option value="CUSTOMER">Khách hàng</option>
+                        <option value="SELLER">Người bán</option>
+                        <option value="ADMIN">Quản trị viên</option>
+                      </select>
+                      <select
+                        className="admin-select"
+                        value={usersActive}
+                        onChange={(e) => {
+                          setUsersActive(e.target.value);
+                          setUsersPaging((prev) => ({ ...prev, page: 1 }));
+                        }}
+                      >
+                        <option value="">Trạng thái</option>
+                        <option value="true">Đang hoạt động</option>
+                        <option value="false">Đã bị khóa</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1490,38 +1461,44 @@ const DashboardPage = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Trạng thái</th>
-                      <th>Hành động</th>
+                      <th style={{ width: '80px' }}>ID</th>
+                      <th>Thông tin thành viên</th>
+                      <th>Email liên hệ</th>
+                      <th style={{ width: '200px' }}>Quyền truy cập</th>
+                      <th style={{ width: '180px' }}>Trạng thái</th>
+                      <th style={{ width: '120px' }}>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loadingUsers ? (
-                      <tr><td colSpan="6" className="text-center">Đang tải dữ liệu...</td></tr>
+                      <tr><td colSpan="6" className="text-center" style={{ height: '300px' }}><div className="loader" style={{ margin: '0 auto' }}></div></td></tr>
                     ) : users.length > 0 ? (
                       users.map((u) => (
                         <tr key={u.id}>
-                          <td>{u.id}</td>
-                          <td><strong>{u.username}</strong></td>
+                          <td><strong>{u.id}</strong></td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div className="user-avatar" style={{ width: '36px', height: '36px', fontSize: '0.8rem' }}>{u.username.charAt(0).toUpperCase()}</div>
+                              <strong>{u.username}</strong>
+                            </div>
+                          </td>
                           <td>{u.email}</td>
                           <td>
                             <select
-                              className="admin-select small"
+                              className={`admin-select small ${u.role === 'ADMIN' ? 'info' : ''}`}
+                              style={{ height: '32px', padding: '0 28px 0 12px', width: '100%', fontSize: '0.8rem' }}
                               value={u.role}
                               disabled={u.id === user.id}
                               onChange={(e) => handleUpdateUserRole(u, e.target.value)}
                             >
-                              <option value="CUSTOMER">CUSTOMER</option>
-                              <option value="SELLER">SELLER</option>
-                              <option value="ADMIN">ADMIN</option>
+                              <option value="CUSTOMER">Khách hàng</option>
+                              <option value="SELLER">Người bán</option>
+                              <option value="ADMIN">Quản trị viên</option>
                             </select>
                           </td>
                           <td>
                             <span className={`status-tag ${u.is_active ? 'active' : 'inactive'}`}>
-                              {u.is_active ? 'Hoạt động' : 'Khóa'}
+                              {u.is_active ? 'Đang hoạt động' : 'Tài khoản bị khóa'}
                             </span>
                           </td>
                           <td>
@@ -1529,10 +1506,10 @@ const DashboardPage = () => {
                               <button
                                 className="btn-toggle"
                                 disabled={u.id === user.id}
-                                title={u.is_active ? 'Khóa user' : 'Mở khóa user'}
+                                title={u.is_active ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                                 onClick={() => handleUpdateUserActive(u, !u.is_active)}
                               >
-                                {u.is_active ? <Lock size={16} /> : <Unlock size={16} />}
+                                {u.is_active ? <Lock size={18} /> : <Unlock size={18} />}
                               </button>
                             </div>
                           </td>
@@ -1540,8 +1517,9 @@ const DashboardPage = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">
-                          {usersSearch.trim() ? 'Không có người dùng khớp tìm kiếm.' : 'Không có người dùng nào.'}
+                        <td colSpan="6" className="text-center" style={{ height: '300px' }}>
+                          <Users size={48} style={{ opacity: 0.2, marginBottom: '20px' }} />
+                          <p style={{ color: 'var(--admin-text-secondary-dark)' }}>Không tìm thấy thành viên nào.</p>
                         </td>
                       </tr>
                     )}
@@ -1555,17 +1533,17 @@ const DashboardPage = () => {
                   disabled={usersPaging.page <= 1 || loadingUsers}
                   onClick={() => setUsersPaging((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                 >
-                  Trước
+                  ← Trước
                 </button>
-                <span className="page-meta">
-                  Trang {usersPaging.page} / {usersPaging.pages}
-                </span>
+                <div className="admin-chips">
+                   <span className="admin-chip">Trang <strong>{usersPaging.page}</strong> / {usersPaging.pages}</span>
+                </div>
                 <button
                   className="btn-page"
                   disabled={usersPaging.page >= usersPaging.pages || loadingUsers}
                   onClick={() => setUsersPaging((prev) => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
                 >
-                  Sau
+                  Sau →
                 </button>
               </div>
             </div>
@@ -1581,20 +1559,20 @@ const DashboardPage = () => {
 
       {confirmDialog.isOpen && (
         <div className="admin-modal-overlay" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} style={{ zIndex: 9999 }}>
-          <div className="admin-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', margin: 'auto' }}>
-            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{confirmDialog.title}</h3>
-              <button className="btn-close" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>✕</button>
+          <div className="admin-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', margin: 'auto' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '8px' }}>
+              <h3>{confirmDialog.title}</h3>
+              <button className="btn-close" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}><X size={20} /></button>
             </div>
-            <div className="modal-content" style={{ paddingTop: '0', paddingBottom: '32px' }}>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.95rem', lineHeight: '1.5' }}>{confirmDialog.message}</p>
-              <div className="modal-footer compact" style={{ borderTop: 'none', paddingTop: '0', marginTop: '0', gap: '12px' }}>
-                <button className="btn-cancel" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>Hủy bỏ</button>
-                <button className="btn-submit" style={{ background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: '#ff3b30', fontWeight: '700' }} onClick={() => {
-                  if (confirmDialog.onConfirm) confirmDialog.onConfirm();
-                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-                }}>Đồng ý</button>
-              </div>
+            <div className="modal-content" style={{ paddingTop: '0', paddingBottom: '24px' }}>
+              <p style={{ color: 'var(--admin-text-secondary-dark)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '0' }}>{confirmDialog.message}</p>
+            </div>
+            <div className="modal-footer" style={{ borderTop: 'none', paddingTop: '0', paddingBottom: '32px', justifyContent: 'center', gap: '16px' }}>
+              <button className="btn-cancel" style={{ padding: '12px 32px' }} onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>Hủy bỏ</button>
+              <button className="btn-logout-btn" style={{ padding: '12px 32px', background: 'var(--admin-danger)', color: 'white', border: 'none' }} onClick={() => {
+                if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+              }}>Xác nhận xóa</button>
             </div>
           </div>
         </div>
@@ -1602,52 +1580,56 @@ const DashboardPage = () => {
 
       {selectedProduct && (
         <div className="admin-modal-overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="admin-modal glass-panel animate-fade-in" onClick={(e) => e.stopPropagation()}>
+          <div className="admin-modal glass-panel animate-fade-in" style={{ maxWidth: '1000px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Biến thể của: {selectedProduct.name}</h3>
-              <button className="btn-close" onClick={() => setSelectedProduct(null)}>✕</button>
+              <div className="config-title">
+                <div className="config-icon-box" style={{ width: '40px', height: '40px' }}><Diamond size={20} /></div>
+                <div>
+                  <h3>Biến thể: {selectedProduct.name}</h3>
+                  <p>Quản lý các phiên bản khác nhau của sản phẩm này</p>
+                </div>
+              </div>
+              <button className="btn-close" onClick={() => setSelectedProduct(null)}><X size={20} /></button>
             </div>
             <div className="modal-content">
-              <div className="modal-toolbar">
-                <button className="btn-add-new" onClick={openCreateVariantForm}>+ Thêm biến thể</button>
+              <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn-add-new" onClick={openCreateVariantForm}>+ Thêm biến thể mới</button>
               </div>
 
               {variantFormOpen && (
-                <form className="variant-form glass-panel" onSubmit={handleSaveVariant}>
-                  <div className="variant-grid">
+                <form className="glass-panel animate-fade-in" style={{ padding: '32px', marginBottom: '32px', border: '1px solid var(--admin-accent)' }} onSubmit={handleSaveVariant}>
+                  <div className="form-grid">
                     <div className="form-group">
-                      <label>SKU</label>
-                      <input name="sku" value={variantFormData.sku} onChange={handleVariantInputChange} required />
+                      <label>Mã định danh (SKU)</label>
+                      <input name="sku" value={variantFormData.sku} onChange={handleVariantInputChange} placeholder="Ví dụ: SKU-MAC-M3-16GB" required />
                     </div>
                     <div className="form-group">
                       <label>Giá cộng thêm (VNĐ)</label>
-                      <input name="price_override" type="number" value={variantFormData.price_override} onChange={handleVariantInputChange} placeholder="Để trống nếu không có" />
+                      <input name="price_override" type="number" value={variantFormData.price_override} onChange={handleVariantInputChange} placeholder="Ví dụ: 2000000" />
                     </div>
                     <div className="form-group">
-                      <label>Tồn kho</label>
+                      <label>Số lượng trong kho</label>
                       <input name="stock_quantity" type="number" value={variantFormData.stock_quantity} onChange={handleVariantInputChange} />
                     </div>
-                    <div className="form-group checkbox-group">
-                      <label className="checkbox-label">
-                        <input name="is_active" type="checkbox" checked={variantFormData.is_active} onChange={handleVariantInputChange} />
-                        Đang hoạt động
-                      </label>
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input name="is_active" type="checkbox" style={{ width: '20px', height: '20px' }} checked={variantFormData.is_active} onChange={handleVariantInputChange} />
+                      <label style={{ margin: 0 }}>Cho phép kinh doanh biến thể này</label>
                     </div>
                     <div className="form-group full-width">
-                      <label>Thuộc tính (JSON)</label>
+                      <label>Cấu hình thuộc tính (Định dạng JSON)</label>
                       <textarea
                         name="attributes_json"
-                        rows="5"
+                        rows="4"
                         value={variantFormData.attributes_json}
                         onChange={handleVariantInputChange}
-                        placeholder='{"ram":"16GB","color":"black"}'
+                        placeholder='Ví dụ: {"ram": "16GB", "ssd": "512GB", "color": "Silver"}'
                         required
                       />
                     </div>
                   </div>
-                  <div className="modal-footer compact">
-                    <button type="button" className="btn-cancel" onClick={() => setVariantFormOpen(false)}>Hủy</button>
-                    <button type="submit" className="btn-submit" disabled={submitting}>
+                  <div className="modal-footer" style={{ borderTop: 'none', padding: '24px 0 0' }}>
+                    <button type="button" className="btn-cancel" onClick={() => setVariantFormOpen(false)}>Hủy bỏ</button>
+                    <button type="submit" className="btn-add-new" disabled={submitting}>
                       {variantFormMode === 'create' ? 'Lưu biến thể' : 'Cập nhật biến thể'}
                     </button>
                   </div>
@@ -1655,18 +1637,18 @@ const DashboardPage = () => {
               )}
 
               {loadingVariants ? (
-                <p>Đang tải biến thể...</p>
+                <div className="text-center" style={{ padding: '40px' }}><div className="loader" style={{ margin: '0 auto' }}></div></div>
               ) : variants.length > 0 ? (
-                <div className="admin-table-container glass-panel">
+                <div className="admin-table-container">
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>SKU</th>
-                        <th>Thuộc tính</th>
-                        <th>Giá cộng thêm</th>
-                        <th>Tồn kho</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th style={{ width: '200px' }}>Mã SKU</th>
+                        <th>Cấu hình thuộc tính</th>
+                        <th style={{ width: '180px' }}>Giá cộng thêm</th>
+                        <th style={{ width: '100px' }}>Kho</th>
+                        <th style={{ width: '150px' }}>Trạng thái</th>
+                        <th style={{ width: '120px' }}>Hành động</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1674,19 +1656,28 @@ const DashboardPage = () => {
                         <tr key={v.id}>
                           <td><strong>{v.sku}</strong></td>
                           <td>
-                            {Object.entries(v.attributes || {}).map(([key, value]) => (
-                              <span key={key} className="attr-tag">{key}: {String(value)}</span>
-                            ))}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {Object.entries(v.attributes || {}).map(([key, value]) => (
+                                <span key={key} className="admin-chip small info" style={{ textTransform: 'none' }}>{key}: {String(value)}</span>
+                              ))}
+                            </div>
                           </td>
-                          <td>{v.price_override === null || v.price_override === undefined ? '—' : `+${Number(v.price_override).toLocaleString()} ₫`}</td>
-                          <td>{v.stock_quantity}</td>
                           <td>
-                            <span className={`status-tag ${v.is_active ? 'active' : 'inactive'}`}>{v.is_active ? 'Hoạt động' : 'Ẩn'}</span>
+                            <strong style={{ color: 'var(--admin-accent)' }}>
+                              {v.price_override === null || v.price_override === undefined ? '0' : `+${Number(v.price_override).toLocaleString()}`}
+                            </strong>
+                            <span style={{ fontSize: '0.7rem', marginLeft: '4px' }}>₫</span>
+                          </td>
+                          <td><span className="admin-chip small">{v.stock_quantity}</span></td>
+                          <td>
+                            <span className={`admin-chip small ${v.is_active ? 'success' : 'danger'}`}>
+                              {v.is_active ? 'Hoạt động' : 'Đã ẩn'}
+                            </span>
                           </td>
                           <td>
                             <div className="table-actions">
-                              <button className="btn-edit" title="Sửa" onClick={() => openEditVariantForm(v)}><Edit size={16} /></button>
-                              <button className="btn-delete" title="Xóa" onClick={() => handleDeleteVariant(v.id)}><Trash2 size={16} /></button>
+                              <button className="btn-edit" onClick={() => openEditVariantForm(v)}><Edit size={16} /></button>
+                              <button className="btn-delete" onClick={() => handleDeleteVariant(v.id)}><Trash2 size={16} /></button>
                             </div>
                           </td>
                         </tr>
@@ -1695,7 +1686,10 @@ const DashboardPage = () => {
                   </table>
                 </div>
               ) : (
-                <p>Chưa có biến thể nào cho sản phẩm này.</p>
+                <div className="text-center" style={{ padding: '60px', opacity: 0.5 }}>
+                   <Diamond size={48} style={{ marginBottom: '16px' }} />
+                   <p>Sản phẩm này chưa có biến thể nào được tạo.</p>
+                </div>
               )}
             </div>
           </div>
@@ -1704,10 +1698,16 @@ const DashboardPage = () => {
 
       {showAddModal && (
         <div className="admin-modal-overlay" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>
-          <div className="admin-modal glass-panel animate-fade-in product-form-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="admin-modal glass-panel animate-fade-in" style={{ maxWidth: '950px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{productModalMode === 'create' ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'}</h3>
-              <button className="btn-close" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>✕</button>
+              <div className="config-title">
+                <div className="config-icon-box" style={{ width: '40px', height: '40px' }}><Package size={20} /></div>
+                <div>
+                  <h3>{productModalMode === 'create' ? 'Tạo sản phẩm mới' : 'Cập nhật thông tin sản phẩm'}</h3>
+                  <p>Điền đầy đủ các thông tin kỹ thuật bên dưới</p>
+                </div>
+              </div>
+              <button className="btn-close" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}><X size={20} /></button>
             </div>
             <form className="modal-content" onSubmit={handleCreateProduct}>
               <div className="form-grid">
@@ -1718,46 +1718,46 @@ const DashboardPage = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Ví dụ: Card đồ họa ASUS ROG Strix..."
+                    placeholder="Ví dụ: Apple MacBook Pro M3 Max..."
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Đường dẫn (Slug)</label>
+                  <label>Đường dẫn tĩnh (Slug)</label>
                   <input
                     type="text"
                     name="slug"
                     value={formData.slug}
                     onChange={handleInputChange}
-                    placeholder="asus-rog-strix"
+                    placeholder="macbook-pro-m3-max"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Giá cơ bản (VNĐ)</label>
+                  <label>Giá niêm yết (VNĐ)</label>
                   <input
                     type="number"
                     name="base_price"
                     value={formData.base_price}
                     onChange={handleInputChange}
-                    placeholder="Ví dụ: 15000000"
+                    placeholder="Ví dụ: 45000000"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Số lượng tồn kho</label>
+                  <label>Tổng tồn kho</label>
                   <input
                     type="number"
                     name="stock_quantity"
                     value={formData.stock_quantity}
                     onChange={handleInputChange}
-                    placeholder="Ví dụ: 50"
+                    placeholder="Ví dụ: 100"
                     min="0"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Danh mục</label>
+                  <label>Phân loại danh mục</label>
                   <select
                     name="category_id"
                     value={formData.category_id}
@@ -1773,7 +1773,7 @@ const DashboardPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Hãng sản xuất</label>
+                  <label>Thương hiệu (Hãng)</label>
                   <select
                     name="brand"
                     value={formData.brand}
@@ -1786,7 +1786,7 @@ const DashboardPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Tình trạng kinh doanh</label>
+                  <label>Tình trạng KD</label>
                   <select
                     name="status"
                     value={formData.status}
@@ -1799,7 +1799,7 @@ const DashboardPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Loại hàng (Mới/Cũ)</label>
+                  <label>Độ mới (Condition)</label>
                   <select
                     name="product_condition"
                     value={formData.product_condition}
@@ -1825,59 +1825,56 @@ const DashboardPage = () => {
                   </select>
                 </div>
                 <div className="form-group full-width">
-                  <label>Link ảnh sản phẩm (Google Drive/URL)</label>
-                  <textarea
+                  <label>Hình ảnh chính (URL hoặc Drive ID)</label>
+                  <input
+                    type="text"
                     name="image_url"
                     value={formData.image_url}
                     onChange={handleInputChange}
-                    placeholder="Dán link ảnh tại đây (Mỗi link một dòng)..."
-                    className="media-textarea"
-                  ></textarea>
+                    placeholder="Dán ID Google Drive hoặc link ảnh trực tiếp..."
+                  />
                   {formData.image_url && (
-                    <div className="image-preview-container">
-                      <img src={getImageUrl(formData.image_url)} alt="Preview" />
-                      <span>Xem trước ảnh</span>
+                    <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <img src={getImageUrl(formData.image_url)} alt="Preview" style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover' }} />
+                      <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>Bản xem trước hình ảnh chính</span>
                     </div>
                   )}
                 </div>
                 <div className="form-group full-width">
-                  <label>Mô tả sản phẩm</label>
+                  <label>Mô tả chi tiết sản phẩm</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    placeholder="Nhập chi tiết về sản phẩm..."
-                    rows="3"
+                    placeholder="Thông số kỹ thuật, đặc điểm nổi bật..."
+                    rows="4"
                   ></textarea>
                 </div>
                 <div className="form-group full-width">
-                  <label>Ảnh & Video bổ sung (Mỗi link một dòng)</label>
+                  <label>Thư viện phương tiện bổ sung (Mỗi link một dòng)</label>
                   <textarea
                     name="additional_media"
                     value={formData.additional_media}
                     onChange={handleInputChange}
-                    placeholder="Dán link ảnh hoặc video bổ sung tại đây...&#10;Hỗ trợ: Google Drive, YouTube, Link trực tiếp"
+                    placeholder="Dán link ảnh hoặc video bổ sung tại đây..."
                     rows="4"
-                    className="media-textarea"
                   ></textarea>
-                  <p className="field-hint">Hệ thống tự nhận diện Ảnh hoặc Video để hiển thị trong bộ sưu tập.</p>
                 </div>
-                <div className="form-group checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleInputChange}
-                    />
-                    Cho phép bán sản phẩm này ngay lập tức
-                  </label>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    style={{ width: '20px', height: '20px' }}
+                    checked={formData.is_active}
+                    onChange={handleInputChange}
+                  />
+                  <label style={{ margin: 0 }}>Hiển thị và cho phép đặt hàng ngay</label>
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-cancel" onClick={() => { setShowAddModal(false); setEditingProduct(null); setProductModalMode('create'); }}>Hủy bỏ</button>
-                <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Đang lưu...' : (productModalMode === 'create' ? 'Lưu sản phẩm' : 'Cập nhật')}
+                <button type="submit" className="btn-add-new" disabled={submitting}>
+                  {submitting ? 'Đang xử lý...' : (productModalMode === 'create' ? 'Tạo sản phẩm' : 'Lưu thay đổi')}
                 </button>
               </div>
             </form>
@@ -1887,13 +1884,19 @@ const DashboardPage = () => {
 
       {showAddCategoryModal && (
         <div className="admin-modal-overlay" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>
-          <div className="admin-modal glass-panel animate-fade-in product-form-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="admin-modal glass-panel animate-fade-in" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{categoryModalMode === 'create' ? 'Thêm danh mục mới' : 'Chỉnh sửa danh mục'}</h3>
-              <button className="btn-close" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>✕</button>
+              <div className="config-title">
+                <div className="config-icon-box" style={{ width: '40px', height: '40px' }}><Folder size={20} /></div>
+                <div>
+                  <h3>{categoryModalMode === 'create' ? 'Tạo danh mục mới' : 'Sửa danh mục'}</h3>
+                  <p>Quản lý phân cấp cây danh mục sản phẩm</p>
+                </div>
+              </div>
+              <button className="btn-close" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}><X size={20} /></button>
             </div>
             <form className="modal-content" onSubmit={handleCreateCategory}>
-              <div className="form-grid">
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="form-group">
                   <label>Tên danh mục</label>
                   <input
@@ -1901,29 +1904,29 @@ const DashboardPage = () => {
                     name="name"
                     value={categoryFormData.name}
                     onChange={handleCategoryInputChange}
-                    placeholder="Ví dụ: Linh kiện PC"
+                    placeholder="Ví dụ: Phụ kiện Gaming"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Đường dẫn (Slug)</label>
+                  <label>Đường dẫn tĩnh (Slug)</label>
                   <input
                     type="text"
                     name="slug"
                     value={categoryFormData.slug}
                     onChange={handleCategoryInputChange}
-                    placeholder="linh-kien-pc"
+                    placeholder="phu-kien-gaming"
                     required
                   />
                 </div>
-                <div className="form-group full-width">
-                  <label>Danh mục cha (Để trống nếu là danh mục gốc)</label>
+                <div className="form-group">
+                  <label>Danh mục cha (Cấp trên)</label>
                   <select
                     name="parent_id"
                     value={categoryFormData.parent_id}
                     onChange={handleCategoryInputChange}
                   >
-                    <option value="">-- Danh mục gốc --</option>
+                    <option value="">-- Là danh mục gốc --</option>
                     {categoryOptions
                       .filter((c) => !editingCategory || c.id !== editingCategory.id)
                       .map((c) => (
@@ -1933,22 +1936,21 @@ const DashboardPage = () => {
                       ))}
                   </select>
                 </div>
-                <div className="form-group checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={categoryFormData.is_active}
-                      onChange={handleCategoryInputChange}
-                    />
-                    Hiển thị danh mục này
-                  </label>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    style={{ width: '20px', height: '20px' }}
+                    checked={categoryFormData.is_active}
+                    onChange={handleCategoryInputChange}
+                  />
+                  <label style={{ margin: 0 }}>Kích hoạt danh mục này</label>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ marginTop: '24px' }}>
                 <button type="button" className="btn-cancel" onClick={() => { setShowAddCategoryModal(false); setEditingCategory(null); setCategoryModalMode('create'); }}>Hủy bỏ</button>
-                <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? 'Đang lưu...' : (categoryModalMode === 'create' ? 'Lưu danh mục' : 'Cập nhật')}
+                <button type="submit" className="btn-add-new" disabled={submitting}>
+                  {submitting ? 'Đang lưu...' : (categoryModalMode === 'create' ? 'Tạo danh mục' : 'Lưu thay đổi')}
                 </button>
               </div>
             </form>

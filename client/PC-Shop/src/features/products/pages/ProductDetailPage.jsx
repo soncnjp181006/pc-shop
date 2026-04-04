@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
-import { Truck, RefreshCcw, ShieldCheck, Frown } from 'lucide-react';
+import { Truck, RefreshCcw, ShieldCheck, Frown, X } from 'lucide-react';
 import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
@@ -162,7 +162,7 @@ const ProductDetailPage = () => {
       {toast && (
         <div className={`toast-notification ${toast.type}`}>
           <span>{toast.message}</span>
-          <button onClick={() => setToast(null)}>✕</button>
+          <button onClick={() => setToast(null)}><X size={16} /></button>
         </div>
       )}
 
