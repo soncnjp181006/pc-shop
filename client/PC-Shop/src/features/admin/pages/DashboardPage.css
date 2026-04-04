@@ -27,11 +27,14 @@
   background: var(--admin-bg-dark);
   color: var(--admin-text-primary-dark);
   transition: background 0.4s ease;
+  zoom: 0.8;
+  color-scheme: dark;
 }
 
 html.light .admin-dashboard {
   background: var(--admin-bg-light);
   color: var(--admin-text-primary-light);
+  color-scheme: light;
 }
 
 /* Background Gradients */
@@ -61,6 +64,7 @@ html.light .admin-dashboard {
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border-right: 1px solid var(--admin-border-dark);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(0);
 }
 
 html.light .admin-sidebar {
@@ -69,7 +73,9 @@ html.light .admin-sidebar {
 }
 
 .admin-sidebar.collapsed {
-  width: 84px;
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .admin-logo-section {
@@ -260,7 +266,7 @@ html.light .admin-user-card {
 }
 
 .admin-main.expanded {
-  margin-left: 84px;
+  margin-left: 0;
 }
 
 /* Header */
@@ -312,6 +318,14 @@ html.light .sidebar-toggle-btn {
 .sidebar-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
+}
+
+.sidebar-toggle-btn {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+html.light .sidebar-toggle-btn {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
 }
 
 .header-info h1 {
@@ -548,6 +562,7 @@ html.light .search-box input {
   font-weight: 800;
   font-size: 0.95rem;
   box-shadow: var(--admin-accent-glow);
+  border: 1px solid transparent;
   transition: all 0.3s ease;
 }
 
@@ -555,6 +570,19 @@ html.light .search-box input {
   transform: translateY(-3px);
   filter: brightness(1.1);
   box-shadow: 0 12px 30px rgba(0, 113, 227, 0.4);
+}
+
+html.light .btn-add-new {
+  background: rgba(0, 113, 227, 0.12);
+  color: #0b5fcc;
+  border: 1px solid rgba(0, 113, 227, 0.22);
+  box-shadow: none;
+}
+
+html.light .btn-add-new:hover {
+  background: rgba(0, 113, 227, 0.18);
+  filter: none;
+  box-shadow: none;
 }
 
 /* Filters Bar */
@@ -597,7 +625,7 @@ html.light .search-box input {
 }
 
 html.light .admin-select {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--admin-border-light);
   color: var(--admin-text-primary-light);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2348484a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 6 8 10 12 6'/%3E%3C/svg%3E");
@@ -756,7 +784,7 @@ html.light .admin-table-container {
 
 .admin-table {
   width: 100%;
-  min-width: 1300px;
+  min-width: 1700px;
   border-collapse: separate;
   border-spacing: 0;
   text-align: left;
@@ -1094,9 +1122,19 @@ html.light .form-group label {
 html.light .form-group input,
 html.light .form-group select,
 html.light .form-group textarea {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--admin-border-light);
   color: var(--admin-text-primary-light);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(176, 176, 181, 0.7);
+}
+
+html.light .form-group input::placeholder,
+html.light .form-group textarea::placeholder {
+  color: rgba(81, 81, 84, 0.7);
 }
 
 .form-group input:focus, 
@@ -1199,17 +1237,6 @@ html.light .form-group select option {
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .admin-sidebar {
-    width: 84px;
-  }
-  .admin-main {
-    margin-left: 84px;
-  }
-  .admin-logo-text, .admin-nav-item span:not(.nav-icon), .user-details, .admin-logout-btn span:not(.nav-icon) {
-    display: none;
-  }
-  .admin-nav-item, .admin-user-card, .admin-logout-btn {
-    justify-content: center;
-    padding: 12px 0;
-  }
+  .admin-content { padding: 28px; }
+  .admin-header-sticky { padding: 16px 24px; }
 }

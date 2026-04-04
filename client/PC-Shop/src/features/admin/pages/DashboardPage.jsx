@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
-import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square, X } from 'lucide-react';
+import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square, X, Menu } from 'lucide-react';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -221,7 +221,7 @@ const DashboardPage = () => {
     if (loading && products.length === 0) {
       return (
         <tr>
-          <td colSpan="9" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
             <div className="loader" style={{ margin: '0 auto' }}></div>
             <p style={{ marginTop: '20px', color: 'var(--admin-text-secondary-dark)' }}>Đang tải dữ liệu sản phẩm...</p>
           </td>
@@ -233,7 +233,7 @@ const DashboardPage = () => {
     if (!loading && products.length === 0) {
       return (
         <tr>
-          <td colSpan="9" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
             <div style={{ color: 'var(--admin-text-secondary-dark)', fontSize: '1.1rem' }}>
               {productSearch.trim() ? 'Không tìm thấy sản phẩm nào khớp với từ khóa.' : 'Danh sách sản phẩm hiện đang trống.'}
             </div>
@@ -263,19 +263,20 @@ const DashboardPage = () => {
           <td title={p.name}>
             <div className="table-product-info">
               <strong>{p.name}</strong>
-              <span>ID: {p.id} | {p.category_name || 'Không có danh mục'}</span>
-              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>Slug: {p.slug}</span>
+              <span>ID: {p.id}</span>
+              <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>Slug: {p.slug}</span>
             </div>
           </td>
           <td>
             <span className="admin-chip small">{p.brand || '—'}</span>
           </td>
           <td>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span className="admin-chip small info">{p.product_condition || 'Mới'}</span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--admin-text-secondary-dark)' }}>{p.origin || 'Chính hãng'}</span>
-            </div>
+            <span className="admin-chip small info" style={{ textTransform: 'none' }}>{p.product_condition || '—'}</span>
           </td>
+          <td>
+            <span className="admin-chip small success" style={{ textTransform: 'none' }}>{p.origin || '—'}</span>
+          </td>
+          <td title={p.category_name || 'N/A'}>{p.category_name || 'N/A'}</td>
           <td>
             <strong style={{ color: 'var(--admin-accent)', fontSize: '1.1rem' }}>{p.base_price.toLocaleString()}</strong>
             <span style={{ fontSize: '0.7rem', marginLeft: '4px', opacity: 0.8 }}>₫</span>
@@ -886,8 +887,7 @@ const DashboardPage = () => {
         try {
           const error = await response.json();
           errorMessage = error.detail || errorMessage;
-        } catch (e) {
-          // Trường hợp không phải JSON (VD: 500 HTML page)
+        } catch {
           errorMessage = `Lỗi hệ thống (${response.status})`;
         }
         setToast({ type: 'error', message: errorMessage });
@@ -1016,7 +1016,7 @@ const DashboardPage = () => {
         <header className="admin-header-sticky animate-fade-in">
           <div className="header-info">
             <button className="sidebar-toggle-btn" onClick={toggleSidebar}>
-              {isSidebarCollapsed ? <Eye size={20} /> : <EyeOff size={20} />}
+              <Menu size={20} />
             </button>
             <div>
               <h1>{activeTab === 'overview' ? 'Bảng điều khiển' : 
@@ -1293,7 +1293,9 @@ const DashboardPage = () => {
                       <th style={{ width: '100px' }}>Ảnh</th>
                       <th>Thông tin sản phẩm</th>
                       <th style={{ width: '140px' }}>Hãng</th>
-                      <th style={{ width: '140px' }}>Loại hàng</th>
+                      <th style={{ width: '180px' }}>Loại hàng</th>
+                      <th style={{ width: '180px' }}>Nguồn gốc</th>
+                      <th style={{ width: '220px' }}>Danh mục</th>
                       <th style={{ width: '180px' }}>Giá cơ bản</th>
                       <th style={{ width: '100px' }}>Kho</th>
                       <th style={{ width: '150px' }}>Trạng thái</th>

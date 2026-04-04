@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Search, SlidersHorizontal, LayoutGrid, List,
   ChevronDown, ChevronRight, Tag, CircleDollarSign,
@@ -133,7 +133,7 @@ const CategoryNode = ({ node, depth, activeId, onSelect, expandedIds, onToggle }
 };
 
 /* Product card */
-const ProductCard = ({ product, viewMode, onQuickAdd, favs, onToggleFav }) => {
+const ProductCard = ({ product, onQuickAdd, favs, onToggleFav }) => {
   const isFaved  = favs.has(product.id);
   const inStock  = product.available_stock > 0;
 
@@ -232,8 +232,6 @@ const ProductListPage = () => {
     in_stock:    searchParams.get('in_stock') === 'true',
   });
 
-  // separate "page" ref to avoid double-fetch
-  const pageRef      = useRef(pagination.page);
   const searchDebRef = useRef(null);
   const [searchInput, setSearchInput] = useState(filters.q);
 
@@ -784,7 +782,6 @@ const ProductListPage = () => {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    viewMode={viewMode}
                     onQuickAdd={handleQuickAdd}
                     favs={favs}
                     onToggleFav={toggleFav}
