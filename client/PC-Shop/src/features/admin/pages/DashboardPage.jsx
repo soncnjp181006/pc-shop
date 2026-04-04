@@ -153,11 +153,24 @@ const DashboardPage = () => {
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [tempConfig, setTempConfig] = useState(configData);
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     setConfigData(tempConfig);
     localStorage.setItem('admin_config', JSON.stringify(tempConfig));
-    setToast({ type: 'success', message: 'Đã lưu cấu hình danh sách' });
-    setShowConfigPanel(false);
+    try {
+      const res = await adminApi.updateProductMetaConfig(tempConfig);
+      if (!res.ok) {
+        setToast({ type: 'error', message: 'Lưu cấu hình thất bại (server). Vui lòng thử lại.' });
+        return;
+      }
+      const data = await res.json();
+      setConfigData(data);
+      setTempConfig(data);
+      localStorage.setItem('admin_config', JSON.stringify(data));
+      setToast({ type: 'success', message: 'Đã lưu cấu hình (Admin → Customer sẽ tự cập nhật)' });
+      setShowConfigPanel(false);
+    } catch {
+      setToast({ type: 'error', message: 'Không thể kết nối server để lưu cấu hình' });
+    }
   };
 
   const resetConfigToDefault = () => {
@@ -398,6 +411,23 @@ const DashboardPage = () => {
     };
     fetchUser();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadMetaConfig = async () => {
+      try {
+        const res = await adminApi.getProductMetaConfig();
+        if (!res.ok) return;
+        const data = await res.json();
+        setConfigData(data);
+        setTempConfig(data);
+        localStorage.setItem('admin_config', JSON.stringify(data));
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadMetaConfig();
+  }, [user]);
 
   useEffect(() => {
     if (activeTab === 'products') {

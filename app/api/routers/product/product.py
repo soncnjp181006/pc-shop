@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from sqlalchemy import text
+from typing import List, Optional, Dict
 from app.db.session import get_db
 from app.schemas.product.product import ProductCreate, ProductUpdate, ProductOut, PaginatedResponse
 from app.services.product_service.product_service import (
@@ -17,6 +18,55 @@ from app.dependencies.user.get_current_user import get_current_user
 from app.models.user import User
 
 router = APIRouter()
+
+DEFAULT_PRODUCT_META_CONFIG: Dict[str, str] = {
+    "brands": "Apple\nASUS\nMSI\nGigabyte\nDell\nHP\nLenovo\nRazer\nCorsair\nNZXT\nLogitech\nSamsung\nLG\nIntel\nAMD\nNVIDIA",
+    "statuses": "Đang kinh doanh\nNgừng kinh doanh\nSắp về hàng\nLiên hệ",
+    "conditions": "Mới 100% Fullbox\nHàng Like New 99%\nHàng Cũ 95%\nHàng Cũ 90%\nHàng Trôi bảo hành",
+    "origins": "Chính hãng (VAT)\nXách tay (Global)\nHàng nhập khẩu",
+}
+
+
+def _ensure_app_config_table(db: Session) -> None:
+    db.execute(
+        text(
+            """
+            CREATE TABLE IF NOT EXISTS app_config (
+              `key` VARCHAR(100) PRIMARY KEY,
+              `value` LONGTEXT NOT NULL,
+              `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+            """
+        )
+    )
+    db.commit()
+
+
+def _get_app_config_value(db: Session, key: str) -> Optional[str]:
+    _ensure_app_config_table(db)
+    row = db.execute(text("SELECT `value` FROM app_config WHERE `key`=:k LIMIT 1"), {"k": key}).fetchone()
+    if not row:
+        return None
+    return row[0]
+
+
+def _split_lines(s: str) -> List[str]:
+    return [x.strip() for x in (s or "").split("\n") if x.strip()]
+
+
+@router.get("/brand-options")
+def get_brand_options(db: Session = Depends(get_db)):
+    raw = _get_app_config_value(db, "product_meta_config")
+    if not raw:
+        return {"brands": _split_lines(DEFAULT_PRODUCT_META_CONFIG["brands"])}
+    try:
+        import json
+
+        data = json.loads(raw) or {}
+        brands = _split_lines(data.get("brands", DEFAULT_PRODUCT_META_CONFIG["brands"]))
+        return {"brands": brands}
+    except Exception:
+        return {"brands": _split_lines(DEFAULT_PRODUCT_META_CONFIG["brands"])}
 
 @router.post("/", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def create_product(

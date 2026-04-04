@@ -222,6 +222,7 @@ const ProductListPage = () => {
   const [favs,        setFavs]        = useState(new Set());
   const [toast,       setToast]       = useState(null);
   const [expandedIds, setExpandedIds] = useState([]);
+  const [brandOptions, setBrandOptions] = useState(BRANDS);
   const [pagination,  setPagination]  = useState({ page: initialPage, limit: initialLimit, pages: 1, total: 0 });
 
   const [filters, setFilters] = useState({
@@ -238,6 +239,25 @@ const ProductListPage = () => {
 
   const searchDebRef = useRef(null);
   const [searchInput, setSearchInput] = useState(filters.q);
+
+  useEffect(() => {
+    let alive = true;
+    const loadBrandOptions = async () => {
+      try {
+        const res = await productsApi.getBrandOptions();
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!alive) return;
+        if (Array.isArray(data?.brands) && data.brands.length > 0) {
+          setBrandOptions(data.brands);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadBrandOptions();
+    return () => { alive = false; };
+  }, []);
 
   /* ── WebSocket realtime stock ── */
   useEffect(() => {
@@ -571,7 +591,7 @@ const ProductListPage = () => {
                 className={`brand-chip ${filters.brand === '' ? 'active' : ''}`}
                 onClick={() => toggleBrand('')}
               >Tất cả</button>
-              {BRANDS.map(b => {
+              {brandOptions.map(b => {
                 const isActive = (filters.brand || '').split(',').includes(b);
                 return (
                   <button

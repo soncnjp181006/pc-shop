@@ -113,6 +113,7 @@ export const productsApi = {
   deleteVariant: (variantId) => apiFetch(`/products/variants/${variantId}`, {
     method: 'DELETE',
   }),
+  getBrandOptions: () => apiFetch('/products/brand-options'),
 };
 
 // API Categories
@@ -172,6 +173,11 @@ export const adminApi = {
   },
   updateProductStatus: (productId, data) => apiFetch(`/admin/products/${productId}`, {
     method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+  getProductMetaConfig: () => apiFetch('/admin/product-meta-config'),
+  updateProductMetaConfig: (data) => apiFetch('/admin/product-meta-config', {
+    method: 'PUT',
     body: JSON.stringify(data),
   }),
 };
