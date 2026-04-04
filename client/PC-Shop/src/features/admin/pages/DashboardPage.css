@@ -207,7 +207,7 @@
 .admin-theme-toggle:hover {
   background: var(--input-bg);
   border-color: var(--border-color);
-  transform: translateY(-2px) rotate(15deg);
+  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -786,8 +786,8 @@
 .form-group input, 
 .form-group select, 
 .form-group textarea {
-  background: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--input-bg);
+  border: 1.5px solid var(--border-color);
   border-radius: 14px;
   padding: 16px 20px;
   color: var(--text-primary);
@@ -796,13 +796,33 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.form-group input:hover, 
+.form-group select:hover, 
+.form-group textarea:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html.light .form-group input:hover, 
+html.light .form-group select:hover, 
+html.light .form-group textarea:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.02);
+}
+
 .form-group input:focus, 
 .form-group select:focus, 
 .form-group textarea:focus {
   border-color: var(--accent-primary);
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(0, 113, 227, 0.15);
+  background: var(--input-bg);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 4px rgba(0, 113, 227, 0.15);
   outline: none;
+}
+
+.form-group select option {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  padding: 12px;
 }
 
 .image-preview-container {
