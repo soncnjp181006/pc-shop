@@ -88,7 +88,7 @@ def get_all_products_repo(
             query = query.filter(or_(*brand_conditions))
         
     # Filter in stock
-    if in_stock:
+    if in_stock is not None:
         from app.models.cart import CartItem
         from app.models.product_variant import ProductVariant
         from sqlalchemy import func, select
@@ -100,7 +100,10 @@ def get_all_products_repo(
             ProductVariant.product_id == Product.id
         ).correlate(Product).scalar_subquery()
         
-        query = query.filter(Product.stock_quantity - coalesce(subq, 0) > 0)
+        if in_stock:
+            query = query.filter(Product.stock_quantity - coalesce(subq, 0) > 0)
+        else:
+            query = query.filter(Product.stock_quantity - coalesce(subq, 0) <= 0)
         
     # Sorting
     if sort == "price_asc":

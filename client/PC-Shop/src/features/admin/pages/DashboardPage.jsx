@@ -48,22 +48,26 @@ const DashboardPage = () => {
       p.category_name || '',
       p.base_price,
       p.stock_quantity,
-      p.is_active ? 'Đang bán' : 'Ẩn'
+      p.is_active ? 'Đang bán' : 'Ngừng bán'
     ]);
     
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // Thêm BOM cho Excel đọc UTF-8
-    csvContent += headers.join(",") + "\n";
+    // Sử dụng dấu chấm phẩy (;) làm dấu phân cách để Excel nhận diện đúng các cột
+    // và thêm BOM để hỗ trợ tiếng Việt có dấu
+    let csvContent = "\uFEFFsep=;\n"; 
+    csvContent += headers.join(";") + "\n";
     rows.forEach(row => {
-      csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",") + "\n";
+      csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(";") + "\n";
     });
     
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `products_export_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const toggleSelectAll = () => {
@@ -128,7 +132,7 @@ const DashboardPage = () => {
     total: 0,
     pages: 1,
     sort: 'newest',
-    active_only: false,
+    status: 'all',
     brand: '',
     in_stock: ''
   });
@@ -225,7 +229,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (activeTab !== 'products') return;
     fetchProducts();
-  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.active_only, productPaging.brand, productPaging.in_stock, productPaging.category_id, productSearch]);
+  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.status, productPaging.brand, productPaging.in_stock, productPaging.category_id, productSearch]);
 
   useEffect(() => {
     if (activeTab !== 'users') return;
@@ -257,7 +261,7 @@ const DashboardPage = () => {
         limit: productPaging.limit,
         sort: productPaging.sort,
         q: productSearch || undefined,
-        active_only: productPaging.active_only ? true : undefined,
+        active_only: productPaging.status === 'active' ? true : (productPaging.status === 'inactive' ? false : undefined),
         brand: productPaging.brand || undefined,
         in_stock: productPaging.in_stock === 'true' ? true : (productPaging.in_stock === 'false' ? false : undefined),
         category_id: productPaging.category_id || undefined
@@ -419,7 +423,7 @@ const DashboardPage = () => {
     try {
       const response = await adminApi.updateProductStatus(p.id, { is_active: !p.is_active });
       if (response.ok) {
-        setToast({ type: 'success', message: p.is_active ? 'Đã ẩn sản phẩm' : 'Đã bật lại sản phẩm' });
+        setToast({ type: 'success', message: p.is_active ? 'Đã ngừng bán sản phẩm' : 'Đã cho phép bán lại' });
         fetchProducts();
       } else {
         const error = await response.json();
@@ -1002,11 +1006,12 @@ const DashboardPage = () => {
 
                     <select
                       className="admin-select"
-                      value={productPaging.active_only ? 'true' : 'false'}
-                      onChange={(e) => setProductPaging((prev) => ({ ...prev, active_only: e.target.value === 'true', page: 1 }))}
+                      value={productPaging.status}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, status: e.target.value, page: 1 }))}
                     >
-                      <option value="false">Tất cả trạng thái</option>
-                      <option value="true">Chỉ đang bán</option>
+                      <option value="all">Tất cả trạng thái</option>
+                      <option value="active">Đang bán</option>
+                      <option value="inactive">Ngừng bán</option>
                     </select>
                   </div>
                   
@@ -1069,7 +1074,7 @@ const DashboardPage = () => {
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
                               <span className={`status-tag ${p.is_active ? 'active' : 'inactive'}`}>
-                                {p.is_active ? 'Đang bán' : 'Ẩn'}
+                                {p.is_active ? 'Đang bán' : 'Ngừng bán'}
                               </span>
                             </div>
                           </td>
