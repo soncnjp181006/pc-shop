@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
 import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square } from 'lucide-react';
@@ -145,8 +145,8 @@ const DashboardPage = () => {
     };
   });
 
-  const brandsList = configData.brands.split('\n').map(b => b.trim()).filter(b => b);
-  const statusesList = configData.statuses.split('\n').map(s => s.trim()).filter(s => s);
+  const brandsList = (configData.brands || '').split('\n').map(b => b.trim()).filter(b => b);
+  const statusesList = (configData.statuses || '').split('\n').map(s => s.trim()).filter(s => s);
   const conditionsList = (configData.conditions || '').split('\n').map(c => c.trim()).filter(c => c);
   const originsList = (configData.origins || '').split('\n').map(o => o.trim()).filter(o => o);
 
@@ -215,6 +215,118 @@ const DashboardPage = () => {
     stock_quantity: 0,
     is_active: true
   });
+  // Tối ưu render bảng để tránh giật khi chọn checkbox
+  const productTableRows = useMemo(() => {
+    // Nếu đang tải và chưa có dữ liệu, hiển thị khung trống ổn định
+    if (loading && products.length === 0) {
+      return (
+        <tr>
+          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+            <div className="loader" style={{ margin: '0 auto' }}></div>
+            <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>Đang tải dữ liệu sản phẩm...</p>
+          </td>
+        </tr>
+      );
+    }
+    
+    // Nếu không có sản phẩm sau khi đã tải xong
+    if (!loading && products.length === 0) {
+      return (
+        <tr>
+          <td colSpan="11" className="text-center" style={{ height: '400px', verticalAlign: 'middle' }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+              {productSearch.trim() ? 'Không tìm thấy sản phẩm nào khớp với từ khóa.' : 'Danh sách sản phẩm hiện đang trống.'}
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    return products.map(p => {
+      const isSelected = selectedProductIds.includes(p.id);
+      return (
+        <tr key={p.id} className={isSelected ? 'selected-row' : ''}>
+          <td>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSelectProduct(p.id);
+              }} 
+              style={{ background: 'none', border: 'none', color: isSelected ? '#0071e3' : 'inherit', padding: 0, cursor: 'pointer' }}
+            >
+              {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
+            </button>
+          </td>
+          <td>
+            <img src={getImageUrl(p.image_url)} alt={p.name} className="table-img" />
+          </td>
+          <td title={p.name}>
+            <div className="table-product-info">
+              <strong>{p.name}</strong>
+              <span>ID: {p.id} | Slug: {p.slug}</span>
+            </div>
+          </td>
+          <td>
+            <span className="admin-chip small">{p.brand || '—'}</span>
+          </td>
+          <td>
+            <span className="admin-chip small info" style={{ fontSize: '0.7rem' }}>{p.product_condition || '—'}</span>
+          </td>
+          <td>
+            <span className="admin-chip small success" style={{ fontSize: '0.7rem' }}>{p.origin || '—'}</span>
+          </td>
+          <td title={p.category_name || 'N/A'}>{p.category_name || 'N/A'}</td>
+          <td>{p.base_price.toLocaleString()} ₫</td>
+          <td>
+            <span className={`admin-chip small ${p.stock_quantity > 0 ? 'success' : 'danger'}`}>
+              {p.stock_quantity}
+            </span>
+          </td>
+          <td>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+              <select
+                className={`admin-select small ${p.is_active ? 'success' : 'danger'}`}
+                style={{ 
+                  padding: '4px 28px 4px 12px', 
+                  fontSize: '0.75rem', 
+                  borderRadius: '20px',
+                  border: 'none',
+                  backgroundPosition: 'right 8px center',
+                  color: p.is_active ? '#34c759' : '#ff3b30',
+                  backgroundColor: p.is_active ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)',
+                  fontWeight: '700'
+                }}
+                value={p.is_active ? 'true' : 'false'}
+                onChange={() => handleToggleProductActive(p)}
+              >
+                <option value="true">Đang bán</option>
+                <option value="false">Ngừng bán</option>
+              </select>
+            </div>
+          </td>
+          <td>
+            <div className="table-actions">
+              <button 
+                className="btn-variants" 
+                title="Biến thể"
+                onClick={() => handleShowVariants(p)}
+              ><Diamond size={16} /></button>
+              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={16} /></button>
+              <button className="btn-toggle" title={p.is_active ? 'Ngừng bán' : 'Cho phép bán'} onClick={() => handleToggleProductActive(p)}>
+                {p.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+              <button 
+                className="btn-delete" 
+                title="Xóa"
+                onClick={() => handleDeleteProduct(p.id)}
+              ><Trash2 size={16} /></button>
+            </div>
+          </td>
+        </tr>
+      );
+    });
+  }, [products, selectedProductIds, loading, productSearch]);
+
   const [users, setUsers] = useState([]);
   const [usersPaging, setUsersPaging] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
   const [usersSearch, setUsersSearch] = useState('');
@@ -1115,25 +1227,19 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                {selectedProductIds.length > 0 && (
-                  <div className="bulk-actions-toolbar glass-panel animate-fade-in" style={{ 
-                    padding: '12px 24px', 
-                    background: 'rgba(0, 113, 227, 0.1)', 
-                    borderColor: 'rgba(0, 113, 227, 0.3)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderRadius: '16px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <strong style={{ color: '#0071e3' }}>Đã chọn {selectedProductIds.length} mục</strong>
-                      <div style={{ height: '20px', width: '1px', background: 'rgba(0, 113, 227, 0.2)' }}></div>
-                      <button className="btn-small" onClick={() => handleBulkToggleStatus(true)} style={{ color: '#34c759' }}>Hiện tất cả</button>
-                      <button className="btn-small" onClick={() => handleBulkToggleStatus(false)} style={{ color: '#ff3b30' }}>Ẩn tất cả</button>
+                <div className={`bulk-actions-wrapper ${selectedProductIds.length > 0 ? 'active' : ''}`}>
+                  {selectedProductIds.length > 0 && (
+                    <div className="bulk-actions-toolbar glass-panel animate-fade-in">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <strong style={{ color: '#0071e3' }}>Đã chọn {selectedProductIds.length} mục</strong>
+                        <div style={{ height: '20px', width: '1px', background: 'rgba(0, 113, 227, 0.2)' }}></div>
+                        <button className="btn-small" onClick={() => handleBulkToggleStatus(true)} style={{ color: '#34c759' }}>Hiện tất cả</button>
+                        <button className="btn-small" onClick={() => handleBulkToggleStatus(false)} style={{ color: '#ff3b30' }}>Ẩn tất cả</button>
+                      </div>
+                      <button className="btn-small danger" onClick={handleBulkDelete}>Xóa {selectedProductIds.length} mục</button>
                     </div>
-                    <button className="btn-small danger" onClick={handleBulkDelete}>Xóa {selectedProductIds.length} mục</button>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="table-filters glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 24px' }}>
                   <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '12px', marginBottom: 0}}>
@@ -1244,90 +1350,7 @@ const DashboardPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {loading && products.length === 0 ? (
-                      <tr><td colSpan="11" className="text-center" style={{ padding: '100px' }}>Đang tải dữ liệu...</td></tr>
-                    ) : products.length > 0 ? (
-                      products.map(p => (
-                        <tr key={p.id} className={selectedProductIds.includes(p.id) ? 'selected-row' : ''}>
-                          <td>
-                            <button onClick={() => toggleSelectProduct(p.id)} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
-                              {selectedProductIds.includes(p.id) ? <CheckSquare size={18} /> : <Square size={18} />}
-                            </button>
-                          </td>
-                          <td>
-                            <img src={getImageUrl(p.image_url)} alt={p.name} className="table-img" />
-                          </td>
-                          <td>
-                            <div className="table-product-info">
-                              <strong>{p.name}</strong>
-                              <span>ID: {p.id} | Slug: {p.slug}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="admin-chip small">{p.brand || '—'}</span>
-                          </td>
-                          <td>
-                            <span className="admin-chip small info" style={{ fontSize: '0.7rem' }}>{p.product_condition || '—'}</span>
-                          </td>
-                          <td>
-                            <span className="admin-chip small success" style={{ fontSize: '0.7rem' }}>{p.origin || '—'}</span>
-                          </td>
-                          <td>{p.category_name || 'N/A'}</td>
-                          <td>{p.base_price.toLocaleString()} ₫</td>
-                          <td>
-                            <span className={`admin-chip small ${p.stock_quantity > 0 ? 'success' : 'danger'}`}>
-                              {p.stock_quantity}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-                              <select
-                                className={`admin-select small ${p.is_active ? 'success' : 'danger'}`}
-                                style={{ 
-                                  padding: '4px 28px 4px 12px', 
-                                  fontSize: '0.75rem', 
-                                  borderRadius: '20px',
-                                  border: 'none',
-                                  backgroundPosition: 'right 8px center',
-                                  color: p.is_active ? '#34c759' : '#ff3b30',
-                                  backgroundColor: p.is_active ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)',
-                                  fontWeight: '700'
-                                }}
-                                value={p.is_active ? 'true' : 'false'}
-                                onChange={() => handleToggleProductActive(p)}
-                              >
-                                <option value="true">Đang bán</option>
-                                <option value="false">Ngừng bán</option>
-                              </select>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="table-actions">
-                              <button 
-                                className="btn-variants" 
-                                title="Biến thể"
-                                onClick={() => handleShowVariants(p)}
-                              ><Diamond size={16} /></button>
-                              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={16} /></button>
-                              <button className="btn-toggle" title={p.is_active ? 'Ngừng bán' : 'Cho phép bán'} onClick={() => handleToggleProductActive(p)}>
-                                {p.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </button>
-                              <button 
-                                className="btn-delete" 
-                                title="Xóa"
-                                onClick={() => handleDeleteProduct(p.id)}
-                              ><Trash2 size={16} /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="11" className="text-center" style={{ padding: '100px' }}>
-                          {productSearch.trim() ? 'Không có sản phẩm nào khớp với tìm kiếm của bạn.' : 'Danh sách sản phẩm trống.'}
-                        </td>
-                      </tr>
-                    )}
+                    {productTableRows}
                   </tbody>
                 </table>
               </div>

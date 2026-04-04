@@ -764,12 +764,15 @@ const ProductListPage = () => {
         <main className={`content ${loading ? 'content-loading-overlay' : ''}`}>
           {loading && products.length === 0 ? (
             <div className={`products-grid ${viewMode === 'list' ? 'list-mode' : ''}`}>
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="product-card-premium skeleton">
-                  <div className="card-image-wrapper" />
+                  <div className="card-image-wrapper">
+                    <div className="skeleton-img-box"></div>
+                  </div>
                   <div className="card-info">
-                    <div className="skeleton-line" />
-                    <div className="skeleton-line short" />
+                    <div className="skeleton-line badge"></div>
+                    <div className="skeleton-line name"></div>
+                    <div className="skeleton-line price"></div>
                   </div>
                 </div>
               ))}
