@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
 import { Truck, RefreshCcw, ShieldCheck, Frown } from 'lucide-react';
@@ -234,24 +235,6 @@ const ProductDetailPage = () => {
               </>
             )}
 
-            {/* Lightbox */}
-            {lightboxIndex !== null && (
-              <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
-                <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-                  <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>×</button>
-                  {isVideo(mediaList[lightboxIndex]) ? (
-                    <iframe
-                      src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
-                      title="Lightbox Video"
-                      frameBorder="0"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* ── Info Panel ── */}
@@ -405,6 +388,26 @@ const ProductDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Lightbox moved outside stacking contexts using Portal */}
+      {lightboxIndex !== null && createPortal(
+        <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
+          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+            <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>×</button>
+            {isVideo(mediaList[lightboxIndex]) ? (
+              <iframe
+                src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
+                title="Lightbox Video"
+                frameBorder="0"
+                allowFullScreen
+              />
+            ) : (
+              <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
