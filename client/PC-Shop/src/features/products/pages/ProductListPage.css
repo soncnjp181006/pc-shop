@@ -567,6 +567,32 @@
 }
 .sort-wrapper select:focus { outline: none; }
 
+/* Page size */
+.page-size-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: var(--input-bg);
+  border: var(--glass-border);
+  transition: all 0.2s;
+}
+
+.page-size-wrapper:focus-within { border-color: var(--accent-primary); }
+.page-size-wrapper svg { color: var(--text-tertiary); flex-shrink: 0; }
+
+.page-size-wrapper select {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 0;
+  cursor: pointer;
+}
+.page-size-wrapper select:focus { outline: none; }
+
 /* View toggle */
 .view-toggle {
   display: flex;

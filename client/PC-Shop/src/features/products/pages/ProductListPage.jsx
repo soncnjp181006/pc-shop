@@ -16,6 +16,7 @@ import './ProductListPage.css';
 const BRANDS = ['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT','Logitech','Samsung','LG','Intel','AMD','NVIDIA'];
 const CONDITIONS = ['Mới 100% Fullbox', 'Hàng Like New 99%', 'Hàng Cũ 95%', 'Hàng Cũ 90%', 'Hàng Trôi bảo hành'];
 const ORIGINS = ['Chính hãng (VAT)', 'Xách tay (Global)', 'Hàng nhập khẩu'];
+const PAGE_SIZE_OPTIONS = [20, 40, 50, 60];
 
 const PRICE_PRESETS = [
   { label: '< 5 triệu',   min: '',         max: '5000000'  },
@@ -209,6 +210,9 @@ const Toast = ({ msg, type, onClose }) => {
 ═══════════════════════════════════════════════════════════ */
 const ProductListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const initialPage = Math.max(1, Number(searchParams.get('page') || 1));
+  const initialLimitRaw = Number(searchParams.get('limit') || 20);
+  const initialLimit = PAGE_SIZE_OPTIONS.includes(initialLimitRaw) ? initialLimitRaw : 20;
 
   /* ── State ── */
   const [products,    setProducts]    = useState([]);
@@ -218,7 +222,7 @@ const ProductListPage = () => {
   const [favs,        setFavs]        = useState(new Set());
   const [toast,       setToast]       = useState(null);
   const [expandedIds, setExpandedIds] = useState([]);
-  const [pagination,  setPagination]  = useState({ page: 1, limit: 20, pages: 1, total: 0 });
+  const [pagination,  setPagination]  = useState({ page: initialPage, limit: initialLimit, pages: 1, total: 0 });
 
   const [filters, setFilters] = useState({
     q:           searchParams.get('q')           || '',
@@ -275,13 +279,15 @@ const ProductListPage = () => {
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== '' && v !== false && v !== null) urlP[k] = v;
     });
+    if (pagination.page > 1) urlP.page = String(pagination.page);
+    if (pagination.limit !== 20) urlP.limit = String(pagination.limit);
     setSearchParams(urlP, { replace: true });
 
     // Build API params
     const params = buildApiParams(filters, pagination.page, pagination.limit);
     fetchProducts(params);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, pagination.page]);
+  }, [filters, pagination.page, pagination.limit]);
 
   /* ── Auto-expand category path in sidebar ── */
   useEffect(() => {
@@ -720,6 +726,22 @@ const ProductListPage = () => {
           <span className="results-count">
             <strong>{pagination.total}</strong> sản phẩm
           </span>
+
+          {/* Page size */}
+          <div className="page-size-wrapper">
+            <Layers size={14} />
+            <select
+              value={pagination.limit}
+              onChange={e => {
+                const next = Number(e.target.value);
+                setPagination(p => ({ ...p, limit: next, page: 1 }));
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map(n => (
+                <option key={n} value={n}>{n}/trang</option>
+              ))}
+            </select>
+          </div>
 
           {/* Sort */}
           <div className="sort-wrapper">
