@@ -26,13 +26,19 @@ def list_products_admin(
     page: int = 1,
     limit: int = 20,
     q: Optional[str] = None,
+    sort: Optional[str] = None,
+    active_only: Optional[bool] = None,
+    brand: Optional[str] = None,
+    in_stock: Optional[bool] = None,
     category_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
     """Admin lấy danh sách tất cả sản phẩm (bao gồm cả ẩn)"""
+    active_flag = False if active_only is None else active_only
     return get_all_products_service(
-        db, active_only=False, page=page, limit=limit, q=q, category_id=category_id
+        db, active_only=active_flag, page=page, limit=limit, q=q, 
+        category_id=category_id, sort=sort, brand=brand, in_stock=in_stock
     )
 
 @router.patch("/products/{product_id}", response_model=ProductOut)

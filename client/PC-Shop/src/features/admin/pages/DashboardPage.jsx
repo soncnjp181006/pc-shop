@@ -47,7 +47,9 @@ const DashboardPage = () => {
     total: 0,
     pages: 1,
     sort: 'newest',
-    active_only: false
+    active_only: false,
+    brand: '',
+    in_stock: ''
   });
   const [overviewStats, setOverviewStats] = useState({ products: 0, categories: 0, users: 0 });
   const [productModalMode, setProductModalMode] = useState('create');
@@ -87,6 +89,7 @@ const DashboardPage = () => {
     is_active: true
   });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,6 +105,7 @@ const DashboardPage = () => {
       setShowAddModal(false);
       setShowAddCategoryModal(false);
       setVariantFormOpen(false);
+      setConfirmDialog(prev => ({ ...prev, isOpen: false }));
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -137,7 +141,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (activeTab !== 'products') return;
     fetchProducts();
-  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.active_only, productSearch]);
+  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.active_only, productPaging.brand, productPaging.in_stock, productPaging.category_id, productSearch]);
 
   useEffect(() => {
     if (activeTab !== 'users') return;
@@ -156,7 +160,11 @@ const DashboardPage = () => {
         page: productPaging.page,
         limit: productPaging.limit,
         sort: productPaging.sort,
-        q: productSearch || undefined
+        q: productSearch || undefined,
+        active_only: productPaging.active_only ? true : undefined,
+        brand: productPaging.brand || undefined,
+        in_stock: productPaging.in_stock === 'true' ? true : (productPaging.in_stock === 'false' ? false : undefined),
+        category_id: productPaging.category_id || undefined
       });
       if (response.ok) {
         const data = await response.json();
@@ -251,17 +259,22 @@ const DashboardPage = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-      try {
-        const response = await productsApi.delete(id);
-        if (response.ok) {
-          setToast({ type: 'success', message: 'Đã xóa sản phẩm' });
-          fetchProducts();
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xóa sản phẩm',
+      message: 'Bạn có chắc chắn muốn xóa sản phẩm này?',
+      onConfirm: async () => {
+        try {
+          const response = await productsApi.delete(id);
+          if (response.ok) {
+            setToast({ type: 'success', message: 'Đã xóa sản phẩm' });
+            fetchProducts();
+          }
+        } catch (error) {
+          console.error('Lỗi khi xóa sản phẩm:', error);
         }
-      } catch (error) {
-        console.error('Lỗi khi xóa sản phẩm:', error);
       }
-    }
+    });
   };
 
   const openCreateProductModal = () => {
@@ -338,20 +351,26 @@ const DashboardPage = () => {
   };
 
   const handleDeleteCategory = async (catId) => {
-    if (!window.confirm('Xóa danh mục sẽ ẩn danh mục này. Tiếp tục?')) return;
-    try {
-      const response = await categoriesApi.delete(catId);
-      if (response.ok) {
-        setToast({ type: 'success', message: 'Đã xóa danh mục' });
-        fetchCategories();
-      } else {
-        const error = await response.json();
-        setToast({ type: 'error', message: error.detail || 'Không thể xóa danh mục' });
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xóa danh mục',
+      message: 'Xóa danh mục sẽ ẩn danh mục này. Tiếp tục?',
+      onConfirm: async () => {
+        try {
+          const response = await categoriesApi.delete(catId);
+          if (response.ok) {
+            setToast({ type: 'success', message: 'Đã xóa danh mục' });
+            fetchCategories();
+          } else {
+            const error = await response.json();
+            setToast({ type: 'error', message: error.detail || 'Không thể xóa danh mục' });
+          }
+        } catch (error) {
+          console.error('Lỗi khi xóa danh mục:', error);
+          setToast({ type: 'error', message: 'Không thể xóa danh mục' });
+        }
       }
-    } catch (error) {
-      console.error('Lỗi khi xóa danh mục:', error);
-      setToast({ type: 'error', message: 'Không thể xóa danh mục' });
-    }
+    });
   };
 
   const openCreateVariantForm = () => {
@@ -422,20 +441,26 @@ const DashboardPage = () => {
   };
 
   const handleDeleteVariant = async (variantId) => {
-    if (!window.confirm('Xóa biến thể này?')) return;
-    try {
-      const response = await productsApi.deleteVariant(variantId);
-      if (response.ok) {
-        setToast({ type: 'success', message: 'Đã xóa biến thể' });
-        if (selectedProduct) fetchVariants(selectedProduct.id);
-      } else {
-        const error = await response.json();
-        setToast({ type: 'error', message: error.detail || 'Không thể xóa biến thể' });
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xóa biến thể',
+      message: 'Bạn có chắc chắn muốn xóa biến thể này?',
+      onConfirm: async () => {
+        try {
+          const response = await productsApi.deleteVariant(variantId);
+          if (response.ok) {
+            setToast({ type: 'success', message: 'Đã xóa biến thể' });
+            if (selectedProduct) fetchVariants(selectedProduct.id);
+          } else {
+            const error = await response.json();
+            setToast({ type: 'error', message: error.detail || 'Không thể xóa biến thể' });
+          }
+        } catch (error) {
+          console.error('Lỗi khi xóa biến thể:', error);
+          setToast({ type: 'error', message: 'Không thể xóa biến thể' });
+        }
       }
-    } catch (error) {
-      console.error('Lỗi khi xóa biến thể:', error);
-      setToast({ type: 'error', message: 'Không thể xóa biến thể' });
-    }
+    });
   };
 
   const handleUpdateUserRole = async (u, role) => {
@@ -778,7 +803,41 @@ const DashboardPage = () => {
                     <span className="admin-chip">{productPaging.total} tổng</span>
                     <span className="admin-chip">{productPaging.active_only ? 'Đang bán' : 'Tất cả'}</span>
                   </div>
-                  <div className="admin-toolbar">
+                  <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '8px', marginBottom: '8px'}}>
+                    <select
+                      className="admin-select"
+                      value={productPaging.category_id || ''}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, category_id: e.target.value, page: 1 }))}
+                    >
+                      <option value="">Tất cả danh mục</option>
+                      {categoryOptions.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {`${'—'.repeat(c.depth)} ${c.name}`.trim()}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <select
+                      className="admin-select"
+                      value={productPaging.brand || ''}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, brand: e.target.value, page: 1 }))}
+                    >
+                      <option value="">Tất cả hãng</option>
+                      {['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT'].map(b => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="admin-select"
+                      value={productPaging.in_stock || ''}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, in_stock: e.target.value, page: 1 }))}
+                    >
+                      <option value="">Tình trạng kho</option>
+                      <option value="true">Còn hàng (&gt;0)</option>
+                      <option value="false">Hết hàng (0)</option>
+                    </select>
+
                     <select
                       className="admin-select"
                       value={productPaging.sort}
@@ -787,7 +846,9 @@ const DashboardPage = () => {
                       <option value="newest">Mới nhất</option>
                       <option value="price_asc">Giá tăng dần</option>
                       <option value="price_desc">Giá giảm dần</option>
+                      <option value="name_asc">Tên (A-Z)</option>
                     </select>
+
                     <select
                       className="admin-select"
                       value={productPaging.active_only ? 'true' : 'false'}
@@ -836,9 +897,16 @@ const DashboardPage = () => {
                           <td>{p.category_name || 'N/A'}</td>
                           <td>{p.base_price.toLocaleString()} ₫</td>
                           <td>
-                            <span className={`status-tag ${p.is_active ? 'active' : 'inactive'}`}>
-                              {p.is_active ? 'Đang bán' : 'Ẩn'}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                              <span className={`status-tag ${p.is_active ? 'active' : 'inactive'}`}>
+                                {p.is_active ? 'Đang bán' : 'Ẩn'}
+                              </span>
+                              {p.stock_quantity <= 0 && (
+                                <span className="status-tag inactive" title="Sản phẩm đã hết hàng trong kho">
+                                  Hết hàng
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td>
                             <div className="table-actions">
@@ -1092,6 +1160,27 @@ const DashboardPage = () => {
       {toast && (
         <div className={`admin-toast ${toast.type}`}>
           {toast.message}
+        </div>
+      )}
+
+      {confirmDialog.isOpen && (
+        <div className="admin-modal-overlay" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} style={{ zIndex: 9999 }}>
+          <div className="admin-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', margin: 'auto' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{confirmDialog.title}</h3>
+              <button className="btn-close" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>✕</button>
+            </div>
+            <div className="modal-content" style={{ paddingTop: '0', paddingBottom: '32px' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.95rem', lineHeight: '1.5' }}>{confirmDialog.message}</p>
+              <div className="modal-footer compact" style={{ borderTop: 'none', paddingTop: '0', marginTop: '0', gap: '12px' }}>
+                <button className="btn-cancel" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>Hủy bỏ</button>
+                <button className="btn-submit" style={{ background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: '#ff3b30', fontWeight: '700' }} onClick={() => {
+                  if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                }}>Đồng ý</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
