@@ -13,7 +13,9 @@ import './ProductListPage.css';
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════════════════════════ */
-const BRANDS = ['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT'];
+const BRANDS = ['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT','Logitech','Samsung','LG','Intel','AMD','NVIDIA'];
+const CONDITIONS = ['Mới 100% Fullbox', 'Hàng Like New 99%', 'Hàng Cũ 95%', 'Hàng Cũ 90%', 'Hàng Trôi bảo hành'];
+const ORIGINS = ['Chính hãng (VAT)', 'Xách tay (Global)', 'Hàng nhập khẩu'];
 
 const PRICE_PRESETS = [
   { label: '< 5 triệu',   min: '',         max: '5000000'  },
@@ -31,7 +33,7 @@ const SORT_OPTIONS = [
 
 const INIT_FILTERS = {
   q: '', category_id: '', min_price: '', max_price: '',
-  sort: 'newest', brand: '', in_stock: false,
+  sort: 'newest', brand: '', product_condition: '', origin: '', in_stock: false,
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -225,6 +227,8 @@ const ProductListPage = () => {
     max_price:   searchParams.get('max_price')   || '',
     sort:        searchParams.get('sort')         || 'newest',
     brand:       searchParams.get('brand')        || '',
+    product_condition: searchParams.get('product_condition') || '',
+    origin:      searchParams.get('origin')       || '',
     in_stock:    searchParams.get('in_stock') === 'true',
   });
 
@@ -333,6 +337,40 @@ const ProductListPage = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
+  const toggleCondition = useCallback((condition) => {
+    if (condition === '') {
+      setFilters(prev => ({ ...prev, product_condition: '' }));
+    } else {
+      setFilters(prev => {
+        let conditions = prev.product_condition ? prev.product_condition.split(',') : [];
+        if (conditions.includes(condition)) {
+          conditions = conditions.filter(c => c !== condition);
+        } else {
+          conditions.push(condition);
+        }
+        return { ...prev, product_condition: conditions.join(',') };
+      });
+    }
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, []);
+
+  const toggleOrigin = useCallback((origin) => {
+    if (origin === '') {
+      setFilters(prev => ({ ...prev, origin: '' }));
+    } else {
+      setFilters(prev => {
+        let origins = prev.origin ? prev.origin.split(',') : [];
+        if (origins.includes(origin)) {
+          origins = origins.filter(o => o !== origin);
+        } else {
+          origins.push(origin);
+        }
+        return { ...prev, origin: origins.join(',') };
+      });
+    }
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, []);
+
   const applyPricePreset = useCallback((preset) => {
     setFilters(prev => {
       const isSame = prev.min_price === preset.min && prev.max_price === preset.max;
@@ -423,6 +461,14 @@ const ProductListPage = () => {
     const brands = filters.brand.split(',');
     brands.forEach(b => activeTags.push({ key: `brand_${b}`, label: b }));
   }
+  if (filters.product_condition) {
+    const conds = filters.product_condition.split(',');
+    conds.forEach(c => activeTags.push({ key: `cond_${c}`, label: c }));
+  }
+  if (filters.origin) {
+    const origins = filters.origin.split(',');
+    origins.forEach(o => activeTags.push({ key: `origin_${o}`, label: o }));
+  }
   if (filters.min_price || filters.max_price) {
     const lo = filters.min_price ? `${Number(filters.min_price).toLocaleString()}₫` : '0₫';
     const hi = filters.max_price ? `${Number(filters.max_price).toLocaleString()}₫` : '∞';
@@ -440,6 +486,22 @@ const ProductListPage = () => {
         let brands = prev.brand ? prev.brand.split(',') : [];
         brands = brands.filter(b => b !== bToRemove);
         return { ...prev, brand: brands.join(',') };
+      });
+      setPagination(prev => ({ ...prev, page: 1 }));
+    } else if (key.toString().startsWith('cond_')) {
+      const cToRemove = key.replace('cond_', '');
+      setFilters(prev => {
+        let conds = prev.product_condition ? prev.product_condition.split(',') : [];
+        conds = conds.filter(c => c !== cToRemove);
+        return { ...prev, product_condition: conds.join(',') };
+      });
+      setPagination(prev => ({ ...prev, page: 1 }));
+    } else if (key.toString().startsWith('origin_')) {
+      const oToRemove = key.replace('origin_', '');
+      setFilters(prev => {
+        let origins = prev.origin ? prev.origin.split(',') : [];
+        origins = origins.filter(o => o !== oToRemove);
+        return { ...prev, origin: origins.join(',') };
       });
       setPagination(prev => ({ ...prev, page: 1 }));
     } else {
@@ -513,6 +575,46 @@ const ProductListPage = () => {
                     className={`brand-chip ${isActive ? 'active' : ''}`}
                     onClick={() => toggleBrand(b)}
                   >{b}</button>
+                );
+              })}
+            </div>
+          </FilterSection>
+
+          {/* Loại hàng */}
+          <FilterSection icon={Sparkles} title="Loại hàng" hasActive={!!filters.product_condition}>
+            <div className="brand-grid">
+              <button
+                className={`brand-chip ${filters.product_condition === '' ? 'active' : ''}`}
+                onClick={() => toggleCondition('')}
+              >Tất cả</button>
+              {CONDITIONS.map(c => {
+                const isActive = (filters.product_condition || '').split(',').includes(c);
+                return (
+                  <button
+                    key={c}
+                    className={`brand-chip ${isActive ? 'active' : ''}`}
+                    onClick={() => toggleCondition(c)}
+                  >{c}</button>
+                );
+              })}
+            </div>
+          </FilterSection>
+
+          {/* Nguồn gốc */}
+          <FilterSection icon={Layers} title="Nguồn gốc / Bảo hành" hasActive={!!filters.origin}>
+            <div className="brand-grid">
+              <button
+                className={`brand-chip ${filters.origin === '' ? 'active' : ''}`}
+                onClick={() => toggleOrigin('')}
+              >Tất cả</button>
+              {ORIGINS.map(o => {
+                const isActive = (filters.origin || '').split(',').includes(o);
+                return (
+                  <button
+                    key={o}
+                    className={`brand-chip ${isActive ? 'active' : ''}`}
+                    onClick={() => toggleOrigin(o)}
+                  >{o}</button>
                 );
               })}
             </div>

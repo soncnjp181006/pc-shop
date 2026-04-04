@@ -22,6 +22,32 @@
   border-right: 1px solid var(--border-color);
   backdrop-filter: blur(50px) saturate(170%);
   -webkit-backdrop-filter: blur(50px) saturate(170%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar.collapsed {
+  width: 80px;
+}
+
+.admin-sidebar.collapsed .admin-logo-text,
+.admin-sidebar.collapsed .admin-nav-item span,
+.admin-sidebar.collapsed .user-details,
+.admin-sidebar.collapsed .admin-logout-btn span {
+  display: none;
+}
+
+.admin-sidebar.collapsed .admin-logo-section {
+  padding: 24px 0;
+  justify-content: center;
+}
+
+.admin-sidebar.collapsed .admin-nav-item {
+  padding: 12px 0;
+  justify-content: center;
+}
+
+.admin-sidebar.collapsed .admin-nav-item .nav-icon {
+  margin: 0;
 }
 
 .admin-logo-section {
@@ -152,6 +178,11 @@
   flex: 1;
   margin-left: 240px;
   padding: 24px 32px 60px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-main.expanded {
+  margin-left: 80px;
 }
 
 .admin-header {
@@ -174,6 +205,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.sidebar-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 16px;
+  transition: all 0.2s;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--border-color);
+  transform: scale(1.05);
 }
 
 html.light .admin-header-sticky {
@@ -478,11 +529,12 @@ html.light .admin-chip {
   border: 1px solid var(--border-color);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.02);
+  position: relative;
 }
 
 .admin-table {
   width: 100%;
-  min-width: 1200px; /* Force minimum width to allow scrolling and more columns */
+  min-width: 1400px; /* Increased minimum width */
   border-collapse: collapse;
   text-align: left;
 }
@@ -490,6 +542,11 @@ html.light .admin-chip {
 .admin-table th {
   padding: 14px 20px;
   font-size: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(10, 11, 14, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 html.light .admin-table th {

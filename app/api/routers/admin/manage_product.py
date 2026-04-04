@@ -31,6 +31,8 @@ def list_products_admin(
     brand: Optional[str] = None,
     in_stock: Optional[bool] = None,
     category_id: Optional[int] = None,
+    product_condition: Optional[str] = None,
+    origin: Optional[str] = None,
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
@@ -38,7 +40,9 @@ def list_products_admin(
     active_flag = False if active_only is None else active_only
     return get_all_products_service(
         db, active_only=active_flag, page=page, limit=limit, q=q, 
-        category_id=category_id, sort=sort, brand=brand, in_stock=in_stock
+        category_id=category_id, sort=sort, brand=brand, in_stock=in_stock,
+        product_condition=product_condition,
+        origin=origin
     )
 
 @router.patch("/products/{product_id}", response_model=ProductOut)

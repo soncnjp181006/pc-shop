@@ -40,7 +40,9 @@ def get_all_products_repo(
     q: Optional[str] = None,
     sort: Optional[str] = None,
     brand: Optional[str] = None,
-    in_stock: Optional[bool] = None
+    in_stock: Optional[bool] = None,
+    product_condition: Optional[str] = None,
+    origin: Optional[str] = None
 ) -> Tuple[List[Product], int]:
     query = db.query(Product).options(joinedload(Product.category), joinedload(Product.seller))
     
@@ -88,6 +90,20 @@ def get_all_products_repo(
         if brand_list:
             brand_conditions = [Product.brand.ilike(f"%{b}%") for b in brand_list]
             query = query.filter(or_(*brand_conditions))
+            
+    # Filter by product condition
+    if product_condition:
+        cond_list = [c.strip() for c in product_condition.split(",") if c.strip()]
+        if cond_list:
+            cond_conditions = [Product.product_condition.ilike(f"%{c}%") for c in cond_list]
+            query = query.filter(or_(*cond_conditions))
+            
+    # Filter by origin
+    if origin:
+        origin_list = [o.strip() for o in origin.split(",") if o.strip()]
+        if origin_list:
+            origin_conditions = [Product.origin.ilike(f"%{o}%") for o in origin_list]
+            query = query.filter(or_(*origin_conditions))
         
     # Filter in stock
     if in_stock is not None:

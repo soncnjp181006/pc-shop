@@ -172,6 +172,8 @@ const DashboardPage = () => {
     sort: 'newest',
     status: 'all',
     brand: '',
+    product_condition: '',
+    origin: '',
     in_stock: ''
   });
   const [overviewStats, setOverviewStats] = useState({ products: 0, categories: 0, users: 0 });
@@ -217,8 +219,17 @@ const DashboardPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') !== 'light');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('admin_sidebar_collapsed') === 'true');
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const navigate = useNavigate();
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(v => {
+      const newVal = !v;
+      localStorage.setItem('admin_sidebar_collapsed', String(newVal));
+      return newVal;
+    });
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -269,7 +280,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (activeTab !== 'products') return;
     fetchProducts();
-  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.status, productPaging.brand, productPaging.in_stock, productPaging.category_id, productSearch]);
+  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.status, productPaging.brand, productPaging.product_condition, productPaging.origin, productPaging.in_stock, productPaging.category_id, productSearch]);
 
   useEffect(() => {
     if (activeTab !== 'users') return;
@@ -303,6 +314,8 @@ const DashboardPage = () => {
         q: productSearch || undefined,
         active_only: productPaging.status === 'active' ? true : (productPaging.status === 'inactive' ? false : undefined),
         brand: productPaging.brand || undefined,
+        product_condition: productPaging.product_condition || undefined,
+        origin: productPaging.origin || undefined,
         in_stock: productPaging.in_stock === 'true' ? true : (productPaging.in_stock === 'false' ? false : undefined),
         category_id: productPaging.category_id || undefined
       });
@@ -807,7 +820,7 @@ const DashboardPage = () => {
 
   return (
     <div className="admin-dashboard">
-      <aside className="admin-sidebar glass-panel">
+      <aside className={`admin-sidebar glass-panel ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="admin-logo-section">
           <img src="/hero.png" alt="PC SHOP" className="admin-logo" />
           <div className="admin-logo-text">
@@ -820,30 +833,34 @@ const DashboardPage = () => {
           <button 
             className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
+            title={isSidebarCollapsed ? 'Tổng quan' : ''}
           >
             <span className="nav-icon"><BarChart2 size={18} /></span>
-            Tổng quan
+            <span>Tổng quan</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
+            title={isSidebarCollapsed ? 'Quản lý sản phẩm' : ''}
           >
             <span className="nav-icon"><Package size={18} /></span>
-            Quản lý sản phẩm
+            <span>Quản lý sản phẩm</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
+            title={isSidebarCollapsed ? 'Danh mục hệ thống' : ''}
           >
             <span className="nav-icon"><Folder size={18} /></span>
-            Danh mục hệ thống
+            <span>Danh mục hệ thống</span>
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
+            title={isSidebarCollapsed ? 'Người dùng & Seller' : ''}
           >
             <span className="nav-icon"><Users size={18} /></span>
-            Người dùng & Seller
+            <span>Người dùng & Seller</span>
           </button>
         </nav>
 
@@ -856,18 +873,24 @@ const DashboardPage = () => {
             </div>
           </div>
           <button onClick={handleLogout} className="admin-logout-btn">
-            Đăng xuất
+            <span className="nav-icon"><Unlock size={16} /></span>
+            <span>Đăng xuất</span>
           </button>
         </div>
       </aside>
 
-      <main className="admin-main">
+      <main className={`admin-main ${isSidebarCollapsed ? 'expanded' : ''}`}>
         <header className="admin-header admin-header-sticky animate-fade-in">
-          <div className="header-info">
-            <h1>{activeTab === 'overview' ? 'Bảng điều khiển' : 
-                 activeTab === 'products' ? 'Quản lý kho hàng' : 
-                 activeTab === 'categories' ? 'Cấu trúc danh mục' : 'Quản trị hệ thống'}</h1>
-            <p>Chào mừng trở lại, {user.username}!</p>
+          <div className="header-info" style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="sidebar-toggle-btn" onClick={toggleSidebar} title={isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}>
+              {isSidebarCollapsed ? <Eye size={20} /> : <EyeOff size={20} />}
+            </button>
+            <div>
+              <h1>{activeTab === 'overview' ? 'Bảng điều khiển' : 
+                   activeTab === 'products' ? 'Quản lý kho hàng' : 
+                   activeTab === 'categories' ? 'Cấu trúc danh mục' : 'Quản trị hệ thống'}</h1>
+              <p>Chào mừng trở lại, {user.username}!</p>
+            </div>
           </div>
           <div className="header-actions">
             <button className="admin-theme-toggle" onClick={toggleTheme} title="Đổi giao diện Sáng/Tối">
@@ -1104,6 +1127,28 @@ const DashboardPage = () => {
                       <option value="">Tất cả hãng</option>
                       {brandsList.map(b => (
                         <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="admin-select"
+                      value={productPaging.product_condition || ''}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, product_condition: e.target.value, page: 1 }))}
+                    >
+                      <option value="">Tất cả loại hàng</option>
+                      {conditionsList.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="admin-select"
+                      value={productPaging.origin || ''}
+                      onChange={(e) => setProductPaging((prev) => ({ ...prev, origin: e.target.value, page: 1 }))}
+                    >
+                      <option value="">Tất cả nguồn gốc</option>
+                      {originsList.map(o => (
+                        <option key={o} value={o}>{o}</option>
                       ))}
                     </select>
 

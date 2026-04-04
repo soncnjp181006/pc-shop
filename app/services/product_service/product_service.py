@@ -54,11 +54,15 @@ def get_all_products_service(
     q: Optional[str] = None,
     sort: Optional[str] = None,
     brand: Optional[str] = None,
-    in_stock: Optional[bool] = None
+    in_stock: Optional[bool] = None,
+    product_condition: Optional[str] = None,
+    origin: Optional[str] = None
 ) -> Dict[str, Any]:
     skip = (page - 1) * limit
     data, total = get_all_products_repo(
-        db, active_only, skip, limit, category_id, min_price, max_price, q, sort, brand, in_stock
+        db, active_only, skip, limit, category_id, min_price, max_price, q, sort, brand, in_stock,
+        product_condition=product_condition,
+        origin=origin
     )
     
     # Inject available stock cho từng sản phẩm
