@@ -89,6 +89,7 @@ const DashboardPage = () => {
     is_active: true
   });
   const [submitting, setSubmitting] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') !== 'light');
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const navigate = useNavigate();
 
@@ -152,6 +153,18 @@ const DashboardPage = () => {
     if (activeTab !== 'overview') return;
     fetchOverviewStats();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.add('light');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode((v) => !v);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -711,6 +724,13 @@ const DashboardPage = () => {
             <p>Chào mừng trở lại, {user.username}!</p>
           </div>
           <div className="header-actions">
+            <button className="admin-theme-toggle" onClick={toggleTheme} title="Đổi giao diện Sáng/Tối">
+              {isDarkMode ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              )}
+            </button>
             <button className="btn-view-shop" onClick={() => navigate('/home')}>
               <span><Eye size={16} /></span> Xem shop
             </button>
@@ -786,24 +806,31 @@ const DashboardPage = () => {
 
           {activeTab === 'products' && (
             <div className="management-tab">
-              <div className="table-header-actions">
-                <div className="search-box glass-panel">
-                  <input
-                    type="text"
-                    placeholder="Tìm tên sản phẩm, slug, ID..."
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setProductPaging((prev) => ({ ...prev, page: 1 }));
-                    }}
-                  />
-                </div>
-                <div className="table-actions-right">
-                  <div className="admin-chips">
-                    <span className="admin-chip">{productPaging.total} tổng</span>
-                    <span className="admin-chip">{productPaging.active_only ? 'Đang bán' : 'Tất cả'}</span>
+              <div className="table-header-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+                <div className="table-top-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  <div className="search-box glass-panel" style={{ flex: '1', maxWidth: '600px', margin: 0 }}>
+                    <input
+                      type="text"
+                      placeholder="Tìm tên sản phẩm, slug, ID..."
+                      value={productSearch}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setProductPaging((prev) => ({ ...prev, page: 1 }));
+                      }}
+                      style={{ padding: '14px 24px', fontSize: '1rem' }}
+                    />
                   </div>
-                  <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '8px', marginBottom: '8px'}}>
+                  <button
+                    className="btn-add-new"
+                    onClick={openCreateProductModal}
+                    style={{ padding: '14px 28px', fontSize: '1rem' }}
+                  >
+                    + Thêm sản phẩm
+                  </button>
+                </div>
+
+                <div className="table-filters glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 24px' }}>
+                  <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '12px', marginBottom: 0}}>
                     <select
                       className="admin-select"
                       value={productPaging.category_id || ''}
@@ -858,12 +885,11 @@ const DashboardPage = () => {
                       <option value="true">Chỉ đang bán</option>
                     </select>
                   </div>
-                  <button
-                    className="btn-add-new"
-                    onClick={openCreateProductModal}
-                  >
-                    + Thêm sản phẩm
-                  </button>
+                  
+                  <div className="admin-chips">
+                    <span className="admin-chip info" style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3', borderColor: 'rgba(0, 113, 227, 0.2)' }}>Tổng cộng: {productPaging.total}</span>
+                    <span className="admin-chip">Trang {productPaging.page}/{productPaging.pages}</span>
+                  </div>
                 </div>
               </div>
 
