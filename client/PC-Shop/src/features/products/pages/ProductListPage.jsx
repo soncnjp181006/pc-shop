@@ -37,10 +37,48 @@ const ProductListPage = () => {
 
   useEffect(() => {
     fetchCategories();
+
+    // Thiết lập kết nối WebSocket để cập nhật thời gian thực
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host.replace('5173', '8000')}/ws/stock`;
+    
+    let socket;
+    const connectWS = () => {
+      socket = new WebSocket(wsUrl);
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'stock_updated') {
+          console.log('Nhận tín hiệu cập nhật kho (List):', data);
+          
+          // Cập nhật state products ngay lập tức nếu product_id nằm trong danh sách hiện tại
+          if (data.product_id) {
+            setProducts(prevProducts => prevProducts.map(p => {
+              if (String(p.id) === String(data.product_id)) {
+                console.log(`Cập nhật kho tức thì cho SP ${p.id} trong danh sách...`);
+                return { ...p, available_stock: data.available_stock };
+              }
+              return p;
+            }));
+          } else {
+            // Fallback nếu payload cũ
+            fetchProducts(false);
+          }
+        }
+      };
+      socket.onclose = () => {
+        setTimeout(connectWS, 5000);
+      };
+    };
+
+    connectWS();
+
+    return () => {
+      if (socket) socket.close();
+    };
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true);
     const newParams = {};
     Object.keys(filters).forEach(key => {
       // Chỉ thêm param khi có giá trị thực sự (không gửi false lên server)
@@ -71,8 +109,8 @@ const ProductListPage = () => {
     }
   };
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       // Chỉ gửi params có giá trị thực (không gửi false/empty lên server)
       const params = { page: pagination.page, limit: pagination.limit };

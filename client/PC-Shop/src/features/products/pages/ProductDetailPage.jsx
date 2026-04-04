@@ -24,9 +24,61 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     fetchProductDetail(true); // Initial load with loading spinner
-    // Polling để cập nhật số lượng kho khả dụng mỗi 10 giây (không hiện loading)
-    const interval = setInterval(() => fetchProductDetail(false), 10000);
-    return () => clearInterval(interval);
+    
+    // Thiết lập kết nối WebSocket để cập nhật thời gian thực
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host.replace('5173', '8000')}/ws/stock`;
+    
+    let socket;
+    const connectWS = () => {
+      socket = new WebSocket(wsUrl);
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'stock_updated') {
+          console.log('Nhận tín hiệu cập nhật kho từ server:', data);
+          
+          // Nếu đây là sản phẩm đang xem, cập nhật state ngay lập tức mà không cần fetch
+          if (data.product_id && String(data.product_id) === String(id)) {
+            console.log('Cập nhật kho tức thì cho sản phẩm hiện tại...');
+            
+            // Cập nhật available_stock cho product chính
+            setProduct(prev => prev ? { ...prev, available_stock: data.available_stock } : prev);
+            
+            // Cập nhật available_stock cho từng variant
+            if (data.variants && data.variants.length > 0) {
+              setVariants(prevVariants => prevVariants.map(v => {
+                const updatedVariant = data.variants.find(uv => uv.id === v.id);
+                return updatedVariant ? { ...v, available_stock: updatedVariant.available_stock } : v;
+              }));
+              
+              // Cập nhật selectedVariant nếu nó đang được chọn
+              setSelectedVariant(prevSelected => {
+                if (!prevSelected) return null;
+                const updatedSelected = data.variants.find(uv => uv.id === prevSelected.id);
+                return updatedSelected ? { ...prevSelected, available_stock: updatedSelected.available_stock } : prevSelected;
+              });
+            }
+          } else {
+            // Nếu là sản phẩm khác hoặc payload cũ, vẫn fetch lại cho chắc chắn (fallback)
+            fetchProductDetail(false);
+          }
+        }
+      };
+      socket.onclose = () => {
+        // Thử kết nối lại sau 5 giây nếu bị ngắt
+        setTimeout(connectWS, 5000);
+      };
+    };
+
+    connectWS();
+
+    // Vẫn giữ Polling như một phương án dự phòng (fallback)
+    const interval = setInterval(() => fetchProductDetail(false), 30000); // 30s polling
+    
+    return () => {
+      if (socket) socket.close();
+      clearInterval(interval);
+    };
   }, [id]);
 
   const fetchProductDetail = async (showLoading = false) => {
@@ -87,6 +139,12 @@ const ProductDetailPage = () => {
       
       if (response.ok) {
         showToast('Đã thêm sản phẩm vào giỏ hàng! 🛒', 'success');
+        
+        // --- LOẠI BỎ OPTIMISTIC UPDATE CHO STOCK ---
+        // Vì WebSocket giờ đã rất nhanh (đã tối ưu backend), 
+        // việc cập nhật thủ công ở đây dễ gây lệch số lượng (race condition) 
+        // khi tin nhắn WebSocket đến cùng lúc.
+        
         // Dispatch custom event to notify Header to refresh cart count
         window.dispatchEvent(new Event('cartUpdated'));
       } else {

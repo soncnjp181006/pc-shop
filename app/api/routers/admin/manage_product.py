@@ -12,6 +12,9 @@ from app.services.product_service.product_service import (
 from app.dependencies.user.get_current_admin import get_current_admin
 from app.models.user import User
 
+from app.services.cart_service import notify_stock_change
+import asyncio
+
 router = APIRouter()
 
 class ProductStatusUpdate(BaseModel):
@@ -33,7 +36,7 @@ def list_products_admin(
     )
 
 @router.patch("/products/{product_id}", response_model=ProductOut)
-def update_product_admin(
+async def update_product_admin(
     product_id: int,
     data: ProductStatusUpdate,
     db: Session = Depends(get_db),
@@ -48,4 +51,10 @@ def update_product_admin(
         )
     
     update_data = ProductUpdate(**data.model_dump(exclude_unset=True))
-    return update_product_service(db, product_id, update_data)
+    updated_product = update_product_service(db, product_id, update_data)
+    
+    # Broadcast thay đổi kho khi admin cập nhật số lượng
+    if data.stock_quantity is not None:
+        await notify_stock_change(db, product_id)
+        
+    return updated_product

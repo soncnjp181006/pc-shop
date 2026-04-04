@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="PC-Shop Backend")
+from app.api.routers.websocket import router as websocket_router
+
+app = FastAPI(
+    title="PC Shop API",
+    description="API for PC Shop Management System",
+    version="1.0.0",
+)
 
 # Cấu hình CORS
 app.add_middleware(
@@ -27,6 +33,7 @@ app.include_router(user)
 # endpoint admin
 from app.api.deps import admin
 app.include_router(admin)
+app.include_router(websocket_router) # WebSocket không cần prefix v1 nếu muốn ngắn gọn
 
 # endpoint categories
 from app.api.deps import category_router, product_router, cart_router

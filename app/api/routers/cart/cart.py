@@ -24,7 +24,7 @@ def get_cart(
     return get_cart_details_service(db, current_user.id)
 
 @router.post("/items", response_model=CartItemOut, status_code=status.HTTP_201_CREATED)
-def add_item_to_cart(
+async def add_item_to_cart(
     item_in: CartItemCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -32,7 +32,7 @@ def add_item_to_cart(
     """
     Thêm sản phẩm vào giỏ hàng
     """
-    item = add_item_to_cart_service(db, current_user.id, item_in.variant_id, item_in.quantity, item_in.product_id)
+    item = await add_item_to_cart_service(db, current_user.id, item_in.variant_id, item_in.quantity, item_in.product_id)
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -41,7 +41,7 @@ def add_item_to_cart(
     return item
 
 @router.put("/items/{item_id}", response_model=CartItemOut)
-def update_cart_item(
+async def update_cart_item(
     item_id: int,
     item_in: CartItemUpdate,
     db: Session = Depends(get_db),
@@ -50,7 +50,7 @@ def update_cart_item(
     """
     Cập nhật số lượng sản phẩm trong giỏ hàng
     """
-    updated_item = update_cart_item_qty_service(db, current_user.id, item_id, item_in.quantity)
+    updated_item = await update_cart_item_qty_service(db, current_user.id, item_id, item_in.quantity)
     if not updated_item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -59,7 +59,7 @@ def update_cart_item(
     return updated_item
 
 @router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_cart_item(
+async def delete_cart_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -67,7 +67,7 @@ def delete_cart_item(
     """
     Xóa sản phẩm khỏi giỏ hàng
     """
-    success = delete_cart_item_service(db, current_user.id, item_id)
+    success = await delete_cart_item_service(db, current_user.id, item_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
