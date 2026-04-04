@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { cartApi, getImageUrl } from '../../../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingBag, Trash2, ArrowRight, ChevronLeft, 
-  ShieldCheck, Truck, RotateCcw, Lock, CreditCard, 
-  Info, AlertCircle, CheckCircle2 
+import {
+  ShoppingBag, Trash2, ArrowRight, ChevronLeft,
+  ShieldCheck, Truck, RotateCcw, Lock, CreditCard,
+  Info, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import './CartPage.css';
 
@@ -98,9 +98,9 @@ const CartPage = () => {
     };
   }, [tempItems, selectedItems]);
 
-  const selectedTotal = useMemo(() => 
+  const selectedTotal = useMemo(() =>
     tempItems.filter(it => selectedItems.has(it.id)).reduce((acc, it) => acc + (it.subtotal || 0), 0)
-  , [tempItems, selectedItems]);
+    , [tempItems, selectedItems]);
 
   if (loading) return (
     <div className="cart-loader">
@@ -123,7 +123,7 @@ const CartPage = () => {
         <header className="cart-modern-header">
           <div className="header-info">
             <h1 className="title-modular">Giỏ hàng <span>({counts.total})</span></h1>
-            <p className="subtitle-modular">Quản lý các linh kiện cao cấp của bạn</p>
+            {/* <p className="subtitle-modular"></p> */}
           </div>
           <button className="btn-back" onClick={() => navigate('/products')}>
             <ChevronLeft size={18} /> Tiếp tục mua sắm
@@ -159,7 +159,7 @@ const CartPage = () => {
                     <div className="item-check" onClick={() => toggleSelect(item.id)}>
                       <div className={`custom-checkbox ${selectedItems.has(item.id) ? 'checked' : ''}`} />
                     </div>
-                    
+
                     <div className="item-img" onClick={() => navigate(`/products/${item.variant.product_id}`)}>
                       <img src={getImageUrl(item.variant.product.image_url)} alt="" />
                     </div>
@@ -173,7 +173,7 @@ const CartPage = () => {
                           <Trash2 size={16} />
                         </button>
                       </div>
-                      
+
                       <div className="item-variant-chip">
                         {Object.values(item.variant.attributes).join(' / ')}
                       </div>
@@ -227,8 +227,8 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                <button 
-                  className="btn-checkout-modular" 
+                <button
+                  className="btn-checkout-modular"
                   disabled={selectedItems.size === 0}
                   onClick={() => navigate('/checkout')}
                 >
