@@ -51,19 +51,19 @@ const DashboardPage = () => {
       p.is_active ? 'Đang bán' : 'Ngừng bán'
     ]);
     
-    // Sử dụng dấu chấm phẩy (;) làm dấu phân cách để Excel nhận diện đúng các cột
-    // và thêm BOM để hỗ trợ tiếng Việt có dấu
-    let csvContent = "\uFEFFsep=;\n"; 
-    csvContent += headers.join(";") + "\n";
+    // Sử dụng định dạng Tab-Separated Values (TSV) và lưu với đuôi .xls
+    // Đây là cách cực kỳ hiệu quả để Excel tự động chia cột đúng mà không quan tâm đến locale (dấu phẩy hay chấm phẩy)
+    let content = "\uFEFF"; // BOM để hỗ trợ tiếng Việt
+    content += headers.join("\t") + "\n";
     rows.forEach(row => {
-      csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(";") + "\n";
+      content += row.map(cell => String(cell).replace(/\t/g, ' ')).join("\t") + "\n";
     });
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `products_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `products_export_${new Date().toISOString().slice(0,10)}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -119,6 +119,27 @@ const DashboardPage = () => {
       setToast({ type: 'error', message: 'Có lỗi khi cập nhật một số sản phẩm' });
     }
   };
+  const [configData, setConfigData] = useState(() => {
+    const saved = localStorage.getItem('admin_config');
+    return saved ? JSON.parse(saved) : {
+      brands: 'Apple\nASUS\nMSI\nGigabyte\nDell\nHP\nLenovo\nRazer\nCorsair\nNZXT',
+      statuses: 'Mới 100%\nLike New 99%\nCũ 95%\nHàng xách tay\nHàng chính hãng'
+    };
+  });
+
+  const brandsList = configData.brands.split('\n').map(b => b.trim()).filter(b => b);
+  const statusesList = configData.statuses.split('\n').map(s => s.trim()).filter(s => s);
+
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [tempConfig, setTempConfig] = useState(configData);
+
+  const handleSaveConfig = () => {
+    setConfigData(tempConfig);
+    localStorage.setItem('admin_config', JSON.stringify(tempConfig));
+    setToast({ type: 'success', message: 'Đã lưu cấu hình danh sách' });
+    setShowConfigPanel(false);
+  };
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -906,6 +927,61 @@ const DashboardPage = () => {
 
           {activeTab === 'products' && (
             <div className="management-tab">
+              {/* Cấu hình danh sách */}
+              <div className="admin-config-section glass-panel animate-fade-in" style={{ marginBottom: '24px', padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showConfigPanel ? '20px' : '0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'var(--accent-gradient)', width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Cấu hình danh mục nhanh</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Quản lý danh sách Hãng sản xuất và Trạng thái hiển thị trong form</p>
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-view-shop" 
+                    onClick={() => {
+                      setShowConfigPanel(!showConfigPanel);
+                      if (!showConfigPanel) setTempConfig(configData);
+                    }}
+                  >
+                    {showConfigPanel ? 'Đóng cấu hình' : 'Mở cấu hình'}
+                  </button>
+                </div>
+
+                {showConfigPanel && (
+                  <div className="config-grid animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <Diamond size={16} /> Hãng sản xuất (Mỗi hãng một dòng)
+                      </label>
+                      <textarea
+                        style={{ minHeight: '120px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                        value={tempConfig.brands}
+                        onChange={(e) => setTempConfig(prev => ({ ...prev, brands: e.target.value }))}
+                        placeholder="ASUS&#10;MSI&#10;Apple..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <CheckSquare size={16} /> Tình trạng / Trạng thái (Mỗi dòng một trạng thái)
+                      </label>
+                      <textarea
+                        style={{ minHeight: '120px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                        value={tempConfig.statuses}
+                        onChange={(e) => setTempConfig(prev => ({ ...prev, statuses: e.target.value }))}
+                        placeholder="Mới 100%&#10;99%&#10;Hàng cũ..."
+                      />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                      <button className="btn-cancel" onClick={() => setShowConfigPanel(false)}>Hủy</button>
+                      <button className="btn-submit" onClick={handleSaveConfig}>Lưu cấu hình</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="table-header-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
                 <div className="table-top-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                   <div className="search-box glass-panel" style={{ flex: '1', maxWidth: '500px', margin: 0 }}>
@@ -978,7 +1054,7 @@ const DashboardPage = () => {
                       onChange={(e) => setProductPaging((prev) => ({ ...prev, brand: e.target.value, page: 1 }))}
                     >
                       <option value="">Tất cả hãng</option>
-                      {['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT'].map(b => (
+                      {brandsList.map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </select>
@@ -1073,9 +1149,24 @@ const DashboardPage = () => {
                           </td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-                              <span className={`status-tag ${p.is_active ? 'active' : 'inactive'}`}>
-                                {p.is_active ? 'Đang bán' : 'Ngừng bán'}
-                              </span>
+                              <select
+                                className={`admin-select small ${p.is_active ? 'success' : 'danger'}`}
+                                style={{ 
+                                  padding: '4px 28px 4px 12px', 
+                                  fontSize: '0.75rem', 
+                                  borderRadius: '20px',
+                                  border: 'none',
+                                  backgroundPosition: 'right 8px center',
+                                  color: p.is_active ? '#34c759' : '#ff3b30',
+                                  backgroundColor: p.is_active ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)',
+                                  fontWeight: '700'
+                                }}
+                                value={p.is_active ? 'true' : 'false'}
+                                onChange={() => handleToggleProductActive(p)}
+                              >
+                                <option value="true">Đang bán</option>
+                                <option value="false">Ngừng bán</option>
+                              </select>
                             </div>
                           </td>
                           <td>
@@ -1528,23 +1619,29 @@ const DashboardPage = () => {
                 </div>
                 <div className="form-group">
                   <label>Hãng sản xuất</label>
-                  <input
-                    type="text"
+                  <select
                     name="brand"
                     value={formData.brand}
                     onChange={handleInputChange}
-                    placeholder="Ví dụ: ASUS, MSI, Apple..."
-                  />
+                  >
+                    <option value="">-- Chọn hãng --</option>
+                    {brandsList.map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Tình trạng / Trạng thái</label>
-                  <input
-                    type="text"
+                  <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    placeholder="Ví dụ: Mới 100%, 99%,..."
-                  />
+                  >
+                    <option value="">-- Chọn tình trạng --</option>
+                    {statusesList.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group full-width">
                   <label>Link ảnh sản phẩm (Google Drive/URL)</label>
