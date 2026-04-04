@@ -46,7 +46,18 @@ def get_all_products_repo(
     
     # Filter by category
     if category_id:
-        query = query.filter(Product.category_id == category_id)
+        from app.models.category import Category
+        # Lấy tất cả danh mục hiện có để dễ dàng duyệt đệ quy mà không cần gọi DB nhiều vòng
+        all_cats = db.query(Category).all()
+        def get_all_child_ids(curr_id: int) -> List[int]:
+            ids = [curr_id]
+            for c in all_cats:
+                if c.parent_id == curr_id:
+                    ids.extend(get_all_child_ids(c.id))
+            return ids
+            
+        child_cat_ids = get_all_child_ids(category_id)
+        query = query.filter(Product.category_id.in_(child_cat_ids))
     
     # Filter by price range
     if min_price is not None:
@@ -60,7 +71,11 @@ def get_all_products_repo(
         
     # Search by brand
     if brand:
-        query = query.filter(Product.name.ilike(f"%{brand}%"))
+        from sqlalchemy import or_
+        brand_list = [b.strip() for b in brand.split(",") if b.strip()]
+        if brand_list:
+            conditions = [Product.name.ilike(f"%{b}%") for b in brand_list]
+            query = query.filter(or_(*conditions))
         
     # Filter in stock
     if in_stock:
@@ -84,6 +99,8 @@ def get_all_products_repo(
         query = query.order_by(Product.base_price.desc())
     elif sort == "newest":
         query = query.order_by(Product.created_at.desc())
+    elif sort == "name_asc":
+        query = query.order_by(Product.name.asc())
     else:
         # Default sort
         query = query.order_by(Product.id.desc())

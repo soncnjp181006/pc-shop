@@ -317,7 +317,19 @@ const ProductListPage = () => {
   }, []);
 
   const toggleBrand = useCallback((brand) => {
-    setFilters(prev => ({ ...prev, brand: prev.brand === brand ? '' : brand }));
+    if (brand === '') {
+      setFilters(prev => ({ ...prev, brand: '' }));
+    } else {
+      setFilters(prev => {
+        let brands = prev.brand ? prev.brand.split(',') : [];
+        if (brands.includes(brand)) {
+          brands = brands.filter(b => b !== brand);
+        } else {
+          brands.push(brand);
+        }
+        return { ...prev, brand: brands.join(',') };
+      });
+    }
     setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
@@ -401,14 +413,16 @@ const ProductListPage = () => {
     return out;
   };
 
-  /* ── Compute active filter tags ── */
   const activeTags = [];
   if (filters.q)           activeTags.push({ key: 'q',       label: `"${filters.q}"` });
   if (filters.category_id) {
     const cat = findCategoryById(categories, filters.category_id);
     activeTags.push({ key: 'category_id', label: cat?.name || 'Danh mục' });
   }
-  if (filters.brand)       activeTags.push({ key: 'brand',   label: filters.brand });
+  if (filters.brand) {
+    const brands = filters.brand.split(',');
+    brands.forEach(b => activeTags.push({ key: `brand_${b}`, label: b }));
+  }
   if (filters.min_price || filters.max_price) {
     const lo = filters.min_price ? `${Number(filters.min_price).toLocaleString()}₫` : '0₫';
     const hi = filters.max_price ? `${Number(filters.max_price).toLocaleString()}₫` : '∞';
@@ -419,6 +433,15 @@ const ProductListPage = () => {
   const removeTag = (key) => {
     if (key === 'price') {
       setFilters(prev => ({ ...prev, min_price: '', max_price: '' }));
+      setPagination(prev => ({ ...prev, page: 1 }));
+    } else if (key.toString().startsWith('brand_')) {
+      const bToRemove = key.replace('brand_', '');
+      setFilters(prev => {
+        let brands = prev.brand ? prev.brand.split(',') : [];
+        brands = brands.filter(b => b !== bToRemove);
+        return { ...prev, brand: brands.join(',') };
+      });
+      setPagination(prev => ({ ...prev, page: 1 }));
     } else {
       applyFilter(key, key === 'in_stock' ? false : '');
     }
@@ -482,13 +505,16 @@ const ProductListPage = () => {
                 className={`brand-chip ${filters.brand === '' ? 'active' : ''}`}
                 onClick={() => toggleBrand('')}
               >Tất cả</button>
-              {BRANDS.map(b => (
-                <button
-                  key={b}
-                  className={`brand-chip ${filters.brand === b ? 'active' : ''}`}
-                  onClick={() => toggleBrand(b)}
-                >{b}</button>
-              ))}
+              {BRANDS.map(b => {
+                const isActive = (filters.brand || '').split(',').includes(b);
+                return (
+                  <button
+                    key={b}
+                    className={`brand-chip ${isActive ? 'active' : ''}`}
+                    onClick={() => toggleBrand(b)}
+                  >{b}</button>
+                );
+              })}
             </div>
           </FilterSection>
 
