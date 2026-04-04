@@ -244,6 +244,19 @@ const ProductListPage = () => {
   const [expandedIds, setExpandedIds] = useState([]);
   const [brandOptions, setBrandOptions] = useState(() => getBrandsFromLocalAdminConfig() || BRANDS);
   const [pagination,  setPagination]  = useState({ page: initialPage, limit: initialLimit, pages: 1, total: 0 });
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isLimitOpen, setIsLimitOpen] = useState(false);
+  const sortRef = useRef(null);
+  const limitRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setIsSortOpen(false);
+      if (limitRef.current && !limitRef.current.contains(e.target)) setIsLimitOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [filters, setFilters] = useState({
     q:           searchParams.get('q')           || '',
@@ -784,27 +797,47 @@ const ProductListPage = () => {
           </span>
 
           {/* Page size */}
-          <div className="page-size-wrapper">
-            <Layers size={14} />
-            <select
-              value={pagination.limit}
-              onChange={e => {
-                const next = Number(e.target.value);
-                setPagination(p => ({ ...p, limit: next, page: 1 }));
-              }}
-            >
-              {PAGE_SIZE_OPTIONS.map(n => (
-                <option key={n} value={n}>{n}/trang</option>
-              ))}
-            </select>
+          <div className="custom-dropdown-wrapper" ref={limitRef}>
+            <div className={`dropdown-trigger ${isLimitOpen ? 'active' : ''}`} onClick={() => setIsLimitOpen(!isLimitOpen)}>
+              <Layers size={14} />
+              <span>{pagination.limit}/trang</span>
+              <ChevronDown size={14} className={`trigger-chevron ${isLimitOpen ? 'up' : ''}`} />
+            </div>
+            {isLimitOpen && (
+              <div className="dropdown-menu glass-panel animate-pop-in">
+                {PAGE_SIZE_OPTIONS.map(n => (
+                  <div
+                    key={n}
+                    className={`dropdown-item ${pagination.limit === n ? 'active' : ''}`}
+                    onClick={() => { setPagination(p => ({ ...p, limit: n, page: 1 })); setIsLimitOpen(false); }}
+                  >
+                    {n}/trang
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Sort */}
-          <div className="sort-wrapper">
-            <ArrowUpDown size={14} />
-            <select value={filters.sort} onChange={e => applyFilter('sort', e.target.value)}>
-              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+          <div className="custom-dropdown-wrapper" ref={sortRef}>
+            <div className={`dropdown-trigger ${isSortOpen ? 'active' : ''}`} onClick={() => setIsSortOpen(!isSortOpen)}>
+              <ArrowUpDown size={14} />
+              <span>{SORT_OPTIONS.find(o => o.value === filters.sort)?.label}</span>
+              <ChevronDown size={14} className={`trigger-chevron ${isSortOpen ? 'up' : ''}`} />
+            </div>
+            {isSortOpen && (
+              <div className="dropdown-menu glass-panel animate-pop-in">
+                {SORT_OPTIONS.map(o => (
+                  <div
+                    key={o.value}
+                    className={`dropdown-item ${filters.sort === o.value ? 'active' : ''}`}
+                    onClick={() => { applyFilter('sort', o.value); setIsSortOpen(false); }}
+                  >
+                    {o.label}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* View toggle */}
