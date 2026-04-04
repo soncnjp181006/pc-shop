@@ -261,158 +261,150 @@ const CartPage = () => {
       <div className="container cart-layout">
         <header className="cart-header">
           <div className="header-text">
-            <h1 className="cart-title">Giỏ hàng <span className="accent">TikTok Style</span></h1>
-            {!isEmpty && <span className="cart-count">Tất cả {visibleItems.length} sản phẩm</span>}
+            <h1 className="cart-title">
+              <span className="accent">Giỏ hàng</span> của bạn
+            </h1>
+            {!isEmpty && <span className="cart-count">Hiện có {visibleItems.length} sản phẩm công nghệ</span>}
           </div>
           <button onClick={() => safeNavigate('/products')} className="continue-shopping btn-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
             Tiếp tục mua sắm
           </button>
         </header>
         
         {isEmpty ? (
-          <div className="empty-cart-premium">
-            <div className="empty-icon-box">🛒</div>
-            <h2>Giỏ hàng chưa có gì</h2>
-            <p>Hàng ngàn sản phẩm công nghệ đỉnh cao đang chờ bạn khám phá.</p>
-            <button onClick={() => safeNavigate('/products')} className="btn btn-primary btn-lg">Bắt đầu mua sắm</button>
+          <div className="empty-cart-modern animate-fade-in">
+            <div className="empty-visual">🛒</div>
+            <h2>Giỏ hàng trống</h2>
+            <p>Hàng ngàn linh kiện PC và phụ kiện Gaming cao cấp đang chờ bạn khám phá. Đừng bỏ lỡ!</p>
+            <button onClick={() => safeNavigate('/products')} className="btn btn-primary btn-lg">
+              Khám phá ngay
+            </button>
           </div>
         ) : (
-          <div className="cart-content-wrapper">
-            <div className="cart-table-header">
-              <div className="col-check">
-                <input 
-                  type="checkbox" 
-                  checked={selectedItems.size === visibleItems.length && visibleItems.length > 0} 
-                  onChange={toggleSelectAll}
-                  id="select-all"
-                />
-                <label htmlFor="select-all">Tất cả ({visibleItems.length} sản phẩm)</label>
-              </div>
-              <div className="col-price mobile-hidden">Đơn giá</div>
-              <div className="col-qty mobile-hidden">Số lượng</div>
-              <div className="col-subtotal mobile-hidden">Số tiền</div>
-              <div className="col-action mobile-hidden">Thao tác</div>
-            </div>
+          <div className="cart-grid-container">
+            <div className="cart-items-column">
+              {hasChanges && (
+                <div className="sync-needed-banner">
+                  <span className="sync-text">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: '8px', verticalAlign: 'middle'}}><path d="M21 2v6h-6M3 22v-6h6M21 12c0 4.97-4.03 9-9 9-2.39 0-4.56-.93-6.18-2.46M3 12c0-4.97 4.03-9 9-9 2.39 0 4.56.93 6.18 2.46"/></svg>
+                    Bạn có thay đổi chưa được đồng bộ
+                  </span>
+                  <button className="btn-sync-now" onClick={handleSyncCart} disabled={isSyncing}>
+                    {isSyncing ? "Đang xử lý..." : "Đồng bộ ngay"}
+                  </button>
+                </div>
+              )}
 
-            <div className="cart-items-list">
-              {tempItems.map(item => {
-                const isDeleted = deletedIds.has(item.id);
-                return (
-                  <div key={item.id} className={`cart-item-tiktok ${selectedItems.has(item.id) ? 'selected' : ''} ${isDeleted ? 'marked-deleted' : ''}`}>
-                    <div className="col-check">
-                      {!isDeleted && (
-                        <input 
-                          type="checkbox" 
-                          checked={selectedItems.has(item.id)} 
-                          onChange={() => toggleSelectItem(item.id)} 
-                        />
-                      )}
-                    </div>
-                    
-                    <div className="col-info">
-                      <div className="item-visual">
-                        <div className="item-img-wrapper">
-                          {item.variant.product?.image_url ? (
-                            <img src={getImageUrl(item.variant.product.image_url)} alt="product" />
-                          ) : (
-                            <span className="no-img">PC</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="item-details">
-                        <button 
-                          onClick={() => safeNavigate(`/products/${item.variant.product_id}`)} 
-                          className="item-name btn-link text-left"
-                        >
-                          {item.variant.product?.name || `Sản phẩm #${item.variant.product_id}`}
-                        </button>
-                        <div className="item-variant-info">
-                          Phân loại: {Object.values(item.variant.attributes).join(' • ')}
-                        </div>
-                        {isDeleted && <span className="deleted-label">Đã đánh dấu xóa</span>}
+              <div className="cart-items-wrapper">
+                {tempItems.map(item => {
+                  const isDeleted = deletedIds.has(item.id);
+                  const isSelected = selectedItems.has(item.id);
+                  
+                  return (
+                    <div key={item.id} className={`cart-item-premium ${isSelected ? 'selected' : ''} ${isDeleted ? 'marked-deleted' : ''}`}>
+                      <div className="item-selector">
                         {!isDeleted && (
-                          <div className="mobile-only price-qty-row">
-                            <span className="mobile-price">{(item.price || 0).toLocaleString()} VNĐ</span>
-                            <div className="qty-stepper mini">
-                              <button className="step-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity - 1)}>-</button>
-                              <span className="qty-number">{item.quantity}</span>
-                              <button className="step-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity + 1)}>+</button>
-                            </div>
-                          </div>
+                          <div 
+                            className={`custom-checkbox ${isSelected ? 'checked' : ''}`}
+                            onClick={() => toggleSelectItem(item.id)}
+                          />
                         )}
                       </div>
-                    </div>
+                      
+                      <div className="item-visual">
+                        {item.variant.product?.image_url ? (
+                          <img src={getImageUrl(item.variant.product.image_url)} alt="product" />
+                        ) : (
+                          <div className="image-placeholder">PC</div>
+                        )}
+                      </div>
 
-                    <div className="col-price mobile-hidden">
-                      {(item.price || 0).toLocaleString()} VNĐ
-                    </div>
-
-                    <div className="col-qty mobile-hidden">
-                      {!isDeleted && (
-                        <div className="qty-stepper">
-                          <button className="step-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity - 1)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14"/></svg>
-                          </button>
-                          <span className="qty-number">{item.quantity}</span>
-                          <button className="step-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity + 1)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
-                          </button>
+                      <div className="item-main-info">
+                        <div className="item-title-row">
+                          <div className="title-group">
+                            <button 
+                              onClick={() => safeNavigate(`/products/${item.variant.product_id}`)} 
+                              className="item-name-premium btn-link text-left"
+                            >
+                              {item.variant.product?.name || `Sản phẩm #${item.variant.product_id}`}
+                            </button>
+                            <div className="item-variant-tag">
+                              {Object.values(item.variant.attributes).join(' • ')}
+                            </div>
+                          </div>
+                          <div className="item-price-info">
+                            <span className="unit-price">{(item.price || 0).toLocaleString()} ₫</span>
+                            <span className="subtotal-price">{(item.subtotal || 0).toLocaleString()} ₫</span>
+                          </div>
                         </div>
-                      )}
-                    </div>
 
-                    <div className="col-subtotal mobile-hidden">
-                      {(item.subtotal || 0).toLocaleString()} VNĐ
+                        <div className="item-footer-row">
+                          <div className="item-actions-group">
+                            {isDeleted ? (
+                              <button className="btn-undo" onClick={() => handleUndoDelete(item.id)}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: '6px'}}><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6-6m-6 6l6 6"/></svg>
+                                Hoàn tác xóa
+                              </button>
+                            ) : (
+                              <>
+                                <div className="premium-stepper">
+                                  <button className="stepper-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity - 1)}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14"/></svg>
+                                  </button>
+                                  <span className="stepper-value">{item.quantity}</span>
+                                  <button className="stepper-btn" onClick={() => handleUpdateQtyLocal(item.id, item.quantity + 1)}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
+                                  </button>
+                                </div>
+                                <button className="btn-remove-premium btn-link" onClick={() => handleDeleteItemLocal(item.id)}>
+                                  Loại bỏ
+                                </button>
+                              </>
+                            )}
+                          </div>
+                          {isDeleted && <span className="deleted-label">Đã đánh dấu xóa</span>}
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="col-action">
-                      {isDeleted ? (
-                        <button className="btn-undo" onClick={() => handleUndoDelete(item.id)}>Hoàn tác</button>
-                      ) : (
-                        <button className="btn-delete" onClick={() => handleDeleteItemLocal(item.id)}>Xóa</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Sticky Checkout Bar */}
-            <div className="checkout-sticky-bar">
-              <div className="container bar-content">
-                <div className="bar-left mobile-hidden">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedItems.size === visibleItems.length && visibleItems.length > 0} 
-                    onChange={toggleSelectAll}
-                    id="select-all-bottom"
-                  />
-                  <label htmlFor="select-all-bottom">Chọn tất cả ({visibleItems.length})</label>
-                  
-                  <button 
-                    className={`btn-sync-cart ${hasChanges ? 'highlight' : ''}`} 
-                    onClick={handleSyncCart}
-                    disabled={!hasChanges || isSyncing}
-                  >
-                    {isSyncing ? "Đang cập nhật..." : "Xác nhận thay đổi"}
-                  </button>
-                </div>
-                
-                <div className="bar-right">
-                  <div className="total-info">
-                    <span className="total-label">Tổng thanh toán ({selectedItems.size} sản phẩm):</span>
-                    <span className="total-amount">{selectedTotal.toLocaleString()} VNĐ</span>
-                  </div>
-                  <button 
-                    className={`btn-checkout-tiktok ${selectedItems.size === 0 ? 'disabled' : ''}`}
-                    disabled={selectedItems.size === 0}
-                  >
-                    Mua hàng
-                  </button>
-                </div>
+                  );
+                })}
               </div>
             </div>
+
+            <aside className="cart-summary-panel">
+              <h2 className="summary-title">Tóm tắt đơn hàng</h2>
+              <div className="summary-content">
+                <div className="summary-row">
+                  <span>Số lượng sản phẩm</span>
+                  <span>{selectedItems.size}</span>
+                </div>
+                <div className="summary-row">
+                  <span>Tạm tính</span>
+                  <span>{selectedTotal.toLocaleString()} ₫</span>
+                </div>
+                <div className="summary-row">
+                  <span>Phí vận chuyển</span>
+                  <span>Miễn phí</span>
+                </div>
+                <div className="summary-row total">
+                  <span>Tổng cộng</span>
+                  <span className="price">{selectedTotal.toLocaleString()} ₫</span>
+                </div>
+              </div>
+              <button 
+                className={`btn btn-primary btn-checkout-premium ${selectedItems.size === 0 ? 'disabled' : ''}`}
+                disabled={selectedItems.size === 0}
+                onClick={() => safeNavigate('/checkout')}
+              >
+                Tiến hành đặt hàng
+              </button>
+              <div className="payment-methods-hint">
+                <p style={{fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '20px', textAlign: 'center'}}>
+                  Chấp nhận thanh toán qua Thẻ quốc tế, Ví điện tử và COD
+                </p>
+              </div>
+            </aside>
           </div>
         )}
       </div>

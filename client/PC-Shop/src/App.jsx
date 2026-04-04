@@ -7,6 +7,7 @@ import DashboardPage from './features/admin/pages/DashboardPage';
 import ProductListPage from './features/products/pages/ProductListPage';
 import ProductDetailPage from './features/products/pages/ProductDetailPage';
 import CartPage from './features/cart/pages/CartPage';
+import CheckoutPage from './features/cart/pages/CheckoutPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 
@@ -119,6 +120,14 @@ function App() {
             <SemiPublicRoute>
               <CartPage />
             </SemiPublicRoute>
+          } 
+        />
+        <Route 
+          path="/checkout" 
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
           } 
         />
 
