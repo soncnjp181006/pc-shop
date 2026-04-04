@@ -425,6 +425,14 @@
   flex: 1;
   min-width: 0;
   padding: 36px 44px;
+  position: relative;
+}
+
+.content-loading-overlay {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: blur(0.5px);
+  transition: all 0.3s ease;
 }
 
 /* ── Top bar ── */

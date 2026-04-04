@@ -761,8 +761,8 @@ const ProductListPage = () => {
         )}
 
         {/* ── Products ── */}
-        <main className="content">
-          {loading ? (
+        <main className={`content ${loading ? 'content-loading-overlay' : ''}`}>
+          {loading && products.length === 0 ? (
             <div className={`products-grid ${viewMode === 'list' ? 'list-mode' : ''}`}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="product-card-premium skeleton">
@@ -817,7 +817,7 @@ const ProductListPage = () => {
                 </div>
               )}
             </>
-          ) : (
+          ) : !loading && (
             <div className="no-results-premium">
               <Search size={48} className="no-results-icon-svg" strokeWidth={1} />
               <h3>Không tìm thấy sản phẩm</h3>
