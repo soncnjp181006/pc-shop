@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
-import { Truck, RefreshCcw, ShieldCheck, Frown, X } from 'lucide-react';
+import { 
+  Truck, RefreshCcw, ShieldCheck, Frown, X, 
+  ShoppingBag, ArrowRight, Star, Heart, Share2, 
+  ChevronRight, Play, Info, Settings
+} from 'lucide-react';
 import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
@@ -21,7 +25,7 @@ const ProductDetailPage = () => {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    setTimeout(() => setToast(null), 3000);
   };
 
   useEffect(() => {
@@ -49,8 +53,6 @@ const ProductDetailPage = () => {
                 return updated ? { ...prev, available_stock: updated.available_stock } : prev;
               });
             }
-          } else {
-            fetchProductDetail(false);
           }
         }
       };
@@ -80,10 +82,10 @@ const ProductDetailPage = () => {
           return variantsData.find(v => v.id === prev.id) || prev;
         });
       } else {
-        if (showLoading) setError("Không tìm thấy sản phẩm.");
+        if (showLoading) setError("Sản phẩm không tồn tại.");
       }
     } catch {
-      if (showLoading) setError("Có lỗi xảy ra khi tải dữ liệu.");
+      if (showLoading) setError("Lỗi kết nối cơ sở dữ liệu.");
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -91,215 +93,167 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     if (variants.length > 0 && !selectedVariant) {
-      showToast('Vui lòng chọn một phiên bản sản phẩm.', 'error');
+      showToast('Vui lòng chọn phiên bản phù hợp.', 'error');
       return;
     }
-
-    const currentAvailable = selectedVariant ? selectedVariant.available_stock : product.available_stock;
-    if (quantity > currentAvailable) {
-      showToast(`Chỉ còn ${currentAvailable} sản phẩm có sẵn.`, 'error');
-      return;
-    }
-
-    const variantId = selectedVariant ? parseInt(selectedVariant.id) : null;
-    const productId = parseInt(id);
 
     setAddingToCart(true);
     try {
-      const response = await cartApi.addItem(variantId, quantity, productId);
+      const response = await cartApi.addItem(
+        selectedVariant ? parseInt(selectedVariant.id) : null,
+        quantity,
+        parseInt(id)
+      );
       if (response.ok) {
-        showToast('Đã thêm vào giỏ hàng! 🛒', 'success');
+        showToast('Đã thêm sản phẩm thành công!', 'success');
         window.dispatchEvent(new Event('cartUpdated'));
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 401) {
-          showToast('Vui lòng đăng nhập để thêm vào giỏ hàng.', 'error');
-          setTimeout(() => navigate('/'), 2000);
-        } else {
-          showToast(errorData.detail || 'Lỗi khi thêm vào giỏ hàng.', 'error');
-        }
+        const errorData = await response.json();
+        showToast(errorData.detail || 'Lỗi bất ngờ xảy ra.', 'error');
       }
     } catch {
-      showToast('Lỗi kết nối server.', 'error');
+      showToast('Máy chủ không phản hồi.', 'error');
     } finally {
       setAddingToCart(false);
     }
   };
 
   if (loading) return (
-    <div className="loading-container">
-      <div className="spinner" />
-      <p>Đang tải thông tin sản phẩm...</p>
+    <div className="product-page-loader">
+      <div className="spinner-modular" />
+      <p>Đang chuẩn bị dữ liệu...</p>
     </div>
   );
 
   if (error) return (
-    <div className="loading-container">
-      <div className="error-state">
-        <div className="error-icon"><Frown size={48} strokeWidth={1.5} color="var(--text-tertiary)" /></div>
+    <div className="product-page-error container">
+      <div className="error-card glass-panel">
+        <Frown size={48} className="error-icon" />
+        <h2>Ối! Thông tin bị gián đoạn</h2>
         <p>{error}</p>
-        <button className="btn btn-secondary" onClick={() => navigate('/products')}>Quay lại danh sách</button>
+        <button className="btn btn-primary" onClick={() => navigate('/products')}>Về trang sản phẩm</button>
       </div>
     </div>
   );
 
   if (!product) return null;
 
-  // Media list
   const mediaMatch = (product.description || '').match(/\[MEDIA:(.*?)\]/);
   const extraLinks = mediaMatch ? mediaMatch[1].split(';').filter(l => l.trim()) : [];
   const mediaList = [product.image_url, ...extraLinks].filter(Boolean);
-
   const isVideo = (url) => url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4');
   const currentMedia = mediaList[activeMediaIdx];
-
   const currentStock = selectedVariant?.available_stock ?? product.available_stock;
   const isOutOfStock = currentStock <= 0;
   const currentPrice = selectedVariant?.price_override || product.base_price;
 
   return (
-    <div className="product-page animate-fade-in">
-      {toast && (
-        <div className={`toast-notification ${toast.type}`}>
+    <main className="product-detail-modular animate-fade-in">
+      {/* Toast Overlay */}
+      {toast && createPortal(
+        <div className={`modular-toast ${toast.type}`}>
+          {toast.type === 'success' ? <ShoppingBag size={18} /> : <X size={18} />}
           <span>{toast.message}</span>
-          <button onClick={() => setToast(null)}><X size={16} /></button>
-        </div>
+        </div>,
+        document.body
       )}
 
-      <div className="product-container">
-        {/* Breadcrumb */}
-        <nav className="breadcrumb">
+      <div className="container-modular">
+        {/* Navigation Breadcrumb */}
+        <nav className="modular-nav">
           <Link to="/home">Trang chủ</Link>
-          <span className="separator">›</span>
-          <Link to="/products">Sản phẩm</Link>
-          <span className="separator">›</span>
+          <ChevronRight size={14} className="sep" />
+          <Link to="/products">Linh kiện</Link>
+          <ChevronRight size={14} className="sep" />
           <span className="current">{product.name}</span>
         </nav>
 
-        <div className="product-grid-detail">
-          {/* ── Gallery Section ── */}
-          <div className="product-gallery">
-            {/* Main Image */}
-            {mediaList.length === 0 ? (
-              <div className="main-image-card placeholder">PC Shop</div>
-            ) : (
-              <>
-                <div className="main-image-card">
-                  {isVideo(currentMedia) ? (
-                    <div className="video-main-container">
-                      <iframe
-                        src={currentMedia.replace('watch?v=', 'embed/')}
-                        title="Product Video"
-                        frameBorder="0"
-                        allowFullScreen
+        <section className="product-hero-modular">
+          {/* GALLERY BLOCK */}
+          <div className="gallery-block">
+            <div className="main-stage glass-panel">
+              <div className="stage-badges">
+                {product.brand && <span className="badge-item brand">{product.brand}</span>}
+                <span className={`badge-item stock ${isOutOfStock ? 'out' : 'in'}`}>
+                  {isOutOfStock ? 'Hết hàng' : 'Còn hàng'}
+                </span>
+              </div>
+              
+              <div className="media-renderer">
+                {mediaList.length === 0 ? (
+                  <div className="image-placeholder">PC SHOP</div>
+                ) : (
+                  <div className="display-box">
+                    {isVideo(currentMedia) ? (
+                      <iframe src={currentMedia.replace('watch?v=', 'embed/')} frameBorder="0" allowFullScreen />
+                    ) : (
+                      <img
+                        src={getImageUrl(currentMedia)}
+                        alt={product.name}
+                        onClick={() => setLightboxIndex(activeMediaIdx)}
                       />
-                    </div>
-                  ) : (
-                    <img
-                      src={getImageUrl(currentMedia)}
-                      alt={product.name}
-                      className="detail-img"
-                      onClick={() => setLightboxIndex(activeMediaIdx)}
-                    />
-                  )}
-
-                  {mediaList.length > 1 && (
-                    <div className="slider-controls">
-                      <button className="slider-btn prev" onClick={() => setActiveMediaIdx(i => (i - 1 + mediaList.length) % mediaList.length)}>‹</button>
-                      <button className="slider-btn next" onClick={() => setActiveMediaIdx(i => (i + 1) % mediaList.length)}>›</button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Thumbnails */}
-                {mediaList.length > 1 && (
-                  <div className="media-gallery-premium">
-                    {mediaList.map((link, idx) => (
-                      <div
-                        key={idx}
-                        className={`media-item-card ${idx === activeMediaIdx ? 'active' : ''} ${isVideo(link) ? 'video-type' : ''}`}
-                        onClick={() => { setActiveMediaIdx(idx); if (!isVideo(link)) setLightboxIndex(idx); }}
-                      >
-                        {isVideo(link) ? (
-                          <div className="video-thumb">
-                            <span className="play-icon">▶</span>
-                            <img src="/hero.png" alt="Video" />
-                          </div>
-                        ) : (
-                          <img src={getImageUrl(link)} alt={`Thumb ${idx}`} />
-                        )}
+                    )}
+                    {mediaList.length > 1 && (
+                      <div className="stage-arrows">
+                        <button onClick={() => setActiveMediaIdx(i => (i - 1 + mediaList.length) % mediaList.length)}>‹</button>
+                        <button onClick={() => setActiveMediaIdx(i => (i + 1) % mediaList.length)}>›</button>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
 
+            {mediaList.length > 1 && (
+              <div className="thumb-reel">
+                {mediaList.map((link, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumb-card ${idx === activeMediaIdx ? 'active' : ''}`}
+                    onClick={() => setActiveMediaIdx(idx)}
+                  >
+                    {isVideo(link) && <div className="video-hint"><Play size={16} /></div>}
+                    <img src={isVideo(link) ? "/hero.png" : getImageUrl(link)} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* ── Info Panel ── */}
-          <div className="product-info-panel">
-            {/* Badges */}
-            <div className="badge-row">
-              <span className="badge-new">✦ Chính hãng</span>
-              <span className={`badge-instock ${isOutOfStock ? 'unavailable' : 'available'}`}>
-                <span className="stock-dot" />
-                {isOutOfStock ? 'Hết hàng' : 'Còn hàng'}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1 className="product-title">{product.name}</h1>
-
-            {/* Rating (decorative) */}
-            <div className="rating-row">
-              <div className="stars">★★★★★</div>
-              <span className="rating-count">4.9 (128 đánh giá)</span>
-              <span className="rating-sep" />
-              <span className="sold-count">Đã bán 500+</span>
-            </div>
-
-            {/* Price Block */}
-            <div className="price-block">
-              <div className="price-tag">{currentPrice.toLocaleString()} ₫</div>
-            </div>
-
-            {/* Stock Info */}
-            <div className="stock-info-row">
-              <div className={`stock-status ${isOutOfStock ? 'out-of-stock' : 'in-stock'}`}>
-                {isOutOfStock
-                  ? '⚠ Hết hàng (đã được đặt hết)'
-                  : `✓ Có sẵn: ${currentStock} sản phẩm`}
+          {/* ESSENTIAL INFO & ACTIONS BLOCK */}
+          <div className="config-block">
+            <header className="modular-header">
+              <span className="mini-meta">{product.origin || 'Công nghệ đỉnh cao'}</span>
+              <h1 className="modular-title">{product.name}</h1>
+              <div className="rating-mini">
+                <Star size={14} fill="var(--accent-secondary)" stroke="none" />
+                <span className="score">4.9</span>
+                <span className="count">(2k+ đã bán)</span>
               </div>
-              <span className="stock-info-small">Kho: {selectedVariant?.stock_quantity ?? product.stock_quantity}</span>
+            </header>
+
+            <div className="modular-price-card">
+              <div className="price-primary">
+                <span className="unit">₫</span>
+                <span className="value">{currentPrice.toLocaleString()}</span>
+              </div>
+              <p className="price-tax">Đã bao gồm VAT & Miễn phí vận chuyển</p>
             </div>
 
-            {/* Description */}
-            <div className="product-description-section">
-              <div className="section-label">Mô tả</div>
-              <p>
-                {(product.description || 'Sản phẩm công nghệ cao cấp, mang lại hiệu năng tối ưu cho công việc và giải trí.')
-                  .replace(/\[MEDIA:.*?\]/, '')
-                  .split('\n').map((line, i) => (
-                    <React.Fragment key={i}>{line}<br /></React.Fragment>
-                  ))}
-              </p>
-            </div>
-
-            {/* Variants */}
-            {variants.length > 0 && (
-              <div className="options-section">
-                <div className="section-label">Chọn phiên bản</div>
-                <div className="variants-grid">
+            {/* Variant Selector - Only show if there are actual variants beyond 'Default' */}
+            {variants.length > 0 && !(variants.length === 1 && Object.values(variants[0].attributes)[0] === 'Default') && (
+              <div className="modular-choices">
+                <h3 className="choice-label"><Settings size={14} /> Chọn cấu hình</h3>
+                <div className="choice-grid">
                   {variants.map(variant => (
                     <button
                       key={variant.id}
-                      className={`variant-option ${selectedVariant?.id === variant.id ? 'selected' : ''}`}
+                      className={`choice-card ${selectedVariant?.id === variant.id ? 'active' : ''}`}
                       onClick={() => setSelectedVariant(variant)}
                     >
-                      <span className="variant-name">{Object.values(variant.attributes).join(' - ')}</span>
-                      {variant.price_override && (
-                        <span className="variant-price-diff">{variant.price_override.toLocaleString()} ₫</span>
+                      <span className="name">{Object.values(variant.attributes).join(' ')}</span>
+                      {variant.price_override && variant.price_override !== product.base_price && (
+                        <span className="diff">+{ (variant.price_override - product.base_price).toLocaleString() } ₫</span>
                       )}
                     </button>
                   ))}
@@ -307,108 +261,174 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Purchase Controls */}
-            <div className="purchase-controls">
-              <div className="purchase-row">
-                <div className="quantity-picker">
-                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  />
+            <div className="modular-action-box glass-panel">
+              <div className="box-top">
+                <div className="modular-qty">
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+                  <input type="number" value={quantity} readOnly />
                   <button onClick={() => setQuantity(q => q + 1)}>+</button>
                 </div>
-
-                <div className="action-buttons">
-                  <button
-                    className="btn-add-cart"
-                    onClick={handleAddToCart}
-                    disabled={addingToCart || isOutOfStock}
-                  >
-                    {addingToCart ? (
-                      <>
-                        <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>
-                        </svg>
-                        Thêm vào giỏ
-                      </>
-                    )}
-                  </button>
-                  <button
-                    className="btn-buy-now"
-                    disabled={isOutOfStock}
-                    onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                    Mua ngay
-                  </button>
+                <div className="stock-label">
+                  <span className={`dot ${isOutOfStock ? 'red' : 'green'}`} />
+                  {isOutOfStock ? 'Tạm hết hàng' : `Còn lại ${currentStock}`}
                 </div>
               </div>
-
-              {/* Guarantee Strip */}
-              <div className="guarantee-strip">
-                <div className="guarantee-item">
-                  <span className="guarantee-icon"><Truck size={18} /></span>
-                  <span className="guarantee-label">Giao hàng nhanh 2-4 ngày</span>
-                </div>
-                <div className="guarantee-item">
-                  <span className="guarantee-icon"><RefreshCcw size={18} /></span>
-                  <span className="guarantee-label">Đổi trả trong 30 ngày</span>
-                </div>
-                <div className="guarantee-item">
-                  <span className="guarantee-icon"><ShieldCheck size={18} /></span>
-                  <span className="guarantee-label">Bảo hành chính hãng</span>
-                </div>
+              
+              <div className="box-buttons">
+                <button
+                  className="btn-add-modular"
+                  onClick={handleAddToCart}
+                  disabled={addingToCart || isOutOfStock}
+                >
+                  {addingToCart ? <div className="btn-spinner" /> : <ShoppingBag size={18} />}
+                  Thêm vào giỏ
+                </button>
+                <button
+                  className="btn-buy-modular"
+                  disabled={isOutOfStock}
+                  onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
+                >
+                  Mua ngay
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+              
+              <div className="box-meta">
+                <div className="meta-item"><Heart size={16} /></div>
+                <div className="meta-item"><Share2 size={16} /></div>
               </div>
             </div>
 
-            {/* Meta Footer */}
-            <footer className="product-meta-footer">
-              <div className="meta-item">
-                <strong>SKU</strong>
-                <span>{selectedVariant?.sku || 'N/A'}</span>
+            <div className="modular-trust-grid">
+              <div className="trust-item">
+                <ShieldCheck size={18} className="icon" />
+                <span>Bảo hành chính hãng 5 năm</span>
               </div>
-              <div className="meta-item">
-                <strong>Tình trạng</strong>
-                <span>{isOutOfStock ? 'Hết hàng' : 'Còn hàng'}</span>
+              <div className="trust-item">
+                <Truck size={18} className="icon" />
+                <span>Miễn phí giao hàng Hà Nội / HCM</span>
               </div>
-              <div className="meta-item">
-                <strong>Vận chuyển</strong>
-                <span>Miễn phí nội thành</span>
-              </div>
-            </footer>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* DETAILS SECTION - REDESIGNED */}
+        <section className="product-details-modular">
+          <div className="details-grid-ultra">
+            {/* Description Block */}
+            <div className="detail-card description glass-panel">
+              <h3 className="card-title"><Info size={18} /> Mô tả sản phẩm</h3>
+              <div className="rich-description-box">
+                {(product.description || 'Thông tin chi tiết về sản phẩm công nghệ đỉnh cao...')
+                  .replace(/\[MEDIA:.*?\]/, '')
+                  .split('\n').map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+              </div>
+            </div>
+
+            {/* Service & Specs Block */}
+            <div className="detail-card specs glass-panel">
+              <h3 className="card-title"><ShieldCheck size={18} /> Chế độ hậu mãi & Cam kết</h3>
+              <div className="spec-grid-compact">
+                <div className="spec-tile">
+                  <span className="tile-label">Giao hàng</span>
+                  <strong className="tile-value">Siêu tốc 2h - 4h nội thành</strong>
+                  <p className="tile-hint">Miễn phí cho đơn hàng từ 500k</p>
+                </div>
+                <div className="spec-tile">
+                  <span className="tile-label">Đổi trả</span>
+                  <strong className="tile-value">30 ngày lỗi 1 đổi 1</strong>
+                  <p className="tile-hint">Thủ tục nhanh chóng, tận nơi</p>
+                </div>
+                <div className="spec-tile">
+                  <span className="tile-label">Bảo hành</span>
+                  <strong className="tile-value">Chính hãng 36 - 60 tháng</strong>
+                  <p className="tile-hint">Kích hoạt bảo hành điện tử</p>
+                </div>
+                <div className="spec-tile">
+                  <span className="tile-label">Hỗ trợ</span>
+                  <strong className="tile-value">Miễn phí phần mềm trọn đời</strong>
+                  <p className="tile-hint">Vệ sinh máy miễn phí định kỳ</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* REVIEWS & COMMENTS SECTION */}
+        <section className="product-reviews-modular glass-panel">
+          <header className="reviews-header">
+            <h3 className="card-title"><Star size={18} /> Đánh giá từ cộng đồng</h3>
+            <div className="rating-overview">
+              <div className="overview-main">
+                <span className="avg-score">4.9</span>
+                <div className="stars-box">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="var(--accent-secondary)" stroke="none" />)}
+                </div>
+                <span className="total-rev">2,482 nhận xét</span>
+              </div>
+              <div className="rating-filters">
+                <button className="filter-chip active">Tất cả</button>
+                <button className="filter-chip">5 ⭐ (2.1k)</button>
+                <button className="filter-chip">4 ⭐ (300)</button>
+                <button className="filter-chip">Có hình ảnh (450)</button>
+                <button className="filter-chip">Có video (80)</button>
+              </div>
+            </div>
+          </header>
+
+          <div className="comments-list">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="comment-item">
+                <div className="user-meta">
+                  <div className="user-avatar">{String.fromCharCode(64 + item)}</div>
+                  <div className="user-info">
+                    <div className="user-name-row">
+                      <strong>Khách hàng ẩn danh</strong>
+                      <span className="verified-badge">Đã mua hàng</span>
+                    </div>
+                    <div className="stars-row">
+                      {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="var(--accent-secondary)" stroke="none" />)}
+                      <span className="date">24/03/2024</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="comment-text">
+                  Sản phẩm đóng gói rất cẩn thận, đúng như mô tả. Nhân viên hỗ trợ nhiệt tình, 
+                  giao hàng ở Hà Nội cực nhanh chỉ mất tầm 1 tiếng rưỡi là nhận được rồi. 
+                  Sẽ tiếp tục ủng hộ shop trong tương lai!
+                </div>
+                {item === 1 && (
+                  <div className="comment-media">
+                    <img src="/hero.png" alt="review" className="rev-img" />
+                    <img src="/hero.png" alt="review" className="rev-img" />
+                  </div>
+                )}
+              </div>
+            ))}
+            <button className="btn-load-more">Xem thêm đánh giá</button>
+          </div>
+        </section>
       </div>
 
-      {/* Lightbox moved outside stacking contexts using Portal */}
+      {/* Lightbox Portal */}
       {lightboxIndex !== null && createPortal(
-        <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
-          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-            <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>×</button>
-            {isVideo(mediaList[lightboxIndex]) ? (
-              <iframe
-                src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
-                title="Lightbox Video"
-                frameBorder="0"
-                allowFullScreen
-              />
-            ) : (
-              <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
-            )}
+        <div className="modular-lightbox" onClick={() => setLightboxIndex(null)}>
+          <div className="lb-content" onClick={e => e.stopPropagation()}>
+            <button className="lb-close" onClick={() => setLightboxIndex(null)}><X size={24} /></button>
+            <div className="lb-media">
+              {isVideo(mediaList[lightboxIndex]) ? (
+                <iframe src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')} frameBorder="0" allowFullScreen />
+              ) : (
+                <img src={getImageUrl(mediaList[lightboxIndex])} alt="" />
+              )}
+            </div>
           </div>
         </div>,
         document.body
       )}
-    </div>
+    </main>
   );
 };
 

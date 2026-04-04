@@ -18,6 +18,26 @@ const CONDITIONS = ['Mới 100% Fullbox', 'Hàng Like New 99%', 'Hàng Cũ 95%',
 const ORIGINS = ['Chính hãng (VAT)', 'Xách tay (Global)', 'Hàng nhập khẩu'];
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 40, 50, 60];
 
+const getBrandsFromLocalAdminConfig = () => {
+  try {
+    const raw = localStorage.getItem('admin_config');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const brandsRaw = (data?.brands || '').toString();
+    const brands = brandsRaw.split('\n').map(b => b.trim()).filter(Boolean);
+    return brands.length ? brands : null;
+  } catch {
+    return null;
+  }
+};
+
+const sameArray = (a, b) => {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+};
+
 const PRICE_PRESETS = [
   { label: '< 5 triệu',   min: '',         max: '5000000'  },
   { label: '5 – 10 triệu', min: '5000000',  max: '10000000' },
@@ -222,7 +242,7 @@ const ProductListPage = () => {
   const [favs,        setFavs]        = useState(new Set());
   const [toast,       setToast]       = useState(null);
   const [expandedIds, setExpandedIds] = useState([]);
-  const [brandOptions, setBrandOptions] = useState(BRANDS);
+  const [brandOptions, setBrandOptions] = useState(() => getBrandsFromLocalAdminConfig() || BRANDS);
   const [pagination,  setPagination]  = useState({ page: initialPage, limit: initialLimit, pages: 1, total: 0 });
 
   const [filters, setFilters] = useState({
@@ -248,8 +268,14 @@ const ProductListPage = () => {
         if (!res.ok) return;
         const data = await res.json();
         if (!alive) return;
-        if (Array.isArray(data?.brands) && data.brands.length > 0) {
-          setBrandOptions(data.brands);
+        const serverBrands = Array.isArray(data?.brands) ? data.brands : [];
+        if (serverBrands.length > 0) {
+          const localBrands = getBrandsFromLocalAdminConfig();
+          if (!sameArray(serverBrands, BRANDS) || !localBrands || sameArray(localBrands, BRANDS)) {
+            setBrandOptions(serverBrands);
+          } else {
+            setBrandOptions(localBrands);
+          }
         }
       } catch (error) {
         console.error(error);
@@ -257,6 +283,16 @@ const ProductListPage = () => {
     };
     loadBrandOptions();
     return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key !== 'admin_config') return;
+      const next = getBrandsFromLocalAdminConfig();
+      if (next && next.length) setBrandOptions(next);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   /* ── WebSocket realtime stock ── */
