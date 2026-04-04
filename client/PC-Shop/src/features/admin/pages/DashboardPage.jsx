@@ -151,11 +151,10 @@ const DashboardPage = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await productsApi.getAll({
+      const response = await adminApi.getProducts({
         page: productPaging.page,
         limit: productPaging.limit,
         sort: productPaging.sort,
-        active_only: productPaging.active_only,
         q: productSearch || undefined
       });
       if (response.ok) {
@@ -304,7 +303,7 @@ const DashboardPage = () => {
 
   const handleToggleProductActive = async (p) => {
     try {
-      const response = await productsApi.update(p.id, { is_active: !p.is_active });
+      const response = await adminApi.updateProductStatus(p.id, { is_active: !p.is_active });
       if (response.ok) {
         setToast({ type: 'success', message: p.is_active ? 'Đã ẩn sản phẩm' : 'Đã bật lại sản phẩm' });
         fetchProducts();

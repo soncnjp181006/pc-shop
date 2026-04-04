@@ -16,6 +16,9 @@ def _inject_available_stock(db: Session, variant: ProductVariant) -> Any:
     if not variant:
         return None
     
+    # Refresh to ensure we have the latest stock_quantity from DB
+    db.refresh(variant)
+    
     # Tính tổng số lượng trong giỏ hàng
     reserved_qty = get_total_quantity_in_carts_repo(db, variant.id)
     

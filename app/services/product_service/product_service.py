@@ -16,14 +16,23 @@ def _inject_product_available_stock(db: Session, product: Product) -> Product:
     if not product:
         return None
     
+    # Refresh to ensure we have the latest stock_quantity from DB
+    db.refresh(product)
+    
     # Tính tổng số lượng đã đặt (trong giỏ hàng) của tất cả variants của sản phẩm này
     total_reserved = 0
-    if product.variants:
-        for variant in product.variants:
-            total_reserved += get_total_quantity_in_carts_repo(db, variant.id)
+    # Cần join hoặc query trực tiếp để tránh stale data trong relationship
+    from app.models.cart import CartItem
+    from app.models.product_variant import ProductVariant
+    from sqlalchemy import func
+    
+    total_reserved = db.query(func.sum(CartItem.quantity))\
+        .join(ProductVariant, CartItem.variant_id == ProductVariant.id)\
+        .filter(ProductVariant.product_id == product.id)\
+        .scalar() or 0
     
     # available_stock của product = tổng stock - tổng reserved
-    product.available_stock = max(0, product.stock_quantity - total_reserved)
+    product.available_stock = max(0, product.stock_quantity - int(total_reserved))
     return product
 
 def create_product_service(db: Session, product_in: ProductCreate) -> Product:

@@ -12,7 +12,7 @@ export const apiFetch = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${BASE_URL}${endpoint}`, {
+  let response = await fetch(`${BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}t=${Date.now()}`, {
     ...options,
     headers,
   });
@@ -156,6 +156,20 @@ export const adminApi = {
   updateUserActive: (userId, is_active) => apiFetch(`/admin/${userId}/active`, {
     method: 'PATCH',
     body: JSON.stringify({ is_active }),
+  }),
+  getProducts: (params = {}) => {
+    const query = new URLSearchParams();
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        query.append(key, String(params[key]));
+      }
+    });
+    const qs = query.toString();
+    return apiFetch(`/admin/products${qs ? `?${qs}` : ''}`);
+  },
+  updateProductStatus: (productId, data) => apiFetch(`/admin/products/${productId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   }),
 };
 

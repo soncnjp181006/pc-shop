@@ -190,6 +190,52 @@
   color: #ff4d4f;
 }
 
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.btn-undo {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--accent-primary);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-undo:hover {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.cart-item-tiktok.marked-deleted {
+  opacity: 0.6;
+  background: rgba(255, 77, 79, 0.05);
+  border-style: dashed;
+}
+
+.deleted-label {
+  color: #ff4d4f;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 /* Sticky Bar */
 .checkout-sticky-bar {
   position: fixed;
@@ -221,6 +267,38 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-weight: 500;
+}
+
+.btn-sync-cart {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-sync-cart.highlight {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px var(--accent-shadow);
+  animation: pulse 2s infinite;
+}
+
+.btn-sync-cart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
 }
 
 .bar-right {
@@ -348,4 +426,115 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Custom Modal */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.custom-modal-content {
+  background: var(--panel-bg);
+  border: var(--glass-border);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+}
+
+.modal-body p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-modal-cancel {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-modal-confirm {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-modal-confirm.danger {
+  background: #ff4d4f;
+}
+
+/* Custom Toast */
+.custom-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--panel-bg);
+  border: var(--glass-border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 3000;
+  min-width: 300px;
+}
+
+.custom-toast.success { border-left: 4px solid #34c759; }
+.custom-toast.error { border-left: 4px solid #ff4d4f; }
+.custom-toast.info { border-left: 4px solid var(--accent-primary); }
+
+.toast-icon { font-size: 1.2rem; }
+.toast-message { flex: 1; font-weight: 600; color: var(--text-primary); }
+.toast-close { background: none; border: none; color: var(--text-tertiary); font-size: 1.5rem; cursor: pointer; }
+
+/* Animations */
+.animate-pop-in {
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
 }

@@ -29,9 +29,18 @@ def get_cart_details_service(db: Session, user_id: int) -> Dict[str, Any]:
     
     total_price = 0.0
     items_out = []
+    
+    # Danh sách các item cần xóa vì không còn variant/product tương ứng
+    items_to_delete = []
+    
     for item in cart.items:
-        # Lấy giá của variant (nếu có override, dùng price_override, ngược lại dùng base_price của product)
         variant = item.variant
+        # Nếu variant hoặc product của nó không tồn tại, bỏ qua và đánh dấu để xóa
+        if not variant or not variant.product:
+            items_to_delete.append(item)
+            continue
+            
+        # Lấy giá của variant (nếu có override, dùng price_override, ngược lại dùng base_price của product)
         price = variant.price_override if variant.price_override is not None else variant.product.base_price
         subtotal = price * item.quantity
         total_price += subtotal
@@ -44,11 +53,15 @@ def get_cart_details_service(db: Session, user_id: int) -> Dict[str, Any]:
             "quantity": item.quantity,
             "created_at": item.created_at,
             "updated_at": item.updated_at,
-            "variant": item.variant,
+            "variant": variant,
             "price": price,
             "subtotal": subtotal
         }
         items_out.append(item_dict)
+    
+    # Dọn dẹp các item rác trong DB
+    for item in items_to_delete:
+        delete_cart_item_repo(db, item)
     
     return {
         "id": cart.id,
@@ -74,10 +87,8 @@ def add_item_to_cart_service(
         if variants:
             variant_id = variants[0].id
         else:
-            # Tạo variant mặc định nếu product không có bất kỳ variant nào
             product = get_product_by_id_repo(db, product_id)
-            if not product:
-                return None
+            if not product: return None
             
             default_variant_in = ProductVariantCreate(
                 product_id=product_id,
@@ -90,19 +101,33 @@ def add_item_to_cart_service(
             new_variant = create_product_variant_repo(db, default_variant_in)
             variant_id = new_variant.id
 
-    if not variant_id:
-        return None
+    if not variant_id: return None
 
     # Kiểm tra variant có tồn tại không
     variant = get_product_variant_by_id_repo(db, variant_id)
-    if not variant:
+    if not variant: return None
+
+    # --- LOGIC KIỂM TRA KHO (RESERVATION) ---
+    # Tính xem những người KHÁC đang giữ bao nhiêu
+    from sqlalchemy import func
+    reserved_others = db.query(func.sum(CartItem.quantity)).filter(
+        CartItem.variant_id == variant_id,
+        CartItem.cart_id != cart.id
+    ).scalar() or 0
+    
+    # Tính số lượng tôi ĐANG có trong giỏ
+    existing_item = get_cart_item_repo(db, cart.id, variant_id)
+    current_in_my_cart = existing_item.quantity if existing_item else 0
+    
+    # Tổng số lượng tôi muốn có sau khi thêm
+    total_wanted = current_in_my_cart + quantity
+    
+    if total_wanted > variant.stock_quantity - reserved_others:
+        # Không đủ hàng để giữ thêm
         return None
 
-    # Kiểm tra xem item đã có trong cart chưa
-    existing_item = get_cart_item_repo(db, cart.id, variant_id)
     if existing_item:
-        new_qty = existing_item.quantity + quantity
-        item = update_cart_item_qty_repo(db, existing_item, new_qty)
+        item = update_cart_item_qty_repo(db, existing_item, total_wanted)
     else:
         item = add_cart_item_repo(db, cart.id, variant_id, quantity)
 
@@ -125,8 +150,19 @@ def update_cart_item_qty_service(db: Session, user_id: int, item_id: int, quanti
     if not item or item.cart.user_id != user_id:
         return None
     
+    # --- LOGIC KIỂM TRA KHO KHI CẬP NHẬT ---
+    from sqlalchemy import func
+    reserved_others = db.query(func.sum(CartItem.quantity)).filter(
+        CartItem.variant_id == item.variant_id,
+        CartItem.cart_id != item.cart_id
+    ).scalar() or 0
+    
+    if quantity > item.variant.stock_quantity - reserved_others:
+        # Vượt quá khả năng đáp ứng của kho
+        return None
+    
     updated_item = update_cart_item_qty_repo(db, item, quantity)
-    price = updated_item.variant.price_override if updated_item.variant.price_override else updated_item.variant.product.base_price
+    price = updated_item.variant.price_override if updated_item.variant.price_override is not None else updated_item.variant.product.base_price
     
     return {
         "id": updated_item.id,

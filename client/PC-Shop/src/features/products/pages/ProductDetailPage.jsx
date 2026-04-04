@@ -23,11 +23,14 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => {
-    fetchProductDetail();
+    fetchProductDetail(true); // Initial load with loading spinner
+    // Polling để cập nhật số lượng kho khả dụng mỗi 10 giây (không hiện loading)
+    const interval = setInterval(() => fetchProductDetail(false), 10000);
+    return () => clearInterval(interval);
   }, [id]);
 
-  const fetchProductDetail = async () => {
-    setLoading(true);
+  const fetchProductDetail = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     try {
       const [productRes, variantsRes] = await Promise.all([
         productsApi.getById(id),
@@ -38,20 +41,26 @@ const ProductDetailPage = () => {
         const productData = await productRes.json();
         const variantsData = await variantsRes.json();
         
+        // Cập nhật state product và variants một cách êm ái
         setProduct(productData);
         setVariants(variantsData);
         
-        if (variantsData.length > 0) {
-          setSelectedVariant(variantsData[0]);
-        }
+        // Cập nhật selectedVariant mà không làm mất lựa chọn hiện tại của người dùng
+        setSelectedVariant(prev => {
+          if (!prev) return variantsData.length > 0 ? variantsData[0] : null;
+          // Tìm lại variant đang chọn trong danh sách mới để cập nhật available_stock
+          const updatedSelected = variantsData.find(v => v.id === prev.id);
+          // Nếu không tìm thấy (hiếm khi), giữ nguyên prev nhưng cập nhật stock từ dữ liệu mới
+          return updatedSelected || prev;
+        });
       } else {
-        setError("Không tìm thấy sản phẩm.");
+        if (showLoading) setError("Không tìm thấy sản phẩm.");
       }
     } catch (err) {
       console.error('Lỗi khi tải chi tiết sản phẩm:', err);
-      setError("Có lỗi xảy ra khi tải dữ liệu.");
+      if (showLoading) setError("Có lỗi xảy ra khi tải dữ liệu.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

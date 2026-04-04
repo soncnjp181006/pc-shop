@@ -53,5 +53,6 @@ def delete_cart_item_repo(db: Session, cart_item: CartItem) -> None:
 
 def get_total_quantity_in_carts_repo(db: Session, variant_id: int) -> int:
     from sqlalchemy import func
+    # Explicitly select sum of quantity
     result = db.query(func.sum(CartItem.quantity)).filter(CartItem.variant_id == variant_id).scalar()
-    return result if result else 0
+    return int(result) if result else 0
