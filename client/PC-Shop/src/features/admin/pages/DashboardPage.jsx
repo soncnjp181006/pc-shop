@@ -163,7 +163,17 @@ const DashboardPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(productSearch);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [productSearch]);
+
   const [productPaging, setProductPaging] = useState({
     page: 1,
     limit: 20,
@@ -280,7 +290,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (activeTab !== 'products') return;
     fetchProducts();
-  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.status, productPaging.brand, productPaging.product_condition, productPaging.origin, productPaging.in_stock, productPaging.category_id, productSearch]);
+  }, [activeTab, productPaging.page, productPaging.limit, productPaging.sort, productPaging.status, productPaging.brand, productPaging.product_condition, productPaging.origin, productPaging.in_stock, productPaging.category_id, debouncedSearch]);
 
   useEffect(() => {
     if (activeTab !== 'users') return;
@@ -311,7 +321,7 @@ const DashboardPage = () => {
         page: productPaging.page,
         limit: productPaging.limit,
         sort: productPaging.sort,
-        q: productSearch || undefined,
+        q: debouncedSearch || undefined,
         active_only: productPaging.status === 'active' ? true : (productPaging.status === 'inactive' ? false : undefined),
         brand: productPaging.brand || undefined,
         product_condition: productPaging.product_condition || undefined,
@@ -1191,7 +1201,7 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              <div className="admin-table-container glass-panel">
+              <div className={`admin-table-container glass-panel ${loading ? 'table-loading' : ''}`}>
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -1213,8 +1223,8 @@ const DashboardPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {loading ? (
-                      <tr><td colSpan="9" className="text-center">Đang tải dữ liệu...</td></tr>
+                    {loading && products.length === 0 ? (
+                      <tr><td colSpan="11" className="text-center" style={{ padding: '100px' }}>Đang tải dữ liệu...</td></tr>
                     ) : products.length > 0 ? (
                       products.map(p => (
                         <tr key={p.id} className={selectedProductIds.includes(p.id) ? 'selected-row' : ''}>
@@ -1278,7 +1288,7 @@ const DashboardPage = () => {
                                 onClick={() => handleShowVariants(p)}
                               ><Diamond size={16} /></button>
                               <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={16} /></button>
-                              <button className="btn-toggle" title={p.is_active ? 'Ẩn' : 'Bật lại'} onClick={() => handleToggleProductActive(p)}>
+                              <button className="btn-toggle" title={p.is_active ? 'Ngừng bán' : 'Cho phép bán'} onClick={() => handleToggleProductActive(p)}>
                                 {p.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
                               <button 
@@ -1292,8 +1302,8 @@ const DashboardPage = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">
-                          {productSearch.trim() ? 'Không có sản phẩm khớp tìm kiếm.' : 'Không có sản phẩm nào.'}
+                        <td colSpan="11" className="text-center" style={{ padding: '100px' }}>
+                          {productSearch.trim() ? 'Không có sản phẩm nào khớp với tìm kiếm của bạn.' : 'Danh sách sản phẩm trống.'}
                         </td>
                       </tr>
                     )}

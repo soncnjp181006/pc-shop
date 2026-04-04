@@ -532,6 +532,16 @@ html.light .admin-chip {
   position: relative;
 }
 
+.admin-table-container.table-loading table {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: blur(0.5px);
+}
+
+.admin-table-container {
+  transition: all 0.3s ease;
+}
+
 .admin-table {
   width: 100%;
   min-width: 1400px; /* Increased minimum width */
