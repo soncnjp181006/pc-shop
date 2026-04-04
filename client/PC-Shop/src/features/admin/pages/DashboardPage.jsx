@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
+import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign } from 'lucide-react';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -636,28 +637,28 @@ const DashboardPage = () => {
             className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
-            <span className="nav-icon">📊</span>
+            <span className="nav-icon"><BarChart2 size={18} /></span>
             Tổng quan
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
           >
-            <span className="nav-icon">📦</span>
+            <span className="nav-icon"><Package size={18} /></span>
             Quản lý sản phẩm
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
           >
-            <span className="nav-icon">📁</span>
+            <span className="nav-icon"><Folder size={18} /></span>
             Danh mục hệ thống
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
-            <span className="nav-icon">👥</span>
+            <span className="nav-icon"><Users size={18} /></span>
             Người dùng & Seller
           </button>
         </nav>
@@ -686,7 +687,7 @@ const DashboardPage = () => {
           </div>
           <div className="header-actions">
             <button className="btn-view-shop" onClick={() => navigate('/home')}>
-              <span>👁️</span> Xem shop
+              <span><Eye size={16} /></span> Xem shop
             </button>
           </div>
         </header>
@@ -696,7 +697,7 @@ const DashboardPage = () => {
             <div className="overview-tab">
               <div className="stats-grid">
                 <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon products-icon">📦</div>
+                  <div className="stat-icon products-icon"><Package size={24} /></div>
                   <div className="stat-info">
                     <h3>Sản phẩm</h3>
                     <p>{overviewStats.products.toLocaleString()}</p>
@@ -704,7 +705,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon users-icon">👥</div>
+                  <div className="stat-icon users-icon"><Users size={24} /></div>
                   <div className="stat-info">
                     <h3>Người dùng</h3>
                     <p>{overviewStats.users.toLocaleString()}</p>
@@ -712,7 +713,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon orders-icon">�</div>
+                  <div className="stat-icon orders-icon"><Folder size={24} /></div>
                   <div className="stat-info">
                     <h3>Danh mục</h3>
                     <p>{overviewStats.categories.toLocaleString()}</p>
@@ -720,7 +721,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
                 <div className="admin-stat-card glass-panel">
-                  <div className="stat-icon revenue-icon">💰</div>
+                  <div className="stat-icon revenue-icon"><DollarSign size={24} /></div>
                   <div className="stat-info">
                     <h3>Doanh thu</h3>
                     <p>—</p>
@@ -845,16 +846,16 @@ const DashboardPage = () => {
                                 className="btn-variants" 
                                 title="Biến thể"
                                 onClick={() => handleShowVariants(p)}
-                              >💎</button>
-                              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}>✏️</button>
+                              ><Diamond size={16} /></button>
+                              <button className="btn-edit" title="Chỉnh sửa" onClick={() => openEditProductModal(p)}><Edit size={16} /></button>
                               <button className="btn-toggle" title={p.is_active ? 'Ẩn' : 'Bật lại'} onClick={() => handleToggleProductActive(p)}>
-                                {p.is_active ? '🙈' : '👁️'}
+                                {p.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
                               <button 
                                 className="btn-delete" 
                                 title="Xóa"
                                 onClick={() => handleDeleteProduct(p.id)}
-                              >🗑️</button>
+                              ><Trash2 size={16} /></button>
                             </div>
                           </td>
                         </tr>
@@ -918,7 +919,7 @@ const DashboardPage = () => {
                     {visibleCategories.map(cat => (
                       <div key={cat.id} className="cat-node">
                         <div className="cat-node-content">
-                          <span className="cat-icon">📁</span>
+                          <span className="cat-icon"><Folder size={16} /></span>
                           <strong>{cat.name}</strong>
                           <div className="cat-actions">
                             <button className="btn-small" onClick={() => openEditCategoryModal(cat)}>Sửa</button>
@@ -934,7 +935,7 @@ const DashboardPage = () => {
                               })
                               .map(sub => (
                               <div key={sub.id} className="cat-node sub">
-                                <span className="cat-icon">📄</span>
+                                <span className="cat-icon"><FileText size={16} /></span>
                                 {sub.name}
                                 <div className="cat-actions">
                                   <button className="btn-small" onClick={() => openEditCategoryModal(sub)}>Sửa</button>
@@ -1047,7 +1048,7 @@ const DashboardPage = () => {
                                 title={u.is_active ? 'Khóa user' : 'Mở khóa user'}
                                 onClick={() => handleUpdateUserActive(u, !u.is_active)}
                               >
-                                {u.is_active ? '🔒' : '🔓'}
+                                {u.is_active ? <Lock size={16} /> : <Unlock size={16} />}
                               </button>
                             </div>
                           </td>
@@ -1179,8 +1180,8 @@ const DashboardPage = () => {
                           </td>
                           <td>
                             <div className="table-actions">
-                              <button className="btn-edit" title="Sửa" onClick={() => openEditVariantForm(v)}>✏️</button>
-                              <button className="btn-delete" title="Xóa" onClick={() => handleDeleteVariant(v.id)}>🗑️</button>
+                              <button className="btn-edit" title="Sửa" onClick={() => openEditVariantForm(v)}><Edit size={16} /></button>
+                              <button className="btn-delete" title="Xóa" onClick={() => handleDeleteVariant(v.id)}><Trash2 size={16} /></button>
                             </div>
                           </td>
                         </tr>

@@ -55,13 +55,15 @@ def get_products(
     max_price: Optional[float] = None,
     q: Optional[str] = None,
     sort: Optional[str] = None,
+    brand: Optional[str] = None,
+    in_stock: Optional[bool] = None,
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách Product với phân trang, lọc và tìm kiếm
     """
     return get_all_products_service(
-        db, active_only, page, limit, category_id, min_price, max_price, q, sort
+        db, active_only, page, limit, category_id, min_price, max_price, q, sort, brand, in_stock
     )
 
 @router.get("/{id}", response_model=ProductOut)

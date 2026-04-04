@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { categoriesApi } from '../../../utils/api';
+import { Zap, ShieldCheck, Package, CreditCard, Diamond } from 'lucide-react';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -62,11 +63,11 @@ const HomePage = () => {
             <div className="image-wrapper">
               <img src="/hero.png" alt="Featured PC" className="hero-image" />
               <div className="floating-card c1">
-                <div className="f-icon">🚀</div>
+                <div className="f-icon"><Zap size={24} /></div>
                 <div className="f-text">Siêu tốc độ</div>
               </div>
               <div className="floating-card c2">
-                <div className="f-icon">🛡️</div>
+                <div className="f-icon"><ShieldCheck size={24} /></div>
                 <div className="f-text">Bảo hành 5 năm</div>
               </div>
             </div>
@@ -117,17 +118,17 @@ const HomePage = () => {
         <section className="features-section">
           <div className="features-grid-premium">
             <div className="feature-card">
-              <div className="feature-icon-box">📦</div>
+              <div className="feature-icon-box"><Package size={32} strokeWidth={1.5} /></div>
               <h3>Giao hàng hỏa tốc</h3>
               <p>Nhận hàng trong vòng 2h tại nội thành. Đóng gói chuyên nghiệp, an toàn tuyệt đối.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon-box">💳</div>
+              <div className="feature-icon-box"><CreditCard size={32} strokeWidth={1.5} /></div>
               <h3>Thanh toán linh hoạt</h3>
               <p>Hỗ trợ trả góp 0%, thanh toán qua ví điện tử, ngân hàng, và COD linh hoạt nhất.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon-box">💎</div>
+              <div className="feature-icon-box"><Diamond size={32} strokeWidth={1.5} /></div>
               <h3>Chất lượng cao cấp</h3>
               <p>100% sản phẩm chính hãng, được kiểm định hiệu năng kỹ càng trước khi đến tay bạn.</p>
             </div>

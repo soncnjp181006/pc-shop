@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { cartApi, getImageUrl } from '../../../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle, Info, AlertTriangle, ShoppingCart, Lock, CreditCard, Package, Undo2, MessageSquare } from 'lucide-react';
 import './CartPage.css';
 
 /* ── Custom Modal ── */
@@ -31,11 +32,11 @@ const CustomToast = ({ message, type, onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const icons = { success: <CheckCircle size={18} />, error: <XCircle size={18} />, info: <Info size={18} /> };
 
   return (
     <div className={`custom-toast animate-slide-in ${type}`}>
-      <div className="toast-icon">{icons[type] || '💬'}</div>
+      <div className="toast-icon">{icons[type] || <MessageSquare size={18} />}</div>
       <div className="toast-message">{message}</div>
       <button className="toast-close" onClick={onClose}>×</button>
     </div>
@@ -233,7 +234,7 @@ const CartPage = () => {
       <div className="cart-layout">
         <div className="empty-cart-modern">
           <div className="empty-visual-wrapper">
-            <span className="empty-cart-icon">⚠️</span>
+            <span className="empty-cart-icon"><AlertTriangle size={48} strokeWidth={1} /></span>
           </div>
           <h2>Ôi, có lỗi xảy ra!</h2>
           <p>{error}</p>
@@ -278,7 +279,7 @@ const CartPage = () => {
         {isEmpty ? (
           <div className="empty-cart-modern">
             <div className="empty-visual-wrapper">
-              <span className="empty-cart-icon">🛒</span>
+              <span className="empty-cart-icon"><ShoppingCart size={48} strokeWidth={1} /></span>
               <div className="empty-cart-ring" />
             </div>
             <h2>Giỏ hàng của bạn trống</h2>
@@ -442,19 +443,19 @@ const CartPage = () => {
 
                 <div className="payment-trust-row">
                   <div className="trust-badge">
-                    <span className="trust-icon">🔒</span>
+                    <span className="trust-icon"><Lock size={16} /></span>
                     <span className="trust-label">Bảo mật SSL</span>
                   </div>
                   <div className="trust-badge">
-                    <span className="trust-icon">💳</span>
+                    <span className="trust-icon"><CreditCard size={16} /></span>
                     <span className="trust-label">Thẻ quốc tế</span>
                   </div>
                   <div className="trust-badge">
-                    <span className="trust-icon">📦</span>
+                    <span className="trust-icon"><Package size={16} /></span>
                     <span className="trust-label">Giao hàng nhanh</span>
                   </div>
                   <div className="trust-badge">
-                    <span className="trust-icon">↩️</span>
+                    <span className="trust-icon"><Undo2 size={16} /></span>
                     <span className="trust-label">Đổi trả 30 ngày</span>
                   </div>
                 </div>

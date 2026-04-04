@@ -34,7 +34,9 @@ def get_all_products_repo(
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
     q: Optional[str] = None,
-    sort: Optional[str] = None
+    sort: Optional[str] = None,
+    brand: Optional[str] = None,
+    in_stock: Optional[bool] = None
 ) -> Tuple[List[Product], int]:
     query = db.query(Product).options(joinedload(Product.category), joinedload(Product.seller))
     
@@ -55,7 +57,26 @@ def get_all_products_repo(
     # Search by name
     if q:
         query = query.filter(Product.name.ilike(f"%{q}%"))
-    
+        
+    # Search by brand
+    if brand:
+        query = query.filter(Product.name.ilike(f"%{brand}%"))
+        
+    # Filter in stock
+    if in_stock:
+        from app.models.cart import CartItem
+        from app.models.product_variant import ProductVariant
+        from sqlalchemy import func, select
+        from sqlalchemy.sql.functions import coalesce
+        
+        subq = select(func.sum(CartItem.quantity)).join(
+            ProductVariant, CartItem.variant_id == ProductVariant.id
+        ).where(
+            ProductVariant.product_id == Product.id
+        ).correlate(Product).scalar_subquery()
+        
+        query = query.filter(Product.stock_quantity - coalesce(subq, 0) > 0)
+        
     # Sorting
     if sort == "price_asc":
         query = query.order_by(Product.base_price.asc())

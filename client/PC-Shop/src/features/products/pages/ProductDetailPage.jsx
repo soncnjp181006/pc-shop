@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
+import { Truck, RefreshCcw, ShieldCheck, Frown } from 'lucide-react';
 import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
@@ -134,7 +135,7 @@ const ProductDetailPage = () => {
   if (error) return (
     <div className="loading-container">
       <div className="error-state">
-        <div className="error-icon">😕</div>
+        <div className="error-icon"><Frown size={48} strokeWidth={1.5} color="var(--text-tertiary)" /></div>
         <p>{error}</p>
         <button className="btn btn-secondary" onClick={() => navigate('/products')}>Quay lại danh sách</button>
       </div>
@@ -372,15 +373,15 @@ const ProductDetailPage = () => {
               {/* Guarantee Strip */}
               <div className="guarantee-strip">
                 <div className="guarantee-item">
-                  <span className="guarantee-icon">🚀</span>
+                  <span className="guarantee-icon"><Truck size={18} /></span>
                   <span className="guarantee-label">Giao hàng nhanh 2-4 ngày</span>
                 </div>
                 <div className="guarantee-item">
-                  <span className="guarantee-icon">🔄</span>
+                  <span className="guarantee-icon"><RefreshCcw size={18} /></span>
                   <span className="guarantee-label">Đổi trả trong 30 ngày</span>
                 </div>
                 <div className="guarantee-item">
-                  <span className="guarantee-icon">🛡️</span>
+                  <span className="guarantee-icon"><ShieldCheck size={18} /></span>
                   <span className="guarantee-label">Bảo hành chính hãng</span>
                 </div>
               </div>
