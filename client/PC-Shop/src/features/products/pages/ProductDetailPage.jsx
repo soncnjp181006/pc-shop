@@ -19,66 +19,45 @@ const ProductDetailPage = () => {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   useEffect(() => {
-    fetchProductDetail(true); // Initial load with loading spinner
-    
-    // Thiết lập kết nối WebSocket để cập nhật thời gian thực
+    fetchProductDetail(true);
+
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProtocol}//${window.location.host.replace('5173', '8000')}/ws/stock`;
-    
+
     let socket;
     const connectWS = () => {
       socket = new WebSocket(wsUrl);
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'stock_updated') {
-          console.log('Nhận tín hiệu cập nhật kho từ server:', data);
-          
-          // Nếu đây là sản phẩm đang xem, cập nhật state ngay lập tức mà không cần fetch
           if (data.product_id && String(data.product_id) === String(id)) {
-            console.log('Cập nhật kho tức thì cho sản phẩm hiện tại...');
-            
-            // Cập nhật available_stock cho product chính
             setProduct(prev => prev ? { ...prev, available_stock: data.available_stock } : prev);
-            
-            // Cập nhật available_stock cho từng variant
-            if (data.variants && data.variants.length > 0) {
-              setVariants(prevVariants => prevVariants.map(v => {
-                const updatedVariant = data.variants.find(uv => uv.id === v.id);
-                return updatedVariant ? { ...v, available_stock: updatedVariant.available_stock } : v;
+            if (data.variants?.length > 0) {
+              setVariants(prev => prev.map(v => {
+                const updated = data.variants.find(uv => uv.id === v.id);
+                return updated ? { ...v, available_stock: updated.available_stock } : v;
               }));
-              
-              // Cập nhật selectedVariant nếu nó đang được chọn
-              setSelectedVariant(prevSelected => {
-                if (!prevSelected) return null;
-                const updatedSelected = data.variants.find(uv => uv.id === prevSelected.id);
-                return updatedSelected ? { ...prevSelected, available_stock: updatedSelected.available_stock } : prevSelected;
+              setSelectedVariant(prev => {
+                if (!prev) return null;
+                const updated = data.variants.find(uv => uv.id === prev.id);
+                return updated ? { ...prev, available_stock: updated.available_stock } : prev;
               });
             }
           } else {
-            // Nếu là sản phẩm khác hoặc payload cũ, vẫn fetch lại cho chắc chắn (fallback)
             fetchProductDetail(false);
           }
         }
       };
-      socket.onclose = () => {
-        // Thử kết nối lại sau 5 giây nếu bị ngắt
-        setTimeout(connectWS, 5000);
-      };
+      socket.onclose = () => setTimeout(connectWS, 5000);
     };
 
     connectWS();
-
-    // Vẫn giữ Polling như một phương án dự phòng (fallback)
-    const interval = setInterval(() => fetchProductDetail(false), 30000); // 30s polling
-    
-    return () => {
-      if (socket) socket.close();
-      clearInterval(interval);
-    };
+    const interval = setInterval(() => fetchProductDetail(false), 30000);
+    return () => { if (socket) socket.close(); clearInterval(interval); };
   }, [id]);
 
   const fetchProductDetail = async (showLoading = false) => {
@@ -92,24 +71,16 @@ const ProductDetailPage = () => {
       if (productRes.ok && variantsRes.ok) {
         const productData = await productRes.json();
         const variantsData = await variantsRes.json();
-        
-        // Cập nhật state product và variants một cách êm ái
         setProduct(productData);
         setVariants(variantsData);
-        
-        // Cập nhật selectedVariant mà không làm mất lựa chọn hiện tại của người dùng
         setSelectedVariant(prev => {
           if (!prev) return variantsData.length > 0 ? variantsData[0] : null;
-          // Tìm lại variant đang chọn trong danh sách mới để cập nhật available_stock
-          const updatedSelected = variantsData.find(v => v.id === prev.id);
-          // Nếu không tìm thấy (hiếm khi), giữ nguyên prev nhưng cập nhật stock từ dữ liệu mới
-          return updatedSelected || prev;
+          return variantsData.find(v => v.id === prev.id) || prev;
         });
       } else {
         if (showLoading) setError("Không tìm thấy sản phẩm.");
       }
-    } catch (err) {
-      console.error('Lỗi khi tải chi tiết sản phẩm:', err);
+    } catch {
       if (showLoading) setError("Có lỗi xảy ra khi tải dữ liệu.");
     } finally {
       if (showLoading) setLoading(false);
@@ -117,7 +88,6 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    // Nếu có variants nhưng chưa chọn
     if (variants.length > 0 && !selectedVariant) {
       showToast('Vui lòng chọn một phiên bản sản phẩm.', 'error');
       return;
@@ -125,7 +95,7 @@ const ProductDetailPage = () => {
 
     const currentAvailable = selectedVariant ? selectedVariant.available_stock : product.available_stock;
     if (quantity > currentAvailable) {
-      showToast(`Chỉ còn ${currentAvailable} sản phẩm có sẵn. Một số đã được người khác thêm vào giỏ hàng.`, 'error');
+      showToast(`Chỉ còn ${currentAvailable} sản phẩm có sẵn.`, 'error');
       return;
     }
 
@@ -134,23 +104,12 @@ const ProductDetailPage = () => {
 
     setAddingToCart(true);
     try {
-      console.log('Adding to cart:', { variantId, productId, quantity });
       const response = await cartApi.addItem(variantId, quantity, productId);
-      
       if (response.ok) {
-        showToast('Đã thêm sản phẩm vào giỏ hàng! 🛒', 'success');
-        
-        // --- LOẠI BỎ OPTIMISTIC UPDATE CHO STOCK ---
-        // Vì WebSocket giờ đã rất nhanh (đã tối ưu backend), 
-        // việc cập nhật thủ công ở đây dễ gây lệch số lượng (race condition) 
-        // khi tin nhắn WebSocket đến cùng lúc.
-        
-        // Dispatch custom event to notify Header to refresh cart count
+        showToast('Đã thêm vào giỏ hàng! 🛒', 'success');
         window.dispatchEvent(new Event('cartUpdated'));
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Lỗi API thêm vào giỏ hàng:', response.status, errorData);
-        
         if (response.status === 401) {
           showToast('Vui lòng đăng nhập để thêm vào giỏ hàng.', 'error');
           setTimeout(() => navigate('/'), 2000);
@@ -158,8 +117,7 @@ const ProductDetailPage = () => {
           showToast(errorData.detail || 'Lỗi khi thêm vào giỏ hàng.', 'error');
         }
       }
-    } catch (error) {
-      console.error('Lỗi kết nối khi thêm vào giỏ hàng:', error);
+    } catch {
       showToast('Lỗi kết nối server.', 'error');
     } finally {
       setAddingToCart(false);
@@ -168,21 +126,34 @@ const ProductDetailPage = () => {
 
   if (loading) return (
     <div className="loading-container">
-      <div className="spinner"></div>
+      <div className="spinner" />
       <p>Đang tải thông tin sản phẩm...</p>
     </div>
   );
-  
+
   if (error) return (
     <div className="loading-container">
       <div className="error-state">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">😕</div>
         <p>{error}</p>
-        <button className="btn btn-secondary" onClick={() => navigate('/products')}>Quay lại</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/products')}>Quay lại danh sách</button>
       </div>
     </div>
   );
+
   if (!product) return null;
+
+  // Media list
+  const mediaMatch = (product.description || '').match(/\[MEDIA:(.*?)\]/);
+  const extraLinks = mediaMatch ? mediaMatch[1].split(';').filter(l => l.trim()) : [];
+  const mediaList = [product.image_url, ...extraLinks].filter(Boolean);
+
+  const isVideo = (url) => url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4');
+  const currentMedia = mediaList[activeMediaIdx];
+
+  const currentStock = selectedVariant?.available_stock ?? product.available_stock;
+  const isOutOfStock = currentStock <= 0;
+  const currentPrice = selectedVariant?.price_override || product.base_price;
 
   return (
     <div className="product-page animate-fade-in">
@@ -192,140 +163,149 @@ const ProductDetailPage = () => {
           <button onClick={() => setToast(null)}>✕</button>
         </div>
       )}
+
       <div className="product-container">
+        {/* Breadcrumb */}
         <nav className="breadcrumb">
           <Link to="/home">Trang chủ</Link>
-          <span className="separator">/</span>
+          <span className="separator">›</span>
           <Link to="/products">Sản phẩm</Link>
-          <span className="separator">/</span>
+          <span className="separator">›</span>
           <span className="current">{product.name}</span>
         </nav>
 
         <div className="product-grid-detail">
+          {/* ── Gallery Section ── */}
           <div className="product-gallery">
-            {(() => {
-              // Hợp nhất ảnh chính và ảnh bổ sung
-              const mediaMatch = (product.description || '').match(/\[MEDIA:(.*?)\]/);
-              const extraLinks = mediaMatch ? mediaMatch[1].split(';').filter(l => l.trim()) : [];
-              const mediaList = [product.image_url, ...extraLinks].filter(Boolean);
-              
-              if (mediaList.length === 0) return (
-                <div className="main-image-card placeholder">PC Shop</div>
-              );
-
-              const currentMedia = mediaList[activeMediaIdx];
-              const isVideo = (url) => url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4');
-
-              return (
-                <>
-                  <div className="main-image-card">
-                    {isVideo(currentMedia) ? (
-                      <div className="video-main-container">
-                        <iframe
-                          src={currentMedia.replace('watch?v=', 'embed/')}
-                          title="Product Video"
-                          frameBorder="0"
-                          allowFullScreen
-                        ></iframe>
-                      </div>
-                    ) : (
-                      <img 
-                        src={getImageUrl(currentMedia)} 
-                        alt={product.name} 
-                        className="detail-img" 
-                        onClick={() => setLightboxIndex(activeMediaIdx)}
+            {/* Main Image */}
+            {mediaList.length === 0 ? (
+              <div className="main-image-card placeholder">PC Shop</div>
+            ) : (
+              <>
+                <div className="main-image-card">
+                  {isVideo(currentMedia) ? (
+                    <div className="video-main-container">
+                      <iframe
+                        src={currentMedia.replace('watch?v=', 'embed/')}
+                        title="Product Video"
+                        frameBorder="0"
+                        allowFullScreen
                       />
-                    )}
-                    
-                    {mediaList.length > 1 && (
-                      <div className="slider-controls">
-                        <button className="slider-btn prev" onClick={() => setActiveMediaIdx(i => (i - 1 + mediaList.length) % mediaList.length)}>‹</button>
-                        <button className="slider-btn next" onClick={() => setActiveMediaIdx(i => (i + 1) % mediaList.length)}>›</button>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={getImageUrl(currentMedia)}
+                      alt={product.name}
+                      className="detail-img"
+                      onClick={() => setLightboxIndex(activeMediaIdx)}
+                    />
+                  )}
 
                   {mediaList.length > 1 && (
-                    <div className="media-gallery-premium">
-                      {mediaList.map((link, idx) => (
-                        <div 
-                          key={idx} 
-                          className={`media-item-card ${idx === activeMediaIdx ? 'active' : ''} ${isVideo(link) ? 'video-type' : ''}`}
-                          onClick={() => {
-                            setActiveMediaIdx(idx);
-                            setLightboxIndex(idx);
-                          }}
-                        >
-                          {isVideo(link) ? (
-                            <div className="video-thumb">
-                              <span className="play-icon">▶</span>
-                              <img src="/hero.png" alt="Video" />
-                            </div>
-                          ) : (
-                            <img src={getImageUrl(link)} alt={`Thumb ${idx}`} />
-                          )}
-                        </div>
-                      ))}
+                    <div className="slider-controls">
+                      <button className="slider-btn prev" onClick={() => setActiveMediaIdx(i => (i - 1 + mediaList.length) % mediaList.length)}>‹</button>
+                      <button className="slider-btn next" onClick={() => setActiveMediaIdx(i => (i + 1) % mediaList.length)}>›</button>
                     </div>
                   )}
+                </div>
 
-                  {/* Lightbox Modal */}
-                  {lightboxIndex !== null && (
-                    <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
-                      <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-                        <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>&times;</button>
-                        {isVideo(mediaList[lightboxIndex]) ? (
-                          <iframe
-                            src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
-                            title="Lightbox Video"
-                            frameBorder="0"
-                            allowFullScreen
-                          ></iframe>
+                {/* Thumbnails */}
+                {mediaList.length > 1 && (
+                  <div className="media-gallery-premium">
+                    {mediaList.map((link, idx) => (
+                      <div
+                        key={idx}
+                        className={`media-item-card ${idx === activeMediaIdx ? 'active' : ''} ${isVideo(link) ? 'video-type' : ''}`}
+                        onClick={() => { setActiveMediaIdx(idx); if (!isVideo(link)) setLightboxIndex(idx); }}
+                      >
+                        {isVideo(link) ? (
+                          <div className="video-thumb">
+                            <span className="play-icon">▶</span>
+                            <img src="/hero.png" alt="Video" />
+                          </div>
                         ) : (
-                          <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
+                          <img src={getImageUrl(link)} alt={`Thumb ${idx}`} />
                         )}
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Lightbox */}
+            {lightboxIndex !== null && (
+              <div className="media-lightbox" onClick={() => setLightboxIndex(null)}>
+                <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+                  <button className="lightbox-close" onClick={() => setLightboxIndex(null)}>×</button>
+                  {isVideo(mediaList[lightboxIndex]) ? (
+                    <iframe
+                      src={mediaList[lightboxIndex].replace('watch?v=', 'embed/')}
+                      title="Lightbox Video"
+                      frameBorder="0"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <img src={getImageUrl(mediaList[lightboxIndex])} alt="Full view" />
                   )}
-                </>
-              );
-            })()}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* ── Info Panel ── */}
           <div className="product-info-panel">
-            <header className="info-header">
-              <span className="badge-new">Chính hãng</span>
-              <h1 className="product-title">{product.name}</h1>
-              <div className="price-tag">
-                {(selectedVariant?.price_override || product.base_price).toLocaleString()} VNĐ
-              </div>
-              <div className={`stock-status ${(selectedVariant?.available_stock ?? product.available_stock) > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                {(selectedVariant?.available_stock ?? product.available_stock) > 0 
-                  ? `Có sẵn: ${selectedVariant?.available_stock ?? product.available_stock}` 
-                  : 'Hết hàng (đã được đặt hết)'}
-              </div>
-              <div className="stock-info-small">
-                (Tổng kho: {selectedVariant?.stock_quantity ?? product.stock_quantity})
-              </div>
-            </header>
+            {/* Badges */}
+            <div className="badge-row">
+              <span className="badge-new">✦ Chính hãng</span>
+              <span className={`badge-instock ${isOutOfStock ? 'unavailable' : 'available'}`}>
+                <span className="stock-dot" />
+                {isOutOfStock ? 'Hết hàng' : 'Còn hàng'}
+              </span>
+            </div>
 
-            <section className="product-description-section">
-              <h3>Mô tả sản phẩm</h3>
+            {/* Title */}
+            <h1 className="product-title">{product.name}</h1>
+
+            {/* Rating (decorative) */}
+            <div className="rating-row">
+              <div className="stars">★★★★★</div>
+              <span className="rating-count">4.9 (128 đánh giá)</span>
+              <span className="rating-sep" />
+              <span className="sold-count">Đã bán 500+</span>
+            </div>
+
+            {/* Price Block */}
+            <div className="price-block">
+              <div className="price-tag">{currentPrice.toLocaleString()} ₫</div>
+            </div>
+
+            {/* Stock Info */}
+            <div className="stock-info-row">
+              <div className={`stock-status ${isOutOfStock ? 'out-of-stock' : 'in-stock'}`}>
+                {isOutOfStock
+                  ? '⚠ Hết hàng (đã được đặt hết)'
+                  : `✓ Có sẵn: ${currentStock} sản phẩm`}
+              </div>
+              <span className="stock-info-small">Kho: {selectedVariant?.stock_quantity ?? product.stock_quantity}</span>
+            </div>
+
+            {/* Description */}
+            <div className="product-description-section">
+              <div className="section-label">Mô tả</div>
               <p>
-                {(product.description || "Sản phẩm công nghệ cao cấp, mang lại hiệu năng tối ưu cho công việc và giải trí.")
+                {(product.description || 'Sản phẩm công nghệ cao cấp, mang lại hiệu năng tối ưu cho công việc và giải trí.')
                   .replace(/\[MEDIA:.*?\]/, '')
                   .split('\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                      {line}<br/>
-                    </React.Fragment>
-                  ))
-                }
+                    <React.Fragment key={i}>{line}<br /></React.Fragment>
+                  ))}
               </p>
-            </section>
+            </div>
 
+            {/* Variants */}
             {variants.length > 0 && (
-              <section className="options-section">
-                <h3>Chọn phiên bản</h3>
+              <div className="options-section">
+                <div className="section-label">Chọn phiên bản</div>
                 <div className="variants-grid">
                   {variants.map(variant => (
                     <button
@@ -333,59 +313,92 @@ const ProductDetailPage = () => {
                       className={`variant-option ${selectedVariant?.id === variant.id ? 'selected' : ''}`}
                       onClick={() => setSelectedVariant(variant)}
                     >
-                      <span className="variant-name">
-                        {Object.values(variant.attributes).join(' - ')}
-                      </span>
+                      <span className="variant-name">{Object.values(variant.attributes).join(' - ')}</span>
                       {variant.price_override && (
-                        <span className="variant-price-diff">
-                          {variant.price_override.toLocaleString()} VNĐ
-                        </span>
+                        <span className="variant-price-diff">{variant.price_override.toLocaleString()} ₫</span>
                       )}
                     </button>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
 
+            {/* Purchase Controls */}
             <div className="purchase-controls">
-              <div className="quantity-picker">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
-                <input 
-                  type="number" 
-                  value={quantity} 
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  style={{ color: '#00e5ff', opacity: 1, visibility: 'visible', textAlign: 'center' }}
-                />
-                <button onClick={() => setQuantity(q => q + 1)}>+</button>
+              <div className="purchase-row">
+                <div className="quantity-picker">
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  />
+                  <button onClick={() => setQuantity(q => q + 1)}>+</button>
+                </div>
+
+                <div className="action-buttons">
+                  <button
+                    className="btn-add-cart"
+                    onClick={handleAddToCart}
+                    disabled={addingToCart || isOutOfStock}
+                  >
+                    {addingToCart ? (
+                      <>
+                        <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        Thêm vào giỏ
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className="btn-buy-now"
+                    disabled={isOutOfStock}
+                    onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    Mua ngay
+                  </button>
+                </div>
               </div>
 
-              <div className="action-buttons">
-                <button 
-                  className="btn-add-cart" 
-                  onClick={handleAddToCart}
-                  disabled={addingToCart || (selectedVariant ? selectedVariant.available_stock <= 0 : product.available_stock <= 0)}
-                >
-                  {addingToCart ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
-                </button>
-                <button 
-                  className="btn-buy-now"
-                  disabled={(selectedVariant ? selectedVariant.available_stock <= 0 : product.available_stock <= 0)}
-                  onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
-                >
-                  Mua ngay
-                </button>
+              {/* Guarantee Strip */}
+              <div className="guarantee-strip">
+                <div className="guarantee-item">
+                  <span className="guarantee-icon">🚀</span>
+                  <span className="guarantee-label">Giao hàng nhanh 2-4 ngày</span>
+                </div>
+                <div className="guarantee-item">
+                  <span className="guarantee-icon">🔄</span>
+                  <span className="guarantee-label">Đổi trả trong 30 ngày</span>
+                </div>
+                <div className="guarantee-item">
+                  <span className="guarantee-icon">🛡️</span>
+                  <span className="guarantee-label">Bảo hành chính hãng</span>
+                </div>
               </div>
             </div>
 
+            {/* Meta Footer */}
             <footer className="product-meta-footer">
               <div className="meta-item">
-                <strong>SKU:</strong> {selectedVariant?.sku || 'N/A'}
+                <strong>SKU</strong>
+                <span>{selectedVariant?.sku || 'N/A'}</span>
               </div>
               <div className="meta-item">
-                <strong>Tình trạng:</strong> {(selectedVariant?.stock_quantity ?? product.stock_quantity) > 0 ? 'Còn hàng' : 'Hết hàng'}
+                <strong>Tình trạng</strong>
+                <span>{isOutOfStock ? 'Hết hàng' : 'Còn hàng'}</span>
               </div>
               <div className="meta-item">
-                <strong>Vận chuyển:</strong> Miễn phí nội thành
+                <strong>Vận chuyển</strong>
+                <span>Miễn phí nội thành</span>
               </div>
             </footer>
           </div>
