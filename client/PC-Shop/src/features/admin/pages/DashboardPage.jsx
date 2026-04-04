@@ -682,12 +682,19 @@ const DashboardPage = () => {
         setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', brand: '', status: '', stock_quantity: 0, is_active: true });
         fetchProducts();
       } else {
-        const error = await response.json();
-        setToast({ type: 'error', message: error.detail || 'Không thể lưu sản phẩm' });
+        let errorMessage = 'Không thể lưu sản phẩm';
+        try {
+          const error = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (e) {
+          // Trường hợp không phải JSON (VD: 500 HTML page)
+          errorMessage = `Lỗi hệ thống (${response.status})`;
+        }
+        setToast({ type: 'error', message: errorMessage });
       }
     } catch (error) {
       console.error('Lỗi khi thêm sản phẩm:', error);
-      setToast({ type: 'error', message: 'Đã có lỗi xảy ra' });
+      setToast({ type: 'error', message: 'Lỗi kết nối hoặc xử lý dữ liệu' });
     } finally {
       setSubmitting(false);
     }
