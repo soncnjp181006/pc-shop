@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000/api/v1';
+ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 export const apiFetch = async (endpoint, options = {}) => {
   let token = localStorage.getItem('access_token');
@@ -12,7 +12,10 @@ export const apiFetch = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+  const url = `${BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const timestampSeparator = url.includes('?') ? '&' : '?';
+  
+  let response = await fetch(`${url}${timestampSeparator}t=${Date.now()}`, {
     ...options,
     headers,
   });

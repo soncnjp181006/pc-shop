@@ -9,7 +9,7 @@
 
 /* Sidebar */
 .admin-sidebar {
-  width: 280px;
+  width: 240px;
   height: 100vh;
   position: fixed;
   left: 0;
@@ -25,16 +25,16 @@
 }
 
 .admin-logo-section {
-  padding: 30px 24px;
+  padding: 24px 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .admin-logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 .admin-logo-text {
@@ -43,15 +43,12 @@
 }
 
 .admin-logo-text span {
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  color: var(--text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
 }
 
 .admin-logo-text strong {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--accent-primary);
+  font-size: 1rem;
 }
 
 .admin-nav {
@@ -153,8 +150,8 @@
 /* Main Content */
 .admin-main {
   flex: 1;
-  margin-left: 280px;
-  padding: 28px 56px 60px;
+  margin-left: 240px;
+  padding: 24px 32px 60px;
 }
 
 .admin-header {
@@ -167,9 +164,9 @@
 .admin-header-sticky {
   position: sticky;
   top: 0;
-  z-index: 150; /* Tăng z-index để không bị modal backdrop che khuất một phần nếu cần, nhưng modal overlay thường cao hơn */
-  margin: -28px -56px 32px;
-  padding: 28px 56px 18px;
+  z-index: 150;
+  margin: -24px -32px 32px;
+  padding: 20px 32px 18px;
   background: rgba(5, 6, 8, 0.4);
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
@@ -257,7 +254,7 @@ html.light .admin-header-sticky {
 }
 
 .header-info h1 {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   margin-bottom: 4px;
   letter-spacing: -0.03em;
@@ -334,7 +331,8 @@ html.light .admin-stat-card {
 }
 
 .search-box {
-  width: 400px;
+  width: 100%;
+  max-width: 500px;
   padding: 0;
 }
 
@@ -421,11 +419,22 @@ html.light .admin-select:hover {
 .admin-chip {
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+html.light .admin-chip {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+.admin-chip.small {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 8px;
 }
 
 .admin-chip.success {
@@ -457,34 +466,30 @@ html.light .admin-select:hover {
 }
 
 /* Admin Table */
+.admin-content {
+  width: 100%;
+  max-width: 100%;
+}
+
 .admin-table-container {
-  border-radius: 24px;
-  overflow: hidden;
-  max-height: calc(100vh - 350px);
+  border-radius: 20px;
   overflow: auto;
+  max-height: calc(100vh - 300px);
   border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .admin-table {
   width: 100%;
+  min-width: 1200px; /* Force minimum width to allow scrolling and more columns */
   border-collapse: collapse;
   text-align: left;
 }
 
 .admin-table th {
-  padding: 18px 24px;
-  background: rgba(0, 0, 0, 0.1);
-  color: var(--text-primary);
-  font-weight: 800;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 14px 20px;
+  font-size: 0.75rem;
 }
 
 html.light .admin-table th {
@@ -492,9 +497,7 @@ html.light .admin-table th {
 }
 
 .admin-table td {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
+  padding: 16px 20px;
 }
 
 .admin-table tbody tr {
@@ -505,12 +508,18 @@ html.light .admin-table th {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.admin-table tbody tr.selected-row {
+  background: rgba(0, 113, 227, 0.08);
+}
+
+.admin-table tbody tr.selected-row:hover {
+  background: rgba(0, 113, 227, 0.12);
+}
+
 .table-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
 }
 
 .table-product-info {
@@ -519,13 +528,13 @@ html.light .admin-table th {
 }
 
 .table-product-info strong {
-  font-size: 1rem;
-  color: var(--text-primary);
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 2px;
 }
 
 .table-product-info span {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 
 .status-tag {

@@ -13,6 +13,8 @@ def create_product_repo(db: Session, product_in: ProductCreate) -> Product:
         category_id=product_in.category_id,
         seller_id=product_in.seller_id,
         image_url=product_in.image_url,
+        brand=product_in.brand,
+        status=product_in.status,
         stock_quantity=product_in.stock_quantity,
         is_active=product_in.is_active
     )
@@ -65,17 +67,25 @@ def get_all_products_repo(
     if max_price is not None:
         query = query.filter(Product.base_price <= max_price)
     
-    # Search by name
+    # Search by name, slug, brand, or ID
     if q:
-        query = query.filter(Product.name.ilike(f"%{q}%"))
+        search_filters = [
+            Product.name.ilike(f"%{q}%"),
+            Product.slug.ilike(f"%{q}%"),
+            Product.brand.ilike(f"%{q}%")
+        ]
+        # Nếu q là số, tìm theo ID nữa
+        if q.isdigit():
+            search_filters.append(Product.id == int(q))
+            
+        query = query.filter(or_(*search_filters))
         
-    # Search by brand
+    # Search by brand using actual brand column
     if brand:
-        from sqlalchemy import or_
         brand_list = [b.strip() for b in brand.split(",") if b.strip()]
         if brand_list:
-            conditions = [Product.name.ilike(f"%{b}%") for b in brand_list]
-            query = query.filter(or_(*conditions))
+            brand_conditions = [Product.brand.ilike(f"%{b}%") for b in brand_list]
+            query = query.filter(or_(*brand_conditions))
         
     # Filter in stock
     if in_stock:

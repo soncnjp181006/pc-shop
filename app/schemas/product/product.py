@@ -11,6 +11,8 @@ class ProductBase(BaseModel):
     category_id: int
     seller_id: int
     image_url: Optional[str] = None
+    brand: Optional[str] = Field(None, max_length=100)
+    status: Optional[str] = Field(None, max_length=50)
     stock_quantity: Optional[int] = Field(0, ge=0)
     is_active: bool = True
 
@@ -25,6 +27,8 @@ class ProductUpdate(BaseModel):
     category_id: Optional[int] = None
     seller_id: Optional[int] = None
     image_url: Optional[str] = None
+    brand: Optional[str] = Field(None, max_length=100)
+    status: Optional[str] = Field(None, max_length=50)
     stock_quantity: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
 

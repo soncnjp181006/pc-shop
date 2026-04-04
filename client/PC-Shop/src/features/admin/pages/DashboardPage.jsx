@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, productsApi, categoriesApi, adminApi, getImageUrl } from '../../../utils/api';
-import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign } from 'lucide-react';
+import { BarChart2, Package, Folder, Users, Eye, EyeOff, Edit, Trash2, Diamond, Lock, Unlock, FileText, DollarSign, Download, CheckSquare, Square } from 'lucide-react';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -33,6 +33,87 @@ const DashboardPage = () => {
     setEditingVariant(null);
     setVariantFormMode('create');
     fetchVariants(product.id);
+  };
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  
+  const handleExportCSV = () => {
+    if (products.length === 0) return;
+    
+    const headers = ['ID', 'Tên sản phẩm', 'Slug', 'Hãng', 'Danh mục', 'Giá', 'Kho', 'Trạng thái'];
+    const rows = products.map(p => [
+      p.id,
+      p.name,
+      p.slug,
+      p.brand || '',
+      p.category_name || '',
+      p.base_price,
+      p.stock_quantity,
+      p.is_active ? 'Đang bán' : 'Ẩn'
+    ]);
+    
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // Thêm BOM cho Excel đọc UTF-8
+    csvContent += headers.join(",") + "\n";
+    rows.forEach(row => {
+      csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",") + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `products_export_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProductIds.length === products.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(products.map(p => p.id));
+    }
+  };
+
+  const toggleSelectProduct = (id) => {
+    setSelectedProductIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProductIds.length === 0) return;
+    
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xóa hàng loạt',
+      message: `Bạn có chắc chắn muốn xóa ${selectedProductIds.length} sản phẩm đã chọn?`,
+      onConfirm: async () => {
+        try {
+          // Xóa từng cái (Backend chưa có bulk delete endpoint chuyên dụng)
+          await Promise.all(selectedProductIds.map(id => productsApi.delete(id)));
+          setToast({ type: 'success', message: `Đã xóa ${selectedProductIds.length} sản phẩm` });
+          setSelectedProductIds([]);
+          fetchProducts();
+        } catch (error) {
+          console.error('Lỗi khi xóa hàng loạt:', error);
+          setToast({ type: 'error', message: 'Có lỗi khi xóa một số sản phẩm' });
+        }
+      }
+    });
+  };
+
+  const handleBulkToggleStatus = async (active) => {
+    if (selectedProductIds.length === 0) return;
+    
+    try {
+      await Promise.all(selectedProductIds.map(id => adminApi.updateProductStatus(id, { is_active: active })));
+      setToast({ type: 'success', message: `Đã cập nhật trạng thái cho ${selectedProductIds.length} sản phẩm` });
+      setSelectedProductIds([]);
+      fetchProducts();
+    } catch (error) {
+      console.error('Lỗi khi cập nhật hàng loạt:', error);
+      setToast({ type: 'error', message: 'Có lỗi khi cập nhật một số sản phẩm' });
+    }
   };
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -79,6 +160,8 @@ const DashboardPage = () => {
     base_price: '',
     category_id: '',
     image_url: '',
+    brand: '',
+    status: '',
     additional_media: '', // Thêm trường mới cho nhiều ảnh/video
     is_active: true
   });
@@ -300,6 +383,8 @@ const DashboardPage = () => {
       base_price: '',
       category_id: '',
       image_url: '',
+      brand: '',
+      status: '',
       additional_media: '',
       is_active: true
     });
@@ -322,6 +407,8 @@ const DashboardPage = () => {
       base_price: String(p.base_price ?? ''),
       category_id: String(p.category_id ?? ''),
       image_url: p.image_url || '',
+      brand: p.brand || '',
+      status: p.status || '',
       stock_quantity: p.stock_quantity ?? 0,
       is_active: !!p.is_active
     });
@@ -577,6 +664,8 @@ const DashboardPage = () => {
         base_price: parseFloat(formData.base_price),
         category_id: parseInt(formData.category_id),
         image_url: mainImageUrl,
+        brand: formData.brand || null,
+        status: formData.status || null,
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         is_active: !!formData.is_active
       };
@@ -590,7 +679,7 @@ const DashboardPage = () => {
         setShowAddModal(false);
         setEditingProduct(null);
         setProductModalMode('create');
-        setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', stock_quantity: 0, is_active: true });
+        setFormData({ name: '', slug: '', description: '', additional_media: '', base_price: '', category_id: '', image_url: '', brand: '', status: '', stock_quantity: 0, is_active: true });
         fetchProducts();
       } else {
         const error = await response.json();
@@ -808,26 +897,54 @@ const DashboardPage = () => {
             <div className="management-tab">
               <div className="table-header-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
                 <div className="table-top-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                  <div className="search-box glass-panel" style={{ flex: '1', maxWidth: '600px', margin: 0 }}>
+                  <div className="search-box glass-panel" style={{ flex: '1', maxWidth: '500px', margin: 0 }}>
                     <input
                       type="text"
-                      placeholder="Tìm tên sản phẩm, slug, ID..."
+                      placeholder="Tìm tên, SKU, ID..."
                       value={productSearch}
                       onChange={(e) => {
                         setProductSearch(e.target.value);
                         setProductPaging((prev) => ({ ...prev, page: 1 }));
                       }}
-                      style={{ padding: '14px 24px', fontSize: '1rem' }}
+                      style={{ padding: '12px 20px', fontSize: '0.95rem' }}
                     />
                   </div>
-                  <button
-                    className="btn-add-new"
-                    onClick={openCreateProductModal}
-                    style={{ padding: '14px 28px', fontSize: '1rem' }}
-                  >
-                    + Thêm sản phẩm
-                  </button>
+                  <div className="header-button-group" style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      className="btn-view-shop"
+                      onClick={handleExportCSV}
+                      title="Xuất CSV"
+                    >
+                      <Download size={18} /> <span>Xuất Excel</span>
+                    </button>
+                    <button
+                      className="btn-add-new"
+                      onClick={openCreateProductModal}
+                    >
+                      + Thêm sản phẩm
+                    </button>
+                  </div>
                 </div>
+
+                {selectedProductIds.length > 0 && (
+                  <div className="bulk-actions-toolbar glass-panel animate-fade-in" style={{ 
+                    padding: '12px 24px', 
+                    background: 'rgba(0, 113, 227, 0.1)', 
+                    borderColor: 'rgba(0, 113, 227, 0.3)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderRadius: '16px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <strong style={{ color: '#0071e3' }}>Đã chọn {selectedProductIds.length} mục</strong>
+                      <div style={{ height: '20px', width: '1px', background: 'rgba(0, 113, 227, 0.2)' }}></div>
+                      <button className="btn-small" onClick={() => handleBulkToggleStatus(true)} style={{ color: '#34c759' }}>Hiện tất cả</button>
+                      <button className="btn-small" onClick={() => handleBulkToggleStatus(false)} style={{ color: '#ff3b30' }}>Ẩn tất cả</button>
+                    </div>
+                    <button className="btn-small danger" onClick={handleBulkDelete}>Xóa {selectedProductIds.length} mục</button>
+                  </div>
+                )}
 
                 <div className="table-filters glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 24px' }}>
                   <div className="admin-toolbar" style={{flexWrap: 'wrap', gap: '12px', marginBottom: 0}}>
@@ -897,41 +1014,56 @@ const DashboardPage = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
+                      <th style={{ width: '40px' }}>
+                        <button onClick={toggleSelectAll} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
+                          {selectedProductIds.length === products.length && products.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                        </button>
+                      </th>
                       <th>Ảnh</th>
                       <th>Sản phẩm</th>
+                      <th>Hãng</th>
                       <th>Danh mục</th>
                       <th>Giá cơ bản</th>
+                      <th>Kho</th>
                       <th>Trạng thái</th>
                       <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan="6" className="text-center">Đang tải dữ liệu...</td></tr>
+                      <tr><td colSpan="9" className="text-center">Đang tải dữ liệu...</td></tr>
                     ) : products.length > 0 ? (
                       products.map(p => (
-                        <tr key={p.id}>
+                        <tr key={p.id} className={selectedProductIds.includes(p.id) ? 'selected-row' : ''}>
+                          <td>
+                            <button onClick={() => toggleSelectProduct(p.id)} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
+                              {selectedProductIds.includes(p.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                            </button>
+                          </td>
                           <td>
                             <img src={getImageUrl(p.image_url)} alt={p.name} className="table-img" />
                           </td>
                           <td>
                             <div className="table-product-info">
                               <strong>{p.name}</strong>
-                              <span>ID: {p.id}</span>
+                              <span>ID: {p.id} | Slug: {p.slug}</span>
                             </div>
+                          </td>
+                          <td>
+                            <span className="admin-chip small">{p.brand || '—'}</span>
                           </td>
                           <td>{p.category_name || 'N/A'}</td>
                           <td>{p.base_price.toLocaleString()} ₫</td>
+                          <td>
+                            <span className={`admin-chip small ${p.stock_quantity > 0 ? 'success' : 'danger'}`}>
+                              {p.stock_quantity}
+                            </span>
+                          </td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
                               <span className={`status-tag ${p.is_active ? 'active' : 'inactive'}`}>
                                 {p.is_active ? 'Đang bán' : 'Ẩn'}
                               </span>
-                              {p.stock_quantity <= 0 && (
-                                <span className="status-tag inactive" title="Sản phẩm đã hết hàng trong kho">
-                                  Hết hàng
-                                </span>
-                              )}
                             </div>
                           </td>
                           <td>
@@ -1381,6 +1513,26 @@ const DashboardPage = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="form-group">
+                  <label>Hãng sản xuất</label>
+                  <input
+                    type="text"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: ASUS, MSI, Apple..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tình trạng / Trạng thái</label>
+                  <input
+                    type="text"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Mới 100%, 99%,..."
+                  />
                 </div>
                 <div className="form-group full-width">
                   <label>Link ảnh sản phẩm (Google Drive/URL)</label>
