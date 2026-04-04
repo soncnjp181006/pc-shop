@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
@@ -10,6 +11,15 @@ import CartPage from './features/cart/pages/CartPage';
 import CheckoutPage from './features/cart/pages/CheckoutPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+
+// Tự động scroll lên đầu trang khi chuyển Route
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 // Route bảo vệ chung (yêu cầu login)
 const ProtectedRoute = ({ children }) => {
@@ -66,6 +76,7 @@ const SemiPublicRoute = ({ children }) => {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Auth Route */}
         <Route 
