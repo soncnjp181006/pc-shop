@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { categoriesApi } from '../../../utils/api';
-import { Zap, ShieldCheck, Package, CreditCard, Diamond } from 'lucide-react';
+import { productsApi, categoriesApi, getImageUrl } from '../../../utils/api';
+import { Zap, ShieldCheck, Package, CreditCard, Diamond, Star, ShoppingCart, ArrowRight } from 'lucide-react';
 import './HomePage.css';
 
 const HomePage = () => {
   const [categories, setCategories] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topFilter, setTopFilter] = useState('newest'); // newest, price_desc, popular
+  const [loadingTop, setLoadingTop] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -21,6 +24,25 @@ const HomePage = () => {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchTopProducts = async () => {
+      setLoadingTop(true);
+      try {
+        const params = { limit: 5, sort: topFilter };
+        const response = await productsApi.getAll(params);
+        if (response.ok) {
+          const data = await response.json();
+          setTopProducts(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching top products:', error);
+      } finally {
+        setLoadingTop(false);
+      }
+    };
+    fetchTopProducts();
+  }, [topFilter]);
 
   return (
     <div className="home-container animate-fade-in">
@@ -91,7 +113,7 @@ const HomePage = () => {
           
           <div className="categories-grid">
             {categories.length > 0 ? (
-              categories.slice(0, 4).map(category => (
+              categories.slice(0, 3).map(category => (
                 <Link to={`/products?category_id=${category.id}`} key={category.id} className="category-card-premium">
                   <div className="cat-icon-wrapper">
                     {category.name.charAt(0)}
@@ -104,11 +126,69 @@ const HomePage = () => {
                 </Link>
               ))
             ) : (
-              [1, 2, 3, 4].map(i => (
+              [1, 2, 3].map(i => (
                 <div key={i} className="category-card-premium skeleton">
                   <div className="cat-icon-wrapper"></div>
                   <div className="cat-line"></div>
                 </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Trending/Top Products Section - INJECTED HERE */}
+        <section className="top-products-section glass-panel">
+          <div className="top-products-header">
+            <div className="top-header-right">
+              <div className="top-filter-group">
+                <button 
+                  className={`filter-btn ${topFilter === 'newest' ? 'active' : ''}`}
+                  onClick={() => setTopFilter('newest')}
+                >Mới nhất</button>
+                <button 
+                  className={`filter-btn ${topFilter === 'price_desc' ? 'active' : ''}`}
+                  onClick={() => setTopFilter('price_desc')}
+                >Trị giá cao</button>
+                <button 
+                  className={`filter-btn ${topFilter === 'popular' ? 'active' : ''}`}
+                  onClick={() => setTopFilter('popular')}
+                >Săn đón</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="top-products-grid">
+            {loadingTop ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="top-product-card skeleton">
+                  <div className="top-img-skeleton"></div>
+                  <div className="top-info-skeleton"></div>
+                </div>
+              ))
+            ) : (
+              topProducts.map(product => (
+                <Link to={`/products/${product.id}`} key={product.id} className="top-product-card">
+                  <div className="top-card-media">
+                    <img src={getImageUrl(product.image_url)} alt={product.name} />
+                    <div className="top-card-badges">
+                      <span className="badge-new">Trend</span>
+                    </div>
+                  </div>
+                  <div className="top-card-content">
+                    <h4 className="top-card-name">{product.name}</h4>
+                    <div className="top-card-rating">
+                      <Star size={10} fill="#f59e0b" color="#f59e0b" />
+                      <span>{product.rating_avg || 5.0}</span>
+                      <span className="top-stock">Còn {product.available_stock}</span>
+                    </div>
+                    <div className="top-card-footer">
+                      <div className="top-price">{product.base_price.toLocaleString()} ₫</div>
+                      <button className="top-quick-cart">
+                        <ShoppingCart size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </Link>
               ))
             )}
           </div>
