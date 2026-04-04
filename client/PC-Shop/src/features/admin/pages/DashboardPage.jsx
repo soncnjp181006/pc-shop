@@ -39,12 +39,14 @@ const DashboardPage = () => {
   const handleExportCSV = () => {
     if (products.length === 0) return;
     
-    const headers = ['ID', 'Tên sản phẩm', 'Slug', 'Hãng', 'Danh mục', 'Giá', 'Kho', 'Trạng thái'];
+    const headers = ['ID', 'Tên sản phẩm', 'Slug', 'Hãng', 'Loại hàng', 'Nguồn gốc', 'Danh mục', 'Giá', 'Kho', 'Trạng thái'];
     const rows = products.map(p => [
       p.id,
       p.name,
       p.slug,
       p.brand || '',
+      p.product_condition || '',
+      p.origin || '',
       p.category_name || '',
       p.base_price,
       p.stock_quantity,
@@ -122,13 +124,17 @@ const DashboardPage = () => {
   const [configData, setConfigData] = useState(() => {
     const saved = localStorage.getItem('admin_config');
     return saved ? JSON.parse(saved) : {
-      brands: 'Apple\nASUS\nMSI\nGigabyte\nDell\nHP\nLenovo\nRazer\nCorsair\nNZXT',
-      statuses: 'Mới 100%\nLike New 99%\nCũ 95%\nHàng xách tay\nHàng chính hãng'
+      brands: 'Apple\nASUS\nMSI\nGigabyte\nDell\nHP\nLenovo\nRazer\nCorsair\nNZXT\nLogitech\nSamsung\nLG\nIntel\nAMD\nNVIDIA',
+      statuses: 'Đang kinh doanh\nNgừng kinh doanh\nSắp về hàng\nLiên hệ',
+      conditions: 'Mới 100% Fullbox\nHàng Like New 99%\nHàng Cũ 95%\nHàng Cũ 90%\nHàng Trôi bảo hành',
+      origins: 'Chính hãng (VAT)\nXách tay (Global)\nHàng nhập khẩu'
     };
   });
 
   const brandsList = configData.brands.split('\n').map(b => b.trim()).filter(b => b);
   const statusesList = configData.statuses.split('\n').map(s => s.trim()).filter(s => s);
+  const conditionsList = (configData.conditions || '').split('\n').map(c => c.trim()).filter(c => c);
+  const originsList = (configData.origins || '').split('\n').map(o => o.trim()).filter(o => o);
 
   const [showConfigPanel, setShowConfigPanel] = useState(false);
   const [tempConfig, setTempConfig] = useState(configData);
@@ -138,6 +144,17 @@ const DashboardPage = () => {
     localStorage.setItem('admin_config', JSON.stringify(tempConfig));
     setToast({ type: 'success', message: 'Đã lưu cấu hình danh sách' });
     setShowConfigPanel(false);
+  };
+
+  const resetConfigToDefault = () => {
+    const defaultData = {
+      brands: 'Apple\nASUS\nMSI\nGigabyte\nDell\nHP\nLenovo\nRazer\nCorsair\nNZXT\nLogitech\nSamsung\nLG\nIntel\nAMD\nNVIDIA',
+      statuses: 'Đang kinh doanh\nNgừng kinh doanh\nSắp về hàng\nLiên hệ',
+      conditions: 'Mới 100% Fullbox\nHàng Like New 99%\nHàng Cũ 95%\nHàng Cũ 90%\nHàng Trôi bảo hành',
+      origins: 'Chính hãng (VAT)\nXách tay (Global)\nHàng nhập khẩu'
+    };
+    setTempConfig(defaultData);
+    setToast({ type: 'info', message: 'Đã tải lại cấu hình mặc định (Nhấn Lưu để áp dụng)' });
   };
 
   const [products, setProducts] = useState([]);
@@ -187,6 +204,8 @@ const DashboardPage = () => {
     image_url: '',
     brand: '',
     status: '',
+    product_condition: '',
+    origin: '',
     additional_media: '', // Thêm trường mới cho nhiều ảnh/video
     is_active: true
   });
@@ -410,6 +429,8 @@ const DashboardPage = () => {
       image_url: '',
       brand: '',
       status: '',
+      product_condition: '',
+      origin: '',
       additional_media: '',
       is_active: true
     });
@@ -434,6 +455,8 @@ const DashboardPage = () => {
       image_url: p.image_url || '',
       brand: p.brand || '',
       status: p.status || '',
+      product_condition: p.product_condition || '',
+      origin: p.origin || '',
       stock_quantity: p.stock_quantity ?? 0,
       is_active: !!p.is_active
     });
@@ -691,6 +714,8 @@ const DashboardPage = () => {
         image_url: mainImageUrl,
         brand: formData.brand || null,
         status: formData.status || null,
+        product_condition: formData.product_condition || null,
+        origin: formData.origin || null,
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         is_active: !!formData.is_active
       };
@@ -951,30 +976,53 @@ const DashboardPage = () => {
                 </div>
 
                 {showConfigPanel && (
-                  <div className="config-grid animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  <div className="config-grid animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
                     <div className="form-group">
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <Diamond size={16} /> Hãng sản xuất (Mỗi hãng một dòng)
+                        <Diamond size={16} /> Hãng sản xuất
                       </label>
                       <textarea
-                        style={{ minHeight: '120px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.brands}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, brands: e.target.value }))}
-                        placeholder="ASUS&#10;MSI&#10;Apple..."
+                        placeholder="ASUS&#10;MSI..."
                       />
                     </div>
                     <div className="form-group">
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <CheckSquare size={16} /> Tình trạng / Trạng thái (Mỗi dòng một trạng thái)
+                        <CheckSquare size={16} /> Tình trạng kinh doanh
                       </label>
                       <textarea
-                        style={{ minHeight: '120px', fontFamily: 'monospace', fontSize: '0.9rem' }}
+                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
                         value={tempConfig.statuses}
                         onChange={(e) => setTempConfig(prev => ({ ...prev, statuses: e.target.value }))}
-                        placeholder="Mới 100%&#10;99%&#10;Hàng cũ..."
+                        placeholder="Đang kinh doanh..."
                       />
                     </div>
-                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <Package size={16} /> Loại hàng (Mới/Cũ)
+                      </label>
+                      <textarea
+                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                        value={tempConfig.conditions}
+                        onChange={(e) => setTempConfig(prev => ({ ...prev, conditions: e.target.value }))}
+                        placeholder="Mới 100%&#10;Cũ..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <Users size={16} /> Nguồn gốc / Bảo hành
+                      </label>
+                      <textarea
+                        style={{ minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                        value={tempConfig.origins}
+                        onChange={(e) => setTempConfig(prev => ({ ...prev, origins: e.target.value }))}
+                        placeholder="Chính hãng&#10;Xách tay..."
+                      />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginTop: '10px' }}>
+                      <button className="btn-view-shop" style={{ marginRight: 'auto' }} onClick={resetConfigToDefault}>Mặc định</button>
                       <button className="btn-cancel" onClick={() => setShowConfigPanel(false)}>Hủy</button>
                       <button className="btn-submit" onClick={handleSaveConfig}>Lưu cấu hình</button>
                     </div>
@@ -1110,6 +1158,8 @@ const DashboardPage = () => {
                       <th>Ảnh</th>
                       <th>Sản phẩm</th>
                       <th>Hãng</th>
+                      <th>Loại hàng</th>
+                      <th>Nguồn gốc</th>
                       <th>Danh mục</th>
                       <th>Giá cơ bản</th>
                       <th>Kho</th>
@@ -1139,6 +1189,12 @@ const DashboardPage = () => {
                           </td>
                           <td>
                             <span className="admin-chip small">{p.brand || '—'}</span>
+                          </td>
+                          <td>
+                            <span className="admin-chip small info" style={{ fontSize: '0.7rem' }}>{p.product_condition || '—'}</span>
+                          </td>
+                          <td>
+                            <span className="admin-chip small success" style={{ fontSize: '0.7rem' }}>{p.origin || '—'}</span>
                           </td>
                           <td>{p.category_name || 'N/A'}</td>
                           <td>{p.base_price.toLocaleString()} ₫</td>
@@ -1631,15 +1687,41 @@ const DashboardPage = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Tình trạng / Trạng thái</label>
+                  <label>Tình trạng kinh doanh</label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
                   >
-                    <option value="">-- Chọn tình trạng --</option>
+                    <option value="">-- Chọn trạng thái --</option>
                     {statusesList.map(s => (
                       <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Loại hàng (Mới/Cũ)</label>
+                  <select
+                    name="product_condition"
+                    value={formData.product_condition}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">-- Chọn loại hàng --</option>
+                    {conditionsList.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Nguồn gốc / Bảo hành</label>
+                  <select
+                    name="origin"
+                    value={formData.origin}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">-- Chọn nguồn gốc --</option>
+                    {originsList.map(o => (
+                      <option key={o} value={o}>{o}</option>
                     ))}
                   </select>
                 </div>

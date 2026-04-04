@@ -13,6 +13,8 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = None
     brand: Optional[str] = Field(None, max_length=100)
     status: Optional[str] = Field(None, max_length=50)
+    product_condition: Optional[str] = Field(None, max_length=100)
+    origin: Optional[str] = Field(None, max_length=100)
     stock_quantity: Optional[int] = Field(0, ge=0)
     is_active: bool = True
 
@@ -29,6 +31,8 @@ class ProductUpdate(BaseModel):
     image_url: Optional[str] = None
     brand: Optional[str] = Field(None, max_length=100)
     status: Optional[str] = Field(None, max_length=50)
+    product_condition: Optional[str] = Field(None, max_length=100)
+    origin: Optional[str] = Field(None, max_length=100)
     stock_quantity: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
 

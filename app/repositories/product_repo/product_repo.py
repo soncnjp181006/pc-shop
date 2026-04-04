@@ -15,6 +15,8 @@ def create_product_repo(db: Session, product_in: ProductCreate) -> Product:
         image_url=product_in.image_url,
         brand=product_in.brand,
         status=product_in.status,
+        product_condition=product_in.product_condition,
+        origin=product_in.origin,
         stock_quantity=product_in.stock_quantity,
         is_active=product_in.is_active
     )

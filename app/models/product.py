@@ -20,6 +20,8 @@ class Product(Base):
     image_url = Column(String(500), nullable=True)  # Link ảnh sản phẩm (Drive, v.v.)
     brand = Column(String(100), nullable=True)
     status = Column(String(50), nullable=True)
+    product_condition = Column(String(100), nullable=True) # Loại mặt hàng (Mới, Cũ...)
+    origin = Column(String(100), nullable=True) # Xách tay/Chính hãng
     stock_quantity = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
