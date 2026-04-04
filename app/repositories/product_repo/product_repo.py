@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional, Tuple
+from fastapi import HTTPException, status
 from app.models.product import Product
 from app.schemas.product.product import ProductCreate, ProductUpdate
 
@@ -151,8 +153,30 @@ def update_product_repo(db: Session, db_obj: Product, product_in: ProductUpdate)
     return db_obj
 
 def delete_product_repo(db: Session, db_obj: Product) -> None:
-    db.delete(db_obj)
-    db.commit()
+    try:
+        # Dọn dẹp các ràng buộc trước khi xóa
+        from app.models.cart import CartItem
+        from app.models.product_variant import ProductVariant
+        
+        # 1. Tìm tất cả variant IDs của sản phẩm này
+        variant_ids = [v.id for v in db_obj.variants]
+        
+        if variant_ids:
+            # 2. Xóa tất cả CartItem liên quan đến các variants này
+            db.query(CartItem).filter(CartItem.variant_id.in_(variant_ids)).delete(synchronize_session=False)
+        
+        # 3. Tiến hành xóa sản phẩm (SQLAlchemy sẽ tự động xóa variants do có cascade="all, delete-orphan")
+        db.delete(db_obj)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        # Nếu vẫn còn lỗi (ví dụ vướng vào Orders - nếu sau này có bảng Orders)
+        if "IntegrityError" in str(type(e)):
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sản phẩm này đã có trong lịch sử đơn hàng của khách, không thể xóa vĩnh viễn. Vui lòng chọn 'Ngừng bán' để ẩn sản phẩm."
+            )
+        raise e
 
 def soft_delete_product_repo(db: Session, db_obj: Product) -> Product:
     db_obj.is_active = False

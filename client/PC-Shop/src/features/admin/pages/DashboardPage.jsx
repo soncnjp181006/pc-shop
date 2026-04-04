@@ -92,17 +92,31 @@ const DashboardPage = () => {
     setConfirmDialog({
       isOpen: true,
       title: 'Xóa hàng loạt',
-      message: `Bạn có chắc chắn muốn xóa ${selectedProductIds.length} sản phẩm đã chọn?`,
+      message: `Bạn có chắc chắn muốn xóa ${selectedProductIds.length} sản phẩm đã chọn? Thao tác này sẽ xóa vĩnh viễn và không thể hoàn tác.`,
       onConfirm: async () => {
         try {
           // Xóa từng cái (Backend chưa có bulk delete endpoint chuyên dụng)
-          await Promise.all(selectedProductIds.map(id => productsApi.delete(id)));
-          setToast({ type: 'success', message: `Đã xóa ${selectedProductIds.length} sản phẩm` });
+          const results = await Promise.all(selectedProductIds.map(async (id) => {
+            const res = await productsApi.delete(id);
+            return { id, ok: res.ok };
+          }));
+          
+          const failed = results.filter(r => !r.ok);
+          
+          if (failed.length === 0) {
+            setToast({ type: 'success', message: `Đã xóa thành công ${selectedProductIds.length} sản phẩm` });
+          } else {
+            setToast({ 
+              type: 'warning', 
+              message: `Đã xóa ${selectedProductIds.length - failed.length} mục. ${failed.length} mục thất bại do có dữ liệu liên quan.` 
+            });
+          }
+          
           setSelectedProductIds([]);
           fetchProducts();
         } catch (error) {
           console.error('Lỗi khi xóa hàng loạt:', error);
-          setToast({ type: 'error', message: 'Có lỗi khi xóa một số sản phẩm' });
+          setToast({ type: 'error', message: 'Có lỗi hệ thống khi xóa hàng loạt sản phẩm' });
         }
       }
     });
@@ -425,16 +439,23 @@ const DashboardPage = () => {
     setConfirmDialog({
       isOpen: true,
       title: 'Xóa sản phẩm',
-      message: 'Bạn có chắc chắn muốn xóa sản phẩm này?',
+      message: 'Bạn có chắc chắn muốn xóa sản phẩm này? Thao tác này sẽ xóa vĩnh viễn và không thể hoàn tác.',
       onConfirm: async () => {
         try {
           const response = await productsApi.delete(id);
           if (response.ok) {
-            setToast({ type: 'success', message: 'Đã xóa sản phẩm' });
+            setToast({ type: 'success', message: 'Đã xóa sản phẩm thành công' });
             fetchProducts();
+          } else {
+            const error = await response.json();
+            setToast({ 
+              type: 'error', 
+              message: error.detail || 'Không thể xóa sản phẩm. Có thể sản phẩm đang nằm trong giỏ hàng của khách.' 
+            });
           }
         } catch (error) {
           console.error('Lỗi khi xóa sản phẩm:', error);
+          setToast({ type: 'error', message: 'Lỗi kết nối hoặc hệ thống khi xóa sản phẩm' });
         }
       }
     });
