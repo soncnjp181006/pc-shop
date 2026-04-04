@@ -16,7 +16,7 @@ import './ProductListPage.css';
 const BRANDS = ['Apple','ASUS','MSI','Gigabyte','Dell','HP','Lenovo','Razer','Corsair','NZXT','Logitech','Samsung','LG','Intel','AMD','NVIDIA'];
 const CONDITIONS = ['Mới 100% Fullbox', 'Hàng Like New 99%', 'Hàng Cũ 95%', 'Hàng Cũ 90%', 'Hàng Trôi bảo hành'];
 const ORIGINS = ['Chính hãng (VAT)', 'Xách tay (Global)', 'Hàng nhập khẩu'];
-const PAGE_SIZE_OPTIONS = [20, 40, 50, 60];
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 40, 50, 60];
 
 const PRICE_PRESETS = [
   { label: '< 5 triệu',   min: '',         max: '5000000'  },
