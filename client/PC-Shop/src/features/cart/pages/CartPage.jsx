@@ -20,6 +20,7 @@ const CartPage = () => {
   const [toast, setToast] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [freeShippingThreshold] = useState(500000); // 500k VND
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
 
   const navigate = useNavigate();
 
@@ -78,19 +79,32 @@ const CartPage = () => {
     }
   };
 
-  const handleDeleteItem = async (itemId) => {
+  const handleDeleteItem = (itemId) => {
+    const item = tempItems.find(it => it.id === itemId);
+    if (item) {
+      setDeleteConfirm({ id: itemId, name: item.variant.product.name });
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
     setIsSyncing(true);
     try {
-      const response = await cartApi.deleteItem(itemId);
+      const response = await cartApi.deleteItem(deleteConfirm.id);
       if (response.ok) {
-        setTempItems(prev => prev.filter(it => it.id !== itemId));
-        setSelectedItems(prev => { const n = new Set(prev); n.delete(itemId); return n; });
+        setTempItems(prev => prev.filter(it => it.id !== deleteConfirm.id));
+        setSelectedItems(prev => { const n = new Set(prev); n.delete(deleteConfirm.id); return n; });
         window.dispatchEvent(new Event('cartUpdated'));
         showToast("Đã xóa sản phẩm khỏi giỏ hàng");
       }
     } finally {
       setIsSyncing(false);
+      setDeleteConfirm(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   const toggleSelect = (id) => {
@@ -143,6 +157,38 @@ const CartPage = () => {
       {toast && (
         <div className={`cart-toast ${toast.type}`}>
           <CheckCircle2 size={18} /> {toast.message}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="delete-confirm-modal-overlay">
+          <div className="delete-confirm-modal glass-panel">
+            <div className="delete-confirm-header">
+              <AlertCircle size={32} className="alert-icon" />
+              <h2>Xác nhận xóa sản phẩm</h2>
+            </div>
+            <p className="delete-confirm-message">
+              Bạn có chắc chắn muốn xóa <strong>"{deleteConfirm.name}"</strong> khỏi giỏ hàng?
+            </p>
+            <p className="delete-confirm-note">Hành động này không thể hoàn tác.</p>
+            <div className="delete-confirm-actions">
+              <button 
+                className="btn-cancel-delete"
+                onClick={cancelDelete}
+                disabled={isSyncing}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn-confirm-delete"
+                onClick={confirmDelete}
+                disabled={isSyncing}
+              >
+                {isSyncing ? 'Đang xóa...' : 'Xóa khỏi giỏ hàng'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
