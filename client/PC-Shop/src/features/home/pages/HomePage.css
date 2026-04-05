@@ -9,24 +9,30 @@
 /* 🚀 HERO SECTION MODERN */
 .hero-modern {
   position: relative;
-  min-height: 90vh;
+  min-height: 85vh;
   display: flex;
   align-items: center;
-  padding: 100px 0;
+  padding: 60px 0 100px;
   overflow: hidden;
+  /* GPU acceleration for entire section */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .hero-background {
   position: absolute;
   inset: 0;
   z-index: 0;
+  pointer-events: none;
 }
 
 .glow-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
+  filter: blur(100px); /* Giảm từ 120px xuống 100px để nhẹ hơn */
+  opacity: 0.12; /* Giảm nhẹ opacity */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .orb-1 {
@@ -56,7 +62,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 60px;
-  align-items: center;
+  align-items: flex-start; /* Chuyển từ center sang flex-start để đẩy chữ lên cao */
+  padding-top: 40px; /* Thêm padding top để căn chỉnh */
   position: relative;
   z-index: 1;
 }
@@ -255,7 +262,7 @@
 
 /* 📦 CATEGORIES SECTION V2 */
 .categories-modern {
-  padding: 120px 0;
+  padding: 80px 0;
 }
 
 .section-heading-v2 {
@@ -372,8 +379,8 @@
 
 .cat-arrow {
   margin-left: auto;
-  width: 40px;
-  height: 40px;
+  width: 44px; /* Tăng nhẹ kích thước cho cân đối */
+  height: 44px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.03);
   display: flex;
@@ -383,6 +390,7 @@
   transform: translateX(-20px);
   transition: all 0.5s ease;
   color: var(--accent-primary);
+  flex-shrink: 0; /* Đảm bảo luôn giữ hình tròn, không bị bóp méo thành elip */
 }
 
 .cat-card-v2:hover .cat-icon-box {
@@ -417,7 +425,7 @@
 
 /* 🔥 TRENDING PRODUCTS V2 */
 .trending-modern {
-  padding: 100px 0;
+  padding: 60px 0;
   background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.02), transparent);
 }
 
@@ -633,7 +641,7 @@
 
 /* 💎 SERVICES SECTION */
 .services-modern {
-  padding: 100px 0;
+  padding: 60px 0;
 }
 
 .services-grid-v2 {
@@ -689,7 +697,7 @@
 
 /* 💬 TESTIMONIALS SECTION */
 .testimonials-modern {
-  padding: 100px 0;
+  padding: 60px 0;
 }
 
 .testimonials-box {
@@ -758,7 +766,7 @@
 
 /* 🏢 BRANDS SECTION */
 .brands-modern {
-  padding: 80px 0 120px;
+  padding: 40px 0 80px;
 }
 
 .brands-label {
@@ -781,6 +789,8 @@
   gap: 80px;
   width: max-content;
   animation: scrollBrands 30s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .brand-logo-item {
@@ -806,8 +816,11 @@
 /* ANIMATIONS & REVEAL */
 .reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(15px); /* Giảm thêm từ 20px xuống 15px để cảm giác nhạy hơn */
+  will-change: transform, opacity;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Rút ngắn từ 0.5s xuống 0.4s */
+  backface-visibility: hidden;
 }
 
 .reveal-visible {
@@ -816,18 +829,27 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  50% { transform: translateY(-15px) translateZ(0); } /* Giảm biên độ từ 20px xuống 15px */
 }
 
 @keyframes floatSlow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  50% { transform: translateY(-8px) translateZ(0); } /* Giảm biên độ từ 10px xuống 8px */
 }
 
-.animate-float { animation: float 6s ease-in-out infinite; }
-.animate-float-slow { animation: floatSlow 8s ease-in-out infinite; }
-.animate-float-delayed { animation: float 6s ease-in-out infinite 1s; }
+.animate-float { 
+  animation: float 6s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-float-slow { 
+  animation: floatSlow 8s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-float-delayed { 
+  animation: float 6s ease-in-out infinite 1s;
+  will-change: transform;
+}
 
 /* RESPONSIVE */
 @media (max-width: 1200px) {

@@ -67,19 +67,33 @@ const HomePage = () => {
     fetchTopProducts();
   }, [topFilter]);
 
-  // Scroll Reveal Effect
+  // Optimized Scroll Reveal Effect
   useEffect(() => {
-    observerRef.current = new IntersectionObserver((entries) => {
+    // Only initialize if data is loaded to avoid redundant observations
+    if (loadingTop || categories.length === 0) return;
+
+    const options = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px' // Start reveal slightly before element enters viewport
+    };
+
+    const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('reveal-visible');
+          // Use requestAnimationFrame for smoother class addition
+          requestAnimationFrame(() => {
+            entry.target.classList.add('reveal-visible');
+          });
+          // Once revealed, no need to observe anymore
+          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1 });
+    }, options);
 
-    document.querySelectorAll('.reveal').forEach(el => observerRef.current.observe(el));
+    const elements = document.querySelectorAll('.reveal');
+    elements.forEach(el => observer.observe(el));
     
-    return () => observerRef.current.disconnect();
+    return () => observer.disconnect();
   }, [loadingTop, categories]);
 
   return (
@@ -137,7 +151,13 @@ const HomePage = () => {
           <div className="hero-visual-box">
             <div className="visual-container">
               <div className="main-pc-image animate-float">
-                <img src="/hero.png" alt="PC Gaming High-end" onError={(e) => e.target.style.display='none'} />
+                <img 
+                  src="/hero.png" 
+                  alt="PC Gaming High-end" 
+                  width="500"
+                  height="500"
+                  onError={(e) => e.target.style.display='none'} 
+                />
                 {/* Fallback if image missing */}
                 <div className="image-fallback">
                   <Cpu size={120} strokeWidth={0.5} className="text-blue-500 opacity-20" />
@@ -253,7 +273,13 @@ const HomePage = () => {
               topProducts.map(product => (
                 <div key={product.id} className="product-card-v2 glass-panel">
                   <div className="p-card-media" onClick={() => navigate(`/products/${product.id}`)}>
-                    <img src={getImageUrl(product.image_url)} alt={product.name} />
+                    <img 
+                      src={getImageUrl(product.image_url)} 
+                      alt={product.name} 
+                      loading="lazy"
+                      width="200"
+                      height="200"
+                    />
                     <div className="p-card-badges">
                       {product.available_stock < 5 && <span className="badge-warning">Sắp hết</span>}
                       <span className="badge-hot">Hot</span>
