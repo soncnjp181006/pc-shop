@@ -18,7 +18,16 @@ import Footer from './components/layout/Footer';
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Sử dụng requestAnimationFrame để đợi cho đến khi component mới render xong
+    // giúp tránh hiện tượng "nhảy" trang khi scroll diễn ra quá sớm
+    const animationId = requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant' // Dùng instant để tránh cảm giác giật khi kết hợp với animation CSS
+      });
+    });
+    return () => cancelAnimationFrame(animationId);
   }, [pathname]);
   return null;
 };

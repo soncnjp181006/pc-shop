@@ -114,7 +114,7 @@ const HomePage = () => {
                 Bắt đầu Build ngay <ArrowRight size={20} />
               </Link>
               <Link to="/products" className="btn-glass">
-                Khám phá linh kiện
+                Khám phá
               </Link>
             </div>
             
