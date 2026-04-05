@@ -92,6 +92,13 @@ const CheckoutPage = () => {
   const [formError, setFormError] = useState('');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [savingAddress, setSavingAddress] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [newAddressForm, setNewAddressForm] = useState({
+    recipient_name: '',
+    phone: '',
+    address_line: '',
+    note: '',
+  });
 
   const applyAddress = useCallback((addr) => {
     setShippingData({
@@ -301,6 +308,45 @@ const CheckoutPage = () => {
     }
   };
 
+  const handleOpenAddressModal = () => {
+    setNewAddressForm({
+      recipient_name: '',
+      phone: '',
+      address_line: '',
+      note: '',
+    });
+    setShowAddressModal(true);
+  };
+
+  const handleSaveNewAddress = async () => {
+    if (!newAddressForm.recipient_name.trim() || !newAddressForm.phone.trim() || !newAddressForm.address_line.trim()) {
+      setFormError('Vui lòng điền đầy đủ thông tin.');
+      return;
+    }
+    setSavingAddress(true);
+    try {
+      const res = await customerProfileApi.createShippingAddress({
+        recipient_name: newAddressForm.recipient_name,
+        phone: newAddressForm.phone,
+        address_line: newAddressForm.address_line,
+        note: newAddressForm.note,
+        is_default: false,
+      });
+      if (res.ok) {
+        await fetchProfile();
+        setShowAddressModal(false);
+        setFormError('');
+      } else {
+        setFormError('Lỗi khi lưu địa chỉ.');
+      }
+    } catch (e) {
+      console.error(e);
+      setFormError('Lỗi khi lưu địa chỉ.');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -374,7 +420,7 @@ const CheckoutPage = () => {
                       </button>
                     ))}
                   </div>
-                  <button type="button" className="btn-textish" onClick={onSwitchToManualAddress}>
+                  <button type="button" className="btn-textish" onClick={handleOpenAddressModal}>
                     + Nhập địa chỉ khác
                   </button>
                 </div>
@@ -644,6 +690,56 @@ const CheckoutPage = () => {
           </aside>
         </div>
       </div>
+
+      {showAddressModal && (
+        <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
+          <div className="address-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Thêm địa chỉ mới</h3>
+            <div className="form-group">
+              <label>Họ và tên người nhận</label>
+              <input
+                type="text"
+                value={newAddressForm.recipient_name}
+                onChange={(e) => setNewAddressForm(prev => ({ ...prev, recipient_name: e.target.value }))}
+                placeholder="VD: Nguyễn Văn A"
+              />
+            </div>
+            <div className="form-group">
+              <label>Số điện thoại</label>
+              <input
+                type="tel"
+                value={newAddressForm.phone}
+                onChange={(e) => setNewAddressForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="VD: 0901 234 567"
+              />
+            </div>
+            <div className="form-group">
+              <label>Địa chỉ nhận hàng đầy đủ</label>
+              <textarea
+                value={newAddressForm.address_line}
+                onChange={(e) => setNewAddressForm(prev => ({ ...prev, address_line: e.target.value }))}
+                rows={3}
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+              />
+            </div>
+            <div className="form-group">
+              <label>Ghi chú giao hàng (không bắt buộc)</label>
+              <textarea
+                value={newAddressForm.note}
+                onChange={(e) => setNewAddressForm(prev => ({ ...prev, note: e.target.value }))}
+                rows={2}
+                placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi đến…"
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowAddressModal(false)}>Hủy</button>
+              <button className="btn-primary" onClick={handleSaveNewAddress} disabled={savingAddress}>
+                {savingAddress ? 'Đang lưu...' : 'Lưu địa chỉ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
