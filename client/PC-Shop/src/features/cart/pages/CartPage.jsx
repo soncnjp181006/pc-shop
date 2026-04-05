@@ -5,7 +5,7 @@ import {
   ShoppingBag, Trash2, ArrowRight, ChevronLeft,
   ShieldCheck, Truck, RotateCcw, Lock, CreditCard,
   Info, AlertCircle, CheckCircle2, Heart, Star, Gift,
-  Zap, Award, Package, Sparkles
+  Zap, Award, Package, Sparkles, Minus, Plus, X, Tag
 } from 'lucide-react';
 import './CartPage.css';
 
@@ -14,17 +14,23 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [tempItems, setTempItems] = useState([]);
-  const [activeItemId, setActiveItemId] = useState(null);
   const [error, setError] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [toast, setToast] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
-  const [freeShippingThreshold] = useState(500000); // 500k VND
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
+  const [freeShippingThreshold] = useState(5000000); // 5M VND for PC parts
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name, isBulk }
+  const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
 
   const navigate = useNavigate();
 
-  useEffect(() => { fetchCart(); fetchRecommended(); }, []);
+  useEffect(() => { 
+    fetchCart(); 
+    fetchRecommended(); 
+    // Scroll to top on mount
+    window.scrollTo(0, 0);
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -40,14 +46,15 @@ const CartPage = () => {
         setCart(data);
         setTempItems(data.items || []);
         if (data.items?.length > 0) {
+          // Default select all on first load
           setSelectedItems(new Set(data.items.map(item => item.id)));
         }
         window.dispatchEvent(new Event('cartUpdated'));
       } else {
-        setError("Không thể tải giỏ hàng.");
+        setError("Không thể tải giỏ hàng. Vui lòng đăng nhập lại.");
       }
     } catch {
-      setError("Lỗi kết nối máy chủ.");
+      setError("Lỗi kết nối máy chủ. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -55,7 +62,7 @@ const CartPage = () => {
 
   const fetchRecommended = async () => {
     try {
-      const res = await productsApi.getAll({ limit: 8, active_only: true });
+      const res = await productsApi.getAll({ limit: 12, active_only: true });
       if (res.ok) {
         const data = await res.json();
         setRecommendedProducts(data.data || []);
@@ -67,13 +74,25 @@ const CartPage = () => {
 
   const handleUpdateQty = async (itemId, newQty) => {
     if (newQty < 1) return;
+    
+    // Optimistic update
+    const oldItems = [...tempItems];
+    setTempItems(prev => prev.map(it => 
+      it.id === itemId ? { ...it, quantity: newQty, subtotal: it.price * newQty } : it
+    ));
+
     setIsSyncing(true);
     try {
       const response = await cartApi.updateItem(itemId, newQty);
       if (response.ok) {
-        setTempItems(prev => prev.map(it => it.id === itemId ? { ...it, quantity: newQty, subtotal: it.price * newQty } : it));
         window.dispatchEvent(new Event('cartUpdated'));
+      } else {
+        setTempItems(oldItems);
+        showToast("Lỗi khi cập nhật số lượng", "error");
       }
+    } catch (error) {
+      setTempItems(oldItems);
+      showToast("Lỗi kết nối", "error");
     } finally {
       setIsSyncing(false);
     }
@@ -82,29 +101,50 @@ const CartPage = () => {
   const handleDeleteItem = (itemId) => {
     const item = tempItems.find(it => it.id === itemId);
     if (item) {
-      setDeleteConfirm({ id: itemId, name: item.variant.product.name });
+      setDeleteConfirm({ id: itemId, name: item.variant.product.name, isBulk: false });
     }
+  };
+
+  const handleClearSelected = () => {
+    if (selectedItems.size === 0) return;
+    setDeleteConfirm({ 
+      id: null, 
+      name: `${selectedItems.size} sản phẩm đã chọn`, 
+      isBulk: true 
+    });
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
     setIsSyncing(true);
     try {
-      const response = await cartApi.deleteItem(deleteConfirm.id);
-      if (response.ok) {
-        setTempItems(prev => prev.filter(it => it.id !== deleteConfirm.id));
-        setSelectedItems(prev => { const n = new Set(prev); n.delete(deleteConfirm.id); return n; });
-        window.dispatchEvent(new Event('cartUpdated'));
-        showToast("Đã xóa sản phẩm khỏi giỏ hàng");
+      if (deleteConfirm.isBulk) {
+        // Bulk delete logic - deleting one by one since backend might not have bulk yet
+        const idsToDelete = Array.from(selectedItems);
+        await Promise.all(idsToDelete.map(id => cartApi.deleteItem(id)));
+        
+        setTempItems(prev => prev.filter(it => !selectedItems.has(it.id)));
+        setSelectedItems(new Set());
+        showToast(`Đã xóa ${idsToDelete.length} sản phẩm khỏi giỏ hàng`);
+      } else {
+        const response = await cartApi.deleteItem(deleteConfirm.id);
+        if (response.ok) {
+          setTempItems(prev => prev.filter(it => it.id !== deleteConfirm.id));
+          setSelectedItems(prev => { 
+            const n = new Set(prev); 
+            n.delete(deleteConfirm.id); 
+            return n; 
+          });
+          showToast("Đã xóa sản phẩm khỏi giỏ hàng");
+        }
       }
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (error) {
+      showToast("Lỗi khi xóa sản phẩm", "error");
     } finally {
       setIsSyncing(false);
       setDeleteConfirm(null);
     }
-  };
-
-  const cancelDelete = () => {
-    setDeleteConfirm(null);
   };
 
   const toggleSelect = (id) => {
@@ -120,6 +160,20 @@ const CartPage = () => {
     else setSelectedItems(new Set(tempItems.map(it => it.id)));
   };
 
+  const handleApplyVoucher = (e) => {
+    e.preventDefault();
+    if (!voucherCode.trim()) return;
+    
+    // Simulating voucher logic
+    if (voucherCode.toUpperCase() === 'PCSHOP2026') {
+      setAppliedVoucher({ code: 'PCSHOP2026', discount: 200000, label: 'Giảm 200k' });
+      showToast("Đã áp dụng mã giảm giá!");
+      setVoucherCode('');
+    } else {
+      showToast("Mã giảm giá không hợp lệ", "error");
+    }
+  };
+
   const counts = useMemo(() => {
     const selected = tempItems.filter(it => selectedItems.has(it.id));
     return {
@@ -128,25 +182,32 @@ const CartPage = () => {
     };
   }, [tempItems, selectedItems]);
 
-  const selectedTotal = useMemo(() =>
+  const selectedSubtotal = useMemo(() =>
     tempItems.filter(it => selectedItems.has(it.id)).reduce((acc, it) => acc + (it.subtotal || 0), 0)
   , [tempItems, selectedItems]);
 
-  const activeItem = useMemo(() => tempItems.find(it => it.id === activeItemId) || null, [tempItems, activeItemId]);
-  const showSummary = Boolean(activeItem);
+  const shippingFee = useMemo(() => {
+    if (selectedItems.size === 0 || selectedSubtotal >= freeShippingThreshold) return 0;
+    return 35000;
+  }, [selectedSubtotal, selectedItems, freeShippingThreshold]);
 
-  const cartProductIds = useMemo(() => new Set(tempItems.map(item => item.variant.product?.id).filter(Boolean)), [tempItems]);
+  const discountAmount = useMemo(() => appliedVoucher ? appliedVoucher.discount : 0, [appliedVoucher]);
+  
+  const finalTotal = useMemo(() => 
+    Math.max(0, selectedSubtotal + shippingFee - discountAmount)
+  , [selectedSubtotal, shippingFee, discountAmount]);
 
-  const upsellSuggestions = useMemo(() => {
-    const candidates = recommendedProducts.filter(product => !cartProductIds.has(product.id));
-    return candidates.length ? candidates.slice(0, 2) : recommendedProducts.slice(0, 2);
-  }, [recommendedProducts, cartProductIds]);
-
-  const progressPercent = useMemo(() => Math.min((selectedTotal / freeShippingThreshold) * 100, 100), [selectedTotal]);
+  const progressPercent = useMemo(() => Math.min((selectedSubtotal / freeShippingThreshold) * 100, 100), [selectedSubtotal, freeShippingThreshold]);
 
   if (loading) return (
-    <div className="cart-loader">
-      <div className="spinner-modular" />
+    <div className="cart-loader-container">
+      <div className="cart-skeleton-header" />
+      <div className="cart-skeleton-layout">
+        <div className="cart-skeleton-items">
+          {[1, 2, 3].map(i => <div key={i} className="skeleton-item glass-panel" />)}
+        </div>
+        <div className="cart-skeleton-summary glass-panel" />
+      </div>
     </div>
   );
 
@@ -156,36 +217,39 @@ const CartPage = () => {
     <div className="cart-modern-container">
       {toast && (
         <div className={`cart-toast ${toast.type}`}>
-          <CheckCircle2 size={18} /> {toast.message}
+          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          {toast.message}
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="delete-confirm-modal-overlay">
-          <div className="delete-confirm-modal glass-panel">
+        <div className="delete-confirm-modal-overlay" onClick={() => setDeleteConfirm(null)}>
+          <div className="delete-confirm-modal glass-panel" onClick={e => e.stopPropagation()}>
             <div className="delete-confirm-header">
-              <AlertCircle size={32} className="alert-icon" />
-              <h2>Xác nhận xóa sản phẩm</h2>
+              <div className="warning-icon-box">
+                <AlertCircle size={32} className="alert-icon" />
+              </div>
+              <h2>Xác nhận xóa</h2>
             </div>
             <p className="delete-confirm-message">
-              Bạn có chắc chắn muốn xóa <strong>"{deleteConfirm.name}"</strong> khỏi giỏ hàng?
+              Bạn có chắc chắn muốn xóa <strong>{deleteConfirm.name}</strong>?
             </p>
-            <p className="delete-confirm-note">Hành động này không thể hoàn tác.</p>
+            <p className="delete-confirm-note">Hành động này sẽ xóa vĩnh viễn sản phẩm khỏi giỏ hàng của bạn.</p>
             <div className="delete-confirm-actions">
               <button 
                 className="btn-cancel-delete"
-                onClick={cancelDelete}
+                onClick={() => setDeleteConfirm(null)}
                 disabled={isSyncing}
               >
-                Hủy
+                Quay lại
               </button>
               <button 
                 className="btn-confirm-delete"
                 onClick={confirmDelete}
                 disabled={isSyncing}
               >
-                {isSyncing ? 'Đang xóa...' : 'Xóa khỏi giỏ hàng'}
+                {isSyncing ? 'Đang xử lý...' : 'Đồng ý xóa'}
               </button>
             </div>
           </div>
@@ -196,235 +260,302 @@ const CartPage = () => {
         {/* Header Section */}
         <header className="cart-modern-header">
           <div className="header-info">
-            <h1 className="title-modular">Giỏ hàng <span>({counts.total})</span></h1>
+            <h1 className="title-modular">Giỏ hàng của bạn</h1>
+            <p className="subtitle-modular">Quản lý các sản phẩm bạn đã chọn để thanh toán</p>
           </div>
-          <button className="btn-back" onClick={() => navigate('/products')}>
+          <Link to="/products" className="btn-continue-shopping">
             <ChevronLeft size={18} /> Tiếp tục mua sắm
-          </button>
+          </Link>
         </header>
 
-        {!isEmpty && (
-          <div className="cart-highlight-row">
-            <div className="highlight-card glass-panel">
-              <div className="highlight-icon"><Truck size={18} /></div>
-              <div>
-                <p className="highlight-title">Miễn phí vận chuyển</p>
-                <p className="highlight-text">Còn {(freeShippingThreshold - selectedTotal).toLocaleString()} ₫ để đạt miễn phí ship.</p>
-              </div>
-            </div>
-            <div className="highlight-card glass-panel">
-              <div className="highlight-icon"><CreditCard size={18} /></div>
-              <div>
-                <p className="highlight-title">Thanh toán đa dạng</p>
-                <p className="highlight-text">COD, thẻ, ví điện tử, chuyển khoản.</p>
-              </div>
-            </div>
-            <div className="highlight-card glass-panel">
-              <div className="highlight-icon"><ShieldCheck size={18} /></div>
-              <div>
-                <p className="highlight-title">An tâm mua sắm</p>
-                <p className="highlight-text">Thanh toán SSL, đổi trả 30 ngày.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {isEmpty ? (
-          <div className="cart-empty-state glass-panel">
-            <div className="empty-icon-box">
-              <ShoppingBag size={64} strokeWidth={1} />
-            </div>
-            <h2>Giỏ hàng trống rỗng</h2>
-            <p>Có vẻ như bạn chưa chọn được linh kiện ưng ý nào.</p>
-            <button className="btn-primary" onClick={() => navigate('/products')}>Khám phá sản phẩm</button>
-          </div>
-        ) : (
-          <>
-            <div className={`cart-main-layout ${showSummary ? '' : 'collapsed'}`}>
-              {/* Left: Items List */}
-              <div className="cart-items-section">
-                <div className="section-actions-bar glass-panel">
-                  <div className="check-all-box" onClick={selectAll}>
-                    <div className={`custom-checkbox ${selectedItems.size === tempItems.length ? 'checked' : ''}`} />
-                    <span>Chọn tất cả</span>
-                  </div>
-                  <button className="btn-clear-marked" disabled={selectedItems.size === 0}>
-                    Xóa mục đã chọn
-                  </button>
+          <div className="cart-empty-wrapper">
+            <div className="cart-empty-state glass-panel animate-fade-in">
+              <div className="empty-visual">
+                <div className="empty-icon-ring">
+                  <ShoppingBag size={80} strokeWidth={1} />
                 </div>
-                <div className="items-stack">
-                  {tempItems.map(item => (
-                    <div
-                      key={item.id}
-                      className={`cart-item-card glass-panel ${selectedItems.has(item.id) ? 'selected' : ''}`}
-                      onClick={() => setActiveItemId(item.id)}
-                    >
-                      <div className="item-check" onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}>
-                        <div className={`custom-checkbox ${selectedItems.has(item.id) ? 'checked' : ''}`} />
+                <div className="empty-sparkle s1"><Sparkles size={20} /></div>
+                <div className="empty-sparkle s2"><Sparkles size={16} /></div>
+              </div>
+              <h2>Giỏ hàng đang chờ bạn</h2>
+              <p>Có vẻ như bạn chưa chọn được linh kiện nào cho dàn máy mơ ước của mình.</p>
+              <div className="empty-actions">
+                <button className="btn-primary-glow" onClick={() => navigate('/products')}>
+                  Khám phá ngay
+                </button>
+                <button className="btn-secondary-outline" onClick={() => navigate('/home')}>
+                  Về trang chủ
+                </button>
+              </div>
+            </div>
+
+            {recommendedProducts.length > 0 && (
+              <div className="empty-recommendations">
+                <h3 className="section-title"><Sparkles size={20} /> Sản phẩm đang hot</h3>
+                <div className="recommendations-grid">
+                  {recommendedProducts.slice(0, 4).map(product => (
+                    <div key={product.id} className="rec-card glass-panel" onClick={() => navigate(`/products/${product.id}`)}>
+                      <div className="rec-img">
+                        <img src={getImageUrl(product.image_url)} alt={product.name} />
                       </div>
-
-                      <div className="item-img" onClick={(e) => { e.stopPropagation(); navigate(`/products/${item.variant.product_id}`); }}>
-                        <img src={getImageUrl(item.variant.product.image_url)} alt="" />
-                      </div>
-
-                      <div className="item-details">
-                        <div className="item-title-row">
-                          <h3 className="item-name" onClick={(e) => { e.stopPropagation(); navigate(`/products/${item.variant.product_id}`); }}>
-                            {item.variant.product.name}
-                          </h3>
-                          <button className="btn-remove-item" onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-
-                        <div className="item-variant-chip">
-                          {Object.values(item.variant.attributes).join(' / ')}
-                        </div>
-
-                        <div className="item-bottom-row">
-                          <div className="item-qty-stepper">
-                            <button onClick={() => handleUpdateQty(item.id, item.quantity - 1)} disabled={isSyncing}>-</button>
-                            <input type="number" value={item.quantity} readOnly />
-                            <button onClick={() => handleUpdateQty(item.id, item.quantity + 1)} disabled={isSyncing}>+</button>
-                          </div>
-                          <div className="item-price-info">
-                            <span className="unit-price">{(item.price || 0).toLocaleString()} ₫</span>
-                            <span className="sub-price">{(item.subtotal || 0).toLocaleString()} ₫</span>
-                          </div>
-                        </div>
+                      <div className="rec-info">
+                        <h4>{product.name}</h4>
+                        <span className="price">{product.base_price.toLocaleString()} ₫</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Right: Summary Panel */}
-              <aside className={`cart-summary-section ${showSummary ? 'visible' : 'hidden'}`}>
-                <div className="summary-sticky glass-panel">
-                  {/* Shipping Progress */}
-                  <div className="shipping-progress">
-                    <div className="progress-header">
-                      <Truck size={20} />
-                      <span>Miễn phí vận chuyển</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
-                    </div>
-                    <p className="progress-text">
-                      {selectedTotal >= freeShippingThreshold ? 
-                        '🎉 Chúc mừng! Bạn đã được miễn phí vận chuyển!' : 
-                        `Thêm ${(freeShippingThreshold - selectedTotal).toLocaleString()} ₫ để miễn phí vận chuyển`
-                      }
-                    </p>
-                  </div>
-
-                  <h2 className="summary-title">Tóm tắt đơn hàng</h2>
-                  <div className="summary-list">
-                    <div className="summary-row">
-                      <span>Số loại sản phẩm</span>
-                      <span>{counts.types}</span>
-                    </div>
-                    <div className="summary-row">
-                      <span>Số lượng sản phẩm</span>
-                      <span>{counts.total}</span>
-                    </div>
-                    <div className="summary-row">
-                      <span>Tạm tính</span>
-                      <span>{selectedTotal.toLocaleString()} ₫</span>
-                    </div>
-                    <div className="summary-row promo">
-                      <span>Mã giảm giá</span>
-                      <button className="btn-add-promo">Thêm mã</button>
-                    </div>
-                    <div className="summary-row shipping">
-                      <span>Vận chuyển</span>
-                      <span className="free">{selectedTotal >= freeShippingThreshold ? 'Miễn phí' : '30.000 ₫'}</span>
-                    </div>
-                    <div className="summary-divider" />
-                    <div className="summary-row total">
-                      <span>Tổng cộng</span>
-                      <span className="total-value">{selectedTotal.toLocaleString()} ₫</span>
-                    </div>
-                  </div>
-
-                  <button
-                    className="btn-checkout-modular"
-                    disabled={!showSummary || selectedItems.size === 0}
-                    onClick={() => navigate('/checkout')}
-                  >
-                    Tiến hành thanh toán <ArrowRight size={18} />
-                  </button>
-
-                  <div className="trust-footer">
-                    <div className="trust-point"><Lock size={14} /> Thanh toán bảo mật SSL</div>
-                    <div className="trust-point"><RotateCcw size={14} /> Đổi trả trong 30 ngày</div>
-                  </div>
-
-                  {/* Moved Feature Grid inside for sticky consistency */}
-                  <div className="cart-features-grid">
-                    <div className="feat-box">
-                      <Truck size={20} />
-                      <strong>Giao hàng 2h</strong>
-                      <span>Nội thành HN/HCM</span>
-                    </div>
-                    <div className="feat-box">
-                      <ShieldCheck size={20} />
-                      <strong>Bảo hành tận nơi</strong>
-                      <span>Gói VIP Care+</span>
-                    </div>
+            )}
+          </div>
+        ) : (
+          <div className="cart-main-layout">
+            {/* Left: Items List */}
+            <div className="cart-content-left">
+              {/* Trust & Promo Row */}
+              <div className="cart-trust-row">
+                <div className="trust-card glass-panel">
+                  <Truck size={20} className="t-icon" />
+                  <div className="t-content">
+                    <strong>Giao hàng nhanh</strong>
+                    <span>Toàn quốc trong 24-48h</span>
                   </div>
                 </div>
-              </aside>
-            </div>
-
-            {/* Upsell & Recommendations */}
-            <div className="cart-bottom-section">
-              <div className="cart-upsell-section">
-                <div className="upsell-card glass-panel">
-                  <div className="upsell-header">
-                    <Zap size={20} />
-                    <h3>Mua thêm để tiết kiệm</h3>
+                <div className="trust-card glass-panel">
+                  <ShieldCheck size={20} className="t-icon" />
+                  <div className="t-content">
+                    <strong>Bảo hành chính hãng</strong>
+                    <span>Cam kết chất lượng 100%</span>
                   </div>
-                  <p>Gợi ý dựa trên kho hàng thực tế và sản phẩm đang có sẵn.</p>
-                  <div className="upsell-items">
-                    {upsellSuggestions.map(product => (
-                      <div key={product.id} className="upsell-item">
-                        <img src={getImageUrl(product.image_url)} alt={product.name} />
-                        <div>
-                          <strong>{product.name}</strong>
-                          <span>{product.base_price.toLocaleString()} ₫</span>
-                        </div>
-                        <button className="btn-upsell" onClick={() => navigate(`/products/${product.id}`)}>Xem</button>
-                      </div>
-                    ))}
+                </div>
+                <div className="trust-card glass-panel">
+                  <RotateCcw size={20} className="t-icon" />
+                  <div className="t-content">
+                    <strong>Đổi trả dễ dàng</strong>
+                    <span>30 ngày dùng thử</span>
                   </div>
                 </div>
               </div>
 
-              {recommendedProducts.length > 0 && (
-                <section className="cart-recommendations">
-                  <div className="recommendations-header">
-                    <Sparkles size={20} />
-                    <h3>Có thể bạn cũng thích</h3>
-                  </div>
-                  <div className="recommendations-grid">
-                    {recommendedProducts.slice(0, 4).map(product => (
-                      <div key={product.id} className="recommendation-card glass-panel" onClick={() => navigate(`/products/${product.id}`)}>
-                        <div className="rec-img">
-                          <img src={getImageUrl(product.image_url)} alt={product.name} />
+              <div className="section-actions-bar glass-panel">
+                <div className="check-all-wrapper" onClick={selectAll}>
+                  <div className={`custom-checkbox ${selectedItems.size === tempItems.length ? 'checked' : ''}`} />
+                  <span>Chọn tất cả ({tempItems.length})</span>
+                </div>
+                {selectedItems.size > 0 && (
+                  <button className="btn-clear-selected" onClick={handleClearSelected}>
+                    <Trash2 size={16} /> Xóa đã chọn ({selectedItems.size})
+                  </button>
+                )}
+              </div>
+
+              <div className="items-list-stack">
+                {tempItems.map(item => (
+                  <div
+                    key={item.id}
+                    className={`cart-item-card-v2 glass-panel ${selectedItems.has(item.id) ? 'selected' : ''}`}
+                  >
+                    <div className="item-selection" onClick={() => toggleSelect(item.id)}>
+                      <div className={`custom-checkbox ${selectedItems.has(item.id) ? 'checked' : ''}`} />
+                    </div>
+
+                    <div className="item-main-content">
+                      <div className="item-image-box" onClick={() => navigate(`/products/${item.variant.product_id}`)}>
+                        <img src={getImageUrl(item.variant.product.image_url)} alt={item.variant.product.name} />
+                      </div>
+
+                      <div className="item-info-box">
+                        <div className="item-header">
+                          <h3 className="item-name" onClick={() => navigate(`/products/${item.variant.product_id}`)}>
+                            {item.variant.product.name}
+                          </h3>
+                          <button className="btn-icon-remove" onClick={() => handleDeleteItem(item.id)}>
+                            <X size={18} />
+                          </button>
                         </div>
-                        <h4>{product.name}</h4>
-                        <div className="rec-price">
-                          <span className="price">{product.base_price.toLocaleString()} ₫</span>
-                          <Heart size={14} className="heart-icon" />
+
+                        <div className="item-meta">
+                          <div className="variant-tag">
+                            <Package size={12} />
+                            {Object.values(item.variant.attributes).join(' / ')}
+                          </div>
+                          <span className="stock-status in-stock">Sẵn hàng</span>
+                        </div>
+
+                        <div className="item-controls-row">
+                          <div className="qty-control">
+                            <button 
+                              className="qty-btn" 
+                              onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
+                              disabled={isSyncing || item.quantity <= 1}
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <input type="number" value={item.quantity} readOnly />
+                            <button 
+                              className="qty-btn" 
+                              onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
+                              disabled={isSyncing}
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+
+                          <div className="price-display">
+                            <span className="unit-price">{(item.price || 0).toLocaleString()} ₫</span>
+                            <span className="subtotal-price">{(item.subtotal || 0).toLocaleString()} ₫</span>
+                          </div>
+                        </div>
+
+                        <div className="item-footer-actions">
+                          <button className="btn-text-action">
+                            <Heart size={14} /> Lưu lại
+                          </button>
+                          <div className="divider" />
+                          <button className="btn-text-action">
+                            <Info size={14} /> Chi tiết
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </section>
-              )}
+                ))}
+              </div>
             </div>
-          </>
+
+            {/* Right: Summary Panel */}
+            <aside className="cart-summary-right">
+              <div className="summary-sticky-card glass-panel">
+                <div className="shipping-upsell">
+                  <div className="upsell-header">
+                    <Truck size={20} className={selectedSubtotal >= freeShippingThreshold ? 'success' : ''} />
+                    <span>Miễn phí vận chuyển</span>
+                  </div>
+                  <div className="upsell-progress">
+                    <div className="progress-track">
+                      <div className="progress-bar" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <p className="progress-note">
+                      {selectedSubtotal >= freeShippingThreshold ? 
+                        'Bạn đã đủ điều kiện miễn phí ship!' : 
+                        `Mua thêm ${(freeShippingThreshold - selectedSubtotal).toLocaleString()} ₫ để được miễn phí ship`
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="summary-section">
+                  <h2 className="summary-title">Tổng quan đơn hàng</h2>
+                  
+                  <div className="summary-rows">
+                    <div className="summary-row">
+                      <span>Tạm tính ({counts.total} món)</span>
+                      <span>{selectedSubtotal.toLocaleString()} ₫</span>
+                    </div>
+                    <div className="summary-row">
+                      <span>Phí vận chuyển</span>
+                      <span className={shippingFee === 0 ? 'free-text' : ''}>
+                        {shippingFee === 0 ? 'Miễn phí' : `${shippingFee.toLocaleString()} ₫`}
+                      </span>
+                    </div>
+                    {appliedVoucher && (
+                      <div className="summary-row discount">
+                        <span className="voucher-label">
+                          <Tag size={12} /> {appliedVoucher.code}
+                        </span>
+                        <span>-{appliedVoucher.discount.toLocaleString()} ₫</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="voucher-input-box">
+                    <form onSubmit={handleApplyVoucher}>
+                      <input 
+                        type="text" 
+                        placeholder="Mã giảm giá (Ví dụ: PCSHOP2026)" 
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value)}
+                      />
+                      <button type="submit" disabled={!voucherCode.trim()}>Áp dụng</button>
+                    </form>
+                    {appliedVoucher && (
+                      <div className="applied-voucher-info">
+                        <span>Đã giảm {appliedVoucher.discount.toLocaleString()} ₫</span>
+                        <button onClick={() => setAppliedVoucher(null)}>Gỡ bỏ</button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="total-divider" />
+                  
+                  <div className="summary-total">
+                    <div className="total-label">
+                      <strong>Tổng tiền</strong>
+                      <span>(Đã bao gồm VAT)</span>
+                    </div>
+                    <div className="total-amount">{finalTotal.toLocaleString()} ₫</div>
+                  </div>
+
+                  <button
+                    className="btn-checkout-glow"
+                    disabled={selectedItems.size === 0 || isSyncing}
+                    onClick={() => navigate('/checkout')}
+                  >
+                    {selectedItems.size === 0 ? 'Chọn sản phẩm để thanh toán' : 'Tiến hành thanh toán'}
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+
+                <div className="summary-footer">
+                  <div className="trust-item">
+                    <Lock size={14} />
+                    <span>Bảo mật thanh toán 256-bit SSL</span>
+                  </div>
+                  <div className="payment-methods">
+                    <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" />
+                    <img src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard" />
+                    <img src="https://img.icons8.com/color/48/paypal.png" alt="Paypal" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-box glass-panel">
+                <h3>Cần hỗ trợ?</h3>
+                <p>Liên hệ với chuyên gia PC của chúng tôi để được tư vấn tốt nhất.</p>
+                <button className="btn-contact">Chat với chúng tôi</button>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* Bottom Recommendations */}
+        {!isEmpty && recommendedProducts.length > 0 && (
+          <section className="cart-recommendations-bottom">
+            <div className="section-header">
+              <div className="title-group">
+                <Sparkles size={24} className="accent-icon" />
+                <h2>Có thể bạn quan tâm</h2>
+              </div>
+              <Link to="/products" className="view-all">Xem tất cả <ArrowRight size={16} /></Link>
+            </div>
+            <div className="recommendations-scroll">
+              {recommendedProducts.map(product => (
+                <div key={product.id} className="product-mini-card glass-panel" onClick={() => navigate(`/products/${product.id}`)}>
+                  <div className="p-img">
+                    <img src={getImageUrl(product.image_url)} alt={product.name} />
+                  </div>
+                  <div className="p-info">
+                    <h4>{product.name}</h4>
+                    <div className="p-bottom">
+                      <span className="p-price">{product.base_price.toLocaleString()} ₫</span>
+                      <button className="btn-add-mini"><Plus size={16} /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </div>
