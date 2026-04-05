@@ -343,14 +343,16 @@
   cursor: not-allowed;
 }
 
-.qty-control input {
+.qty-value {
   width: 44px;
   text-align: center;
-  background: transparent;
-  border: none;
   color: var(--text-primary);
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
 
 .price-display {

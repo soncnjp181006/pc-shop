@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Trash2, 
@@ -170,15 +171,16 @@ const FavoritesPage = () => {
 
   return (
     <div className="favorites-modern-container">
-      {toast && (
+      {toast && createPortal(
         <div className={`favorites-toast ${toast.type}`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
           {toast.message}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
+      {deleteConfirm && createPortal(
         <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
           <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
@@ -195,7 +197,8 @@ const FavoritesPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="container">

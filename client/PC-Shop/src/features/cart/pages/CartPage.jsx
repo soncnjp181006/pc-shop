@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { cartApi, productsApi, getImageUrl } from '../../../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -215,15 +216,16 @@ const CartPage = () => {
 
   return (
     <div className="cart-modern-container">
-      {toast && (
+      {toast && createPortal(
         <div className={`cart-toast ${toast.type}`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
           {toast.message}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
+      {deleteConfirm && createPortal(
         <div className="delete-confirm-modal-overlay" onClick={() => setDeleteConfirm(null)}>
           <div className="delete-confirm-modal glass-panel" onClick={e => e.stopPropagation()}>
             <div className="delete-confirm-header">
@@ -253,7 +255,8 @@ const CartPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="container">
@@ -392,7 +395,7 @@ const CartPage = () => {
                             >
                               <Minus size={14} />
                             </button>
-                            <input type="number" value={item.quantity} readOnly />
+                            <span className="qty-value">{item.quantity}</span>
                             <button 
                               className="qty-btn" 
                               onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
