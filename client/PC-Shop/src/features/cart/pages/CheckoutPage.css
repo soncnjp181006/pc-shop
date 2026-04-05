@@ -785,12 +785,14 @@ html.light {
 .item-qty-controls {
   display: flex;
   align-items: center;
+  justify-content: center;
   border: 1px solid var(--checkout-border);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
   flex-shrink: 0;
   height: 32px;
+  min-width: 100px;
 }
 
 .qty-btn {
@@ -819,14 +821,21 @@ html.light {
 }
 
 .qty-input {
-  width: 24px;
+  width: 36px;
   height: 28px;
   border: none;
   background: transparent;
   text-align: center;
   color: var(--checkout-text-primary);
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0 4px;
+  line-height: 28px;
+  outline: none;
+}
+
+.qty-input:focus {
+  outline: none;
 }
 
 .qty-input::-webkit-outer-spin-button,
