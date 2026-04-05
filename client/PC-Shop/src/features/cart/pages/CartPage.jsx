@@ -31,6 +31,48 @@ const CartPage = () => {
     fetchRecommended(); 
     // Scroll to top on mount
     window.scrollTo(0, 0);
+
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const port  = window.location.host.replace('5174','8000').replace('5173','8000');
+    const wsUrl = `${proto}//${port}/ws/stock`;
+    let ws;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = e => {
+          try {
+            const d = JSON.parse(e.data);
+            if (d.type === 'stock_updated' && d.product_id) {
+              setTempItems(prev => prev.map(item => {
+                if (String(item.variant.product_id) === String(d.product_id)) {
+                  // Find the specific variant
+                  const variantUpdate = d.variants?.find(v => String(v.id) === String(item.variant_id));
+                  const newVariantStock = variantUpdate ? variantUpdate.available_stock : d.available_stock;
+                  return {
+                    ...item,
+                    variant: {
+                      ...item.variant,
+                      available_stock: newVariantStock,
+                      product: {
+                        ...item.variant.product,
+                        available_stock: d.available_stock
+                      }
+                    }
+                  };
+                }
+                return item;
+              }));
+            }
+          } catch { /* ignore */ }
+        };
+        ws.onerror  = () => { /* silent */ };
+        ws.onclose  = () => setTimeout(connect, 5000);
+      } catch { /* no WS */ }
+    };
+
+    connect();
+    return () => { ws?.close(); };
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -365,7 +407,11 @@ const CartPage = () => {
                             <Package size={12} />
                             {Object.values(item.variant.attributes).join(' / ')}
                           </div>
-                          <span className="stock-status in-stock">Sẵn hàng</span>
+                          {item.variant.available_stock !== undefined && item.variant.available_stock < item.quantity ? (
+                            <span className="stock-status out-of-stock" style={{color: '#ff4d4f', background: 'rgba(255, 77, 79, 0.1)'}}>Tồn kho không đủ</span>
+                          ) : (
+                            <span className="stock-status in-stock">Sẵn hàng</span>
+                          )}
                         </div>
 
                         <div className="item-controls-row">

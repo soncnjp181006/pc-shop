@@ -74,3 +74,32 @@ async def delete_cart_item(
             detail="Cart item not found"
         )
     return None
+
+from app.schemas.order import CheckoutRequest, OrderOut
+from app.services.checkout_service import checkout_cart_service
+
+@router.post("/checkout", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
+async def checkout_cart(
+    req: CheckoutRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Thực hiện thanh toán giỏ hàng (Tạo Order, trừ Stock, bắn Real-time Socket)
+    """
+    try:
+        order = await checkout_cart_service(
+            db=db,
+            user_id=current_user.id,
+            full_name=req.full_name,
+            phone=req.phone,
+            address=req.address,
+            note=req.note,
+            payment_method=req.payment_method,
+            item_ids=req.item_ids,
+            item_quantities=req.item_quantities,
+            total_amount=req.total_amount
+        )
+        return order
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

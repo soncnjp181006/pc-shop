@@ -79,6 +79,7 @@ async def notify_stock_change(db: Session, product_id: int):
     from app.models.product import Product
     from app.models.product_variant import ProductVariant
     from app.models.cart import CartItem
+    from app.services.product_service.product_service import _inject_product_available_stock
     from sqlalchemy import func
     import time
     
@@ -90,47 +91,37 @@ async def notify_stock_change(db: Session, product_id: int):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product: return
     
+    _inject_product_available_stock(db, product)
+    
     # 3. Lấy tất cả variants
     variants = db.query(ProductVariant).filter(ProductVariant.product_id == product_id).all()
-    if not variants:
-        # Nếu không có variant, chỉ broadcast thông tin product cơ bản
-        payload = {
-            "type": "stock_updated",
-            "product_id": product_id,
-            "available_stock": product.stock_quantity,
-            "variants": [],
-            "ts": time.time()
-        }
-        await manager.broadcast(payload)
-        return
-    
-    # 4. Tính tổng số lượng đã đặt cho từng variant
-    v_ids = [v.id for v in variants]
-    variant_reservations = db.query(
-        CartItem.variant_id, 
-        func.sum(CartItem.quantity).label('reserved_qty')
-    ).filter(CartItem.variant_id.in_(v_ids))\
-     .group_by(CartItem.variant_id).all()
-    
-    res_map = {r.variant_id: int(r.reserved_qty) for r in variant_reservations}
-    
-    # 5. Chuẩn bị payload
-    total_reserved = sum(res_map.values())
-    product_available = max(0, product.stock_quantity - total_reserved)
     
     variants_out = []
-    for v in variants:
-        v_res = res_map.get(v.id, 0)
-        v_available = max(0, v.stock_quantity - v_res)
-        variants_out.append({
-            "id": v.id,
-            "available_stock": v_available
-        })
+    if variants:
+        v_ids = [v.id for v in variants]
+        variant_reservations = db.query(
+            CartItem.variant_id, 
+            func.sum(CartItem.quantity).label('reserved_qty')
+        ).filter(CartItem.variant_id.in_(v_ids))\
+         .group_by(CartItem.variant_id).all()
+        
+        res_map = {r.variant_id: int(r.reserved_qty) for r in variant_reservations}
+        
+        for v in variants:
+            v_res = res_map.get(v.id, 0)
+            v_available = max(0, v.stock_quantity - v_res)
+            variants_out.append({
+                "id": v.id,
+                "available_stock": v_available,
+                "stock_quantity": v.stock_quantity
+            })
     
     payload = {
         "type": "stock_updated",
         "product_id": product_id,
-        "available_stock": product_available,
+        "available_stock": product.available_stock,
+        "stock_quantity": product.stock_quantity,
+        "sold_count": getattr(product, "sold_count", 0),
         "variants": variants_out,
         "ts": time.time()
     }

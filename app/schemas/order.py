@@ -43,3 +43,14 @@ class OrderOut(OrderBase):
 
     class Config:
         from_attributes = True
+
+class CheckoutRequest(BaseModel):
+    full_name: str
+    phone: str
+    address: str
+    note: Optional[str] = None
+    payment_method: str = "cod"
+    voucher_code: Optional[str] = None
+    item_ids: List[int]
+    item_quantities: dict[int, int]
+    total_amount: float

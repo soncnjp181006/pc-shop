@@ -249,6 +249,10 @@ export const cartApi = {
     method: 'PUT',
     body: JSON.stringify({ quantity }),
   }),
+  checkout: (data) => apiFetch('/cart/checkout', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
   deleteItem: (itemId) => apiFetch(`/cart/items/${itemId}`, {
     method: 'DELETE',
   }),

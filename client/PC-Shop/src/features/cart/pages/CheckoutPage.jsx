@@ -298,16 +298,39 @@ const CheckoutPage = () => {
     return '';
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const err = validateForm();
     if (err) {
       setFormError(err);
       return;
     }
     setFormError('');
-    alert(
-      `Đặt hàng (demo)\nThanh toán: ${paymentLabel()}\nTổng: ${formatVnd(orderTotal)}\n\nChức năng xử lý đơn sẽ được nối API sau.`
-    );
+    
+    try {
+      const payload = {
+        full_name: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+        note: formData.note,
+        payment_method: paymentMethod,
+        voucher_code: appliedCoupon ? appliedCoupon.code : null,
+        item_ids: Array.from(selectedItems),
+        item_quantities: Object.fromEntries(itemQuantities),
+        total_amount: orderTotal
+      };
+      
+      const res = await cartApi.checkout(payload);
+      if (res.ok) {
+        alert(`Đặt hàng thành công với mã ưu đãi/thanh toán: ${paymentLabel()}`);
+        navigate('/cart'); 
+      } else {
+        const errorData = await res.json();
+        setFormError(errorData.detail || 'Lỗi khi đặt hàng. Vui lòng kiểm tra lại giỏ hàng.');
+      }
+    } catch (e) {
+      console.error(e);
+      setFormError('Lỗi kết nối hoặc sự cố hệ thống. Vui lòng thử lại sau.');
+    }
   };
 
   const handleSaveAddress = async () => {

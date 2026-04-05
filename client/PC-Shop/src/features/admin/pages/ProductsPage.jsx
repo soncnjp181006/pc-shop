@@ -167,6 +167,37 @@ const ProductsPage = () => {
     return () => clearTimeout(timer);
   }, [pagination.page, pagination.limit, sortConfig, searchValue, filters]);
 
+  /* ── WebSocket realtime stock ── */
+  useEffect(() => {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const port  = window.location.host.replace('5174','8000').replace('5173','8000');
+    const wsUrl = `${proto}//${port}/ws/stock`;
+    let ws;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onmessage = e => {
+          try {
+            const d = JSON.parse(e.data);
+            if (d.type === 'stock_updated' && d.product_id) {
+              setProducts(prev => prev.map(p =>
+                String(p.id) === String(d.product_id)
+                  ? { ...p, available_stock: d.available_stock, stock_quantity: d.stock_quantity, sold_count: d.sold_count }
+                  : p
+              ));
+            }
+          } catch { /* ignore */ }
+        };
+        ws.onerror  = () => { /* silent */ };
+        ws.onclose  = () => setTimeout(connect, 5000);
+      } catch { /* no WS */ }
+    };
+
+    connect();
+    return () => { ws?.close(); };
+  }, []);
+
   // --- Meta Config Handlers ---
   const handleSaveConfig = async () => {
     try {
