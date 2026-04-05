@@ -40,5 +40,13 @@ class User(Base):
     # Quan hệ với Cart
     cart = relationship("Cart", back_populates="user", uselist=False)
 
+    payment_methods = relationship(
+        "UserPaymentMethod", back_populates="user", cascade="all, delete-orphan"
+    )
+    shipping_addresses = relationship(
+        "UserShippingAddress", back_populates="user", cascade="all, delete-orphan"
+    )
+    phones = relationship("UserPhone", back_populates="user", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"

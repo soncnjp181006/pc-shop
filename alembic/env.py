@@ -105,7 +105,17 @@ if config.config_file_name is not None:
 # Import Base + Models
 # Base chứa metadata của toàn bộ models
 from app.db.base import Base
-from app.models import User, Category, Product, ProductVariant, Cart, CartItem
+from app.models import (
+    User,
+    Category,
+    Product,
+    ProductVariant,
+    Cart,
+    CartItem,
+    UserPaymentMethod,
+    UserShippingAddress,
+    UserPhone,
+)
 
 target_metadata = Base.metadata
 

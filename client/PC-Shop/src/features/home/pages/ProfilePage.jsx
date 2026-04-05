@@ -145,6 +145,7 @@ const ProfilePage = () => {
             <NavBtn icon={<UserIcon size={18} />} label="Thông tin" active={activeTab === 'info'} onClick={() => setActiveTab('info')} />
             <NavBtn icon={<ShieldCheck size={18} />} label="Bảo mật" active={activeTab === 'security'} onClick={() => setActiveTab('security')} />
             <NavBtn icon={<Package size={18} />} label="Đơn hàng" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
+            <NavBtn icon={<CreditCard size={18} />} label="Thanh toán & giao hàng" onClick={() => navigate('/profile/payment')} />
             <NavBtn icon={<Gift size={18} />} label="Ưu đãi" active={activeTab === 'deals'} onClick={() => setActiveTab('deals')} />
             <div className="sidebar-divider" />
             <div className="sidebar-section-label">Điều hướng</div>
@@ -194,7 +195,7 @@ const ProfilePage = () => {
                       <QuickLink icon={<ShoppingCart size={24} />} label="Giỏ hàng" onClick={() => navigate('/cart')} />
                       <QuickLink icon={<Package size={24} />} label="Đơn hàng" onClick={() => setActiveTab('orders')} />
                       <QuickLink icon={<Heart size={24} />} label="Yêu thích" onClick={() => navigate('/products')} />
-                      <QuickLink icon={<CreditCard size={24} />} label="Thanh toán" onClick={() => navigate('/checkout')} />
+                      <QuickLink icon={<CreditCard size={24} />} label="Thanh toán & địa chỉ" onClick={() => navigate('/profile/payment')} />
                       <QuickLink icon={<Bell size={24} />} label="Thông báo" onClick={() => {}} />
                       <QuickLink icon={<Users size={24} />} label="Giới thiệu" onClick={() => {}} />
                     </div>

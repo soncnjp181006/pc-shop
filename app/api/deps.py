@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.routers import health # import file health
 from app.api.routers.auth import auth_register, auth_login, auth_refresh
-from app.api.routers.user import get_me
+from app.api.routers.user import get_me, customer_profile
 from app.api.routers.admin import manage_user, manage_product
 from app.api.routers.category import category
 from app.api.routers.product import product, product_variant
@@ -22,6 +22,7 @@ auth.include_router(auth_refresh.router)
 # User
 user = APIRouter(prefix="/api/v1/user", tags=["User"])
 user.include_router(get_me.router)
+user.include_router(customer_profile.router)
 
 # Admin
 admin = APIRouter(prefix="/api/v1/admin", tags=["Admin Management"])

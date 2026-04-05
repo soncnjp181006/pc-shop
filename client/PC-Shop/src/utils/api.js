@@ -182,6 +182,41 @@ export const adminApi = {
   }),
 };
 
+// Thông tin thanh toán / địa chỉ / SĐT (đã đăng nhập)
+export const customerProfileApi = {
+  getCheckoutProfile: () => apiFetch('/user/checkout-profile'),
+  listPaymentMethods: () => apiFetch('/user/payment-methods'),
+  createPaymentMethod: (data) => apiFetch('/user/payment-methods', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updatePaymentMethod: (id, data) => apiFetch(`/user/payment-methods/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deletePaymentMethod: (id) => apiFetch(`/user/payment-methods/${id}`, { method: 'DELETE' }),
+  listShippingAddresses: () => apiFetch('/user/shipping-addresses'),
+  createShippingAddress: (data) => apiFetch('/user/shipping-addresses', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateShippingAddress: (id, data) => apiFetch(`/user/shipping-addresses/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteShippingAddress: (id) => apiFetch(`/user/shipping-addresses/${id}`, { method: 'DELETE' }),
+  listPhones: () => apiFetch('/user/phones'),
+  createPhone: (data) => apiFetch('/user/phones', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updatePhone: (id, data) => apiFetch(`/user/phones/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deletePhone: (id) => apiFetch(`/user/phones/${id}`, { method: 'DELETE' }),
+};
+
 // API Cart
 export const cartApi = {
   getCart: () => apiFetch('/cart/'),

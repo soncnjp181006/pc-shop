@@ -4,6 +4,7 @@ import './App.css';
 import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
 import ProfilePage from './features/home/pages/ProfilePage';
+import PaymentSettingsPage from './features/home/pages/PaymentSettingsPage';
 import DashboardPage from './features/admin/pages/DashboardPage';
 import ProductListPage from './features/products/pages/ProductListPage';
 import ProductDetailPage from './features/products/pages/ProductDetailPage';
@@ -102,6 +103,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile/payment" 
+          element={
+            <ProtectedRoute>
+              <PaymentSettingsPage />
             </ProtectedRoute>
           } 
         />
