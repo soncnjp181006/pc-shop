@@ -108,19 +108,25 @@ def get_all_products_repo(
     if in_stock is not None:
         from app.models.cart import CartItem
         from app.models.product_variant import ProductVariant
+        from app.models.order import OrderItem, Order, OrderStatus
         from sqlalchemy import func, select
         from sqlalchemy.sql.functions import coalesce
         
-        subq = select(func.sum(CartItem.quantity)).join(
+        cart_subq = select(func.sum(CartItem.quantity)).join(
             ProductVariant, CartItem.variant_id == ProductVariant.id
         ).where(
             ProductVariant.product_id == Product.id
         ).correlate(Product).scalar_subquery()
+
+        # Available = stock_quantity - cart
+        # NOTE: product.stock_quantity DB records current physical inventory! 
+        # Orders already deducted physical stock directly, so only cart reservations remain.
+        available_sql = Product.stock_quantity - coalesce(cart_subq, 0)
         
         if in_stock:
-            query = query.filter(Product.stock_quantity - coalesce(subq, 0) > 0)
+            query = query.filter(available_sql > 0)
         else:
-            query = query.filter(Product.stock_quantity - coalesce(subq, 0) <= 0)
+            query = query.filter(available_sql <= 0)
         
     # Sorting
     if sort == "price_asc":

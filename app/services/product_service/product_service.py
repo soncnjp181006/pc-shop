@@ -39,13 +39,13 @@ def _inject_product_available_stock(db: Session, product: Product) -> Product:
         .filter(Order.status != OrderStatus.RETURNED)\
         .scalar() or 0
 
-    # available_stock của product = tổng stock - tổng đã bán - tổng đang trong giỏ
-    product.available_stock = max(0, product.stock_quantity - int(total_sold) - int(total_in_cart))
+    # available_stock (Còn lại, có thể bán tiếp) = Số lượng trong kho (chưa bán) - số đang kẹt trong giỏ hàng
+    product.available_stock = max(0, product.stock_quantity - int(total_in_cart))
     
-    # chưa bán = tổng stock - tổng đã bán
-    setattr(product, "unsold_stock", max(0, product.stock_quantity - int(total_sold)))
+    # chưa bán (Unsold) = chính là số lượng trong kho DB hiện tại
+    setattr(product, "unsold_stock", product.stock_quantity)
 
-    # đã bán
+    # đã bán = tổng đơn hàng thành công
     setattr(product, "sold_count", int(total_sold))
     return product
 

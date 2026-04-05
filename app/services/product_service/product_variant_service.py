@@ -19,10 +19,14 @@ def _inject_available_stock(db: Session, variant: ProductVariant) -> Any:
     # Refresh to ensure we have the latest stock_quantity from DB
     db.refresh(variant)
 
-    # Nếu stock_quantity của cấu hình (variant) lớn một cách bất thường do seed lỗi (như 56,453,324), 
-    # tự động đồng bộ lại với kho của sản phẩm mẹ.
+    # Nếu stock_quantity của cấu hình (variant) lớn một cách bất thường do seed lỗi, đồng bộ lại.
     if variant.stock_quantity > 10000 and variant.product:
         variant.stock_quantity = variant.product.stock_quantity
+        db.commit()
+
+    # Nếu price_override lớn gấp 5-10 lần base_price do seed dư số 0, đồng bộ lại base_price.
+    if variant.price_override and variant.product and variant.price_override > variant.product.base_price * 5:
+        variant.price_override = variant.product.base_price
         db.commit()
     
     # Tính tổng số lượng trong giỏ hàng
