@@ -31,6 +31,7 @@ class Product(Base):
     category = relationship("Category", back_populates="products")
     seller = relationship("User", back_populates="products")
     variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="product", cascade="all, delete-orphan")
 
     @property
     def category_name(self):

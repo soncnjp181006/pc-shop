@@ -10,6 +10,7 @@ import ProductListPage from './features/products/pages/ProductListPage';
 import ProductDetailPage from './features/products/pages/ProductDetailPage';
 import CartPage from './features/cart/pages/CartPage';
 import CheckoutPage from './features/cart/pages/CheckoutPage';
+import { FavoritesPage } from './features/favorites/pages';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 
@@ -147,6 +148,16 @@ function App() {
           element={
             <ProtectedRoute>
               <CheckoutPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Favorites Route */}
+        <Route 
+          path="/favorites" 
+          element={
+            <ProtectedRoute>
+              <FavoritesPage />
             </ProtectedRoute>
           } 
         />

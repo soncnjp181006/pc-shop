@@ -8,6 +8,7 @@ import {
   RotateCcw, Zap, Filter
 } from 'lucide-react';
 import { productsApi, categoriesApi, getImageUrl, cartApi } from '../../../utils/api';
+import { favoritesApi } from '../../../utils/favoritesApi';
 import './ProductListPage.css';
 
 /* ═══════════════════════════════════════════════════════════
@@ -373,6 +374,25 @@ const ProductListPage = () => {
     } catch { /* ignore */ }
   };
 
+  /* ── Load user's favorites ── */
+  const loadFavorites = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+      const r = await favoritesApi.getFavorites(token);
+      if (r.ok) {
+        const data = await r.json();
+        const favoriteIds = new Set(data.map(fav => fav.product_id));
+        setFavs(favoriteIds);
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Load favorites when component mounts
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
   const fetchProducts = async (params) => {
     setLoading(true);
     try {
@@ -475,13 +495,45 @@ const ProductListPage = () => {
   };
 
   /* ── Favorite toggle ── */
-  const toggleFav = useCallback((id) => {
-    setFavs(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
-  }, []);
+  const toggleFav = useCallback(async (id) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setToast({ msg: 'Vui lòng đăng nhập để sử dụng tính năng yêu thích.', type: 'error' });
+      return;
+    }
+
+    const isFaved = favs.has(id);
+    
+    try {
+      if (isFaved) {
+        // Remove from favorites
+        const response = await favoritesApi.removeFavoriteByProduct(id, token);
+        if (response.ok) {
+          setFavs(prev => {
+            const n = new Set(prev);
+            n.delete(id);
+            return n;
+          });
+          setToast({ msg: 'Đã xóa khỏi yêu thích', type: 'success' });
+        } else {
+          setToast({ msg: 'Không thể xóa khỏi yêu thích', type: 'error' });
+        }
+      } else {
+        // Add to favorites
+        const response = await favoritesApi.addFavorite(id, token);
+        if (response.ok) {
+          setFavs(prev => new Set(prev).add(id));
+          setToast({ msg: 'Đã thêm vào yêu thích', type: 'success' });
+        } else {
+          const data = await response.json().catch(() => ({}));
+          setToast({ msg: data.detail || 'Không thể thêm vào yêu thích', type: 'error' });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      setToast({ msg: 'Lỗi khi cập nhật yêu thích', type: 'error' });
+    }
+  }, [favs]);
 
   /* ── Quick add to cart ── */
   const handleQuickAdd = useCallback(async (product) => {

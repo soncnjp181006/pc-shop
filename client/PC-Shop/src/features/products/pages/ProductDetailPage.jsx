@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
+import HeartToggle from '../../../components/HeartToggle';
 import { 
   Truck, RefreshCcw, ShieldCheck, Frown, X, 
   ShoppingBag, ArrowRight, Star, Heart, Share2, 
@@ -321,7 +322,7 @@ const ProductDetailPage = () => {
               </div>
               
               <div className="box-meta">
-                <div className="meta-item"><Heart size={16} /></div>
+                <HeartToggle productId={parseInt(id)} className="meta-item-heart" />
                 <div className="meta-item"><Share2 size={16} /></div>
               </div>
             </div>

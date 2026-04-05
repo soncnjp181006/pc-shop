@@ -115,6 +115,7 @@ from app.models import (
     UserPaymentMethod,
     UserShippingAddress,
     UserPhone,
+    Favorite,
 )
 
 target_metadata = Base.metadata

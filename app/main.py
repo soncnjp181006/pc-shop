@@ -36,10 +36,11 @@ app.include_router(admin)
 app.include_router(websocket_router) # WebSocket không cần prefix v1 nếu muốn ngắn gọn
 
 # endpoint categories
-from app.api.deps import category_router, product_router, cart_router
+from app.api.deps import category_router, product_router, cart_router, favorite_router
 app.include_router(category_router)
 app.include_router(product_router)
 app.include_router(cart_router)
+app.include_router(favorite_router)
 
 
 if __name__ == "__main__":

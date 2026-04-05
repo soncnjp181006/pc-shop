@@ -1,0 +1,62 @@
+.heart-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #7b8794;
+}
+
+.dark .heart-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+}
+
+.light .heart-toggle {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+}
+
+.heart-toggle:hover {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  transform: scale(1.1);
+}
+
+.heart-toggle.favorited {
+  color: #ff6b6b;
+}
+
+.heart-toggle.favorited {
+  background: rgba(255, 107, 107, 0.15);
+}
+
+.heart-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.heart-icon {
+  transition: transform 0.3s ease, fill 0.3s ease;
+}
+
+.heart-icon.filled {
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

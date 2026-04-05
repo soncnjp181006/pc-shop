@@ -6,6 +6,7 @@ from app.api.routers.admin import manage_user, manage_product
 from app.api.routers.category import category
 from app.api.routers.product import product, product_variant
 from app.api.routers.cart import cart
+from app.api.routers.favorite import favorite
 
 # Health
 healthSys = APIRouter(prefix="/api/v1/health", tags=["Health"])
@@ -41,3 +42,7 @@ product_router.include_router(product_variant.router)
 # Cart
 cart_router = APIRouter(prefix="/api/v1/cart", tags=["Cart"])
 cart_router.include_router(cart.router)
+
+# Favorite
+favorite_router = APIRouter(prefix="/api/v1/favorites", tags=["Favorites"])
+favorite_router.include_router(favorite.router)
