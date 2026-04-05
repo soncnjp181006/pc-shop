@@ -43,6 +43,7 @@ class ProductOut(ProductBase):
     available_stock: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
+    sold_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

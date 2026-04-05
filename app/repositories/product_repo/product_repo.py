@@ -90,22 +90,19 @@ def get_all_products_repo(
     if brand:
         brand_list = [b.strip() for b in brand.split(",") if b.strip()]
         if brand_list:
-            brand_conditions = [Product.brand.ilike(f"%{b}%") for b in brand_list]
-            query = query.filter(or_(*brand_conditions))
+            query = query.filter(Product.brand.in_(brand_list))
             
     # Filter by product condition
     if product_condition:
         cond_list = [c.strip() for c in product_condition.split(",") if c.strip()]
         if cond_list:
-            cond_conditions = [Product.product_condition.ilike(f"%{c}%") for c in cond_list]
-            query = query.filter(or_(*cond_conditions))
+            query = query.filter(Product.product_condition.in_(cond_list))
             
     # Filter by origin
     if origin:
         origin_list = [o.strip() for o in origin.split(",") if o.strip()]
         if origin_list:
-            origin_conditions = [Product.origin.ilike(f"%{o}%") for o in origin_list]
-            query = query.filter(or_(*origin_conditions))
+            query = query.filter(Product.origin.in_(origin_list))
         
     # Filter in stock
     if in_stock is not None:

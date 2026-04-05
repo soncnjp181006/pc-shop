@@ -18,6 +18,12 @@ def _inject_available_stock(db: Session, variant: ProductVariant) -> Any:
     
     # Refresh to ensure we have the latest stock_quantity from DB
     db.refresh(variant)
+
+    # Nếu stock_quantity của cấu hình (variant) lớn một cách bất thường do seed lỗi (như 56,453,324), 
+    # tự động đồng bộ lại với kho của sản phẩm mẹ.
+    if variant.stock_quantity > 10000 and variant.product:
+        variant.stock_quantity = variant.product.stock_quantity
+        db.commit()
     
     # Tính tổng số lượng trong giỏ hàng
     reserved_qty = get_total_quantity_in_carts_repo(db, variant.id)

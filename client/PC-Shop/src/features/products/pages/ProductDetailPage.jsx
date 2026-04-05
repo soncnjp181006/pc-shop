@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi, cartApi, getImageUrl } from '../../../utils/api';
 import HeartToggle from '../../../components/HeartToggle';
-import { 
-  Truck, RefreshCcw, ShieldCheck, Frown, X, 
-  ShoppingBag, ArrowRight, Star, Heart, Share2, 
+import {
+  Truck, RefreshCcw, ShieldCheck, Frown, X,
+  ShoppingBag, ArrowRight, Star, Heart, Share2,
   ChevronRight, Play, Info, Settings
 } from 'lucide-react';
 import './ProductDetailPage.css';
@@ -171,8 +171,10 @@ const ProductDetailPage = () => {
   const mediaList = [product.image_url, ...extraLinks].filter(Boolean);
   const isVideo = (url) => url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4');
   const currentMedia = mediaList[activeMediaIdx];
-  const currentStock = selectedVariant?.available_stock ?? product.available_stock;
+  const currentStockQuantity = selectedVariant?.stock_quantity ?? product.stock_quantity ?? 0;
+  const currentStock = selectedVariant?.available_stock ?? product.available_stock ?? 0;
   const isOutOfStock = currentStock <= 0;
+  const itemsInCart = currentStockQuantity > currentStock ? currentStockQuantity - currentStock : 0;
   const currentPrice = selectedVariant?.price_override || product.base_price;
 
   return (
@@ -206,7 +208,7 @@ const ProductDetailPage = () => {
                   {isOutOfStock ? 'Hết hàng' : 'Còn hàng'}
                 </span>
               </div>
-              
+
               <div className="media-renderer">
                 {mediaList.length === 0 ? (
                   <div className="image-placeholder">PC SHOP</div>
@@ -256,7 +258,7 @@ const ProductDetailPage = () => {
               <div className="rating-mini">
                 <Star size={14} fill="var(--accent-secondary)" stroke="none" />
                 <span className="score">4.9</span>
-                <span className="count">(2k+ đã bán)</span>
+                <span className="count">({product.sold_count || 0} sản phẩm đã bán & trong giỏ)</span>
               </div>
             </header>
 
@@ -281,7 +283,7 @@ const ProductDetailPage = () => {
                     >
                       <span className="name">{Object.values(variant.attributes).join(' ')}</span>
                       {variant.price_override && variant.price_override !== product.base_price && (
-                        <span className="diff">+{ (variant.price_override - product.base_price).toLocaleString() } ₫</span>
+                        <span className="diff">+{(variant.price_override - product.base_price).toLocaleString()} ₫</span>
                       )}
                     </button>
                   ))}
@@ -301,7 +303,7 @@ const ProductDetailPage = () => {
                   {isOutOfStock ? 'Tạm hết hàng' : `Còn lại ${currentStock}`}
                 </div>
               </div>
-              
+
               <div className="box-buttons">
                 <button
                   className="btn-add-modular"
@@ -320,7 +322,7 @@ const ProductDetailPage = () => {
                   Mua ngay
                 </button>
               </div>
-              
+
               <div className="box-meta">
                 <HeartToggle productId={parseInt(id)} className="meta-item-heart" />
                 <div className="meta-item"><Share2 size={16} /></div>
@@ -423,8 +425,8 @@ const ProductDetailPage = () => {
                   </div>
                 </div>
                 <div className="comment-text">
-                  Sản phẩm đóng gói rất cẩn thận, đúng như mô tả. Nhân viên hỗ trợ nhiệt tình, 
-                  giao hàng ở Hà Nội cực nhanh chỉ mất tầm 1 tiếng rưỡi là nhận được rồi. 
+                  Sản phẩm đóng gói rất cẩn thận, đúng như mô tả. Nhân viên hỗ trợ nhiệt tình,
+                  giao hàng ở Hà Nội cực nhanh chỉ mất tầm 1 tiếng rưỡi là nhận được rồi.
                   Sẽ tiếp tục ủng hộ shop trong tương lai!
                 </div>
                 {item === 1 && (

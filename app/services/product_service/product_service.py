@@ -21,18 +21,29 @@ def _inject_product_available_stock(db: Session, product: Product) -> Product:
     
     # Tính tổng số lượng đã đặt (trong giỏ hàng) của tất cả variants của sản phẩm này
     total_reserved = 0
-    # Cần join hoặc query trực tiếp để tránh stale data trong relationship
     from app.models.cart import CartItem
     from app.models.product_variant import ProductVariant
+    from app.models.order import OrderItem, Order, OrderStatus
     from sqlalchemy import func
     
-    total_reserved = db.query(func.sum(CartItem.quantity))\
+    total_in_cart = db.query(func.sum(CartItem.quantity))\
         .join(ProductVariant, CartItem.variant_id == ProductVariant.id)\
         .filter(ProductVariant.product_id == product.id)\
         .scalar() or 0
+        
+    total_sold = db.query(func.sum(OrderItem.quantity))\
+        .join(ProductVariant, OrderItem.variant_id == ProductVariant.id)\
+        .join(Order, OrderItem.order_id == Order.id)\
+        .filter(ProductVariant.product_id == product.id)\
+        .filter(Order.status != OrderStatus.CANCELLED)\
+        .filter(Order.status != OrderStatus.RETURNED)\
+        .scalar() or 0
+
+    # available_stock của product = tổng stock - tổng đã bán - tổng đang trong giỏ
+    product.available_stock = max(0, product.stock_quantity - int(total_sold) - int(total_in_cart))
     
-    # available_stock của product = tổng stock - tổng reserved
-    product.available_stock = max(0, product.stock_quantity - int(total_reserved))
+    # Gắn thêm thuộc tính sold_count để ProductOut serialize
+    setattr(product, "sold_count", int(total_in_cart) + int(total_sold))
     return product
 
 def create_product_service(db: Session, product_in: ProductCreate) -> Product:
