@@ -92,6 +92,7 @@
 .checkout-card {
   padding: 24px 26px 28px;
   border-radius: var(--border-radius-md);
+  position: relative;
 }
 
 .checkout-card-head {
@@ -796,6 +797,31 @@
   gap: 8px;
   font-size: 0.78rem;
   color: var(--text-tertiary);
+}
+
+/* Nút lưu địa chỉ */
+.btn-save-address {
+  position: absolute;
+  bottom: 24px;
+  right: 26px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--accent-primary);
+  color: white;
+  transition: background var(--transition-fast);
+}
+
+.btn-save-address:hover:not(:disabled) {
+  background: var(--accent-primary-hover, #0071e3);
+}
+
+.btn-save-address:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .aside-trust-mini svg {

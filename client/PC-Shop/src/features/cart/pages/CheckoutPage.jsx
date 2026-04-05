@@ -91,6 +91,7 @@ const CheckoutPage = () => {
   const [couponError, setCouponError] = useState('');
   const [formError, setFormError] = useState('');
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [savingAddress, setSavingAddress] = useState(false);
 
   const applyAddress = useCallback((addr) => {
     setShippingData({
@@ -271,6 +272,35 @@ const CheckoutPage = () => {
     );
   };
 
+  const handleSaveAddress = async () => {
+    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim()) {
+      setFormError('Vui lòng điền đầy đủ thông tin để lưu địa chỉ.');
+      return;
+    }
+    setSavingAddress(true);
+    try {
+      const res = await customerProfileApi.createShippingAddress({
+        recipient_name: formData.fullName,
+        phone: formData.phone,
+        address_line: formData.address,
+        note: formData.note,
+        is_default: savedAddresses.length === 0, // Nếu là địa chỉ đầu tiên, đặt làm mặc định
+      });
+      if (res.ok) {
+        // Refresh profile để cập nhật danh sách địa chỉ
+        await fetchProfile();
+        setFormError('');
+      } else {
+        setFormError('Lỗi khi lưu địa chỉ. Vui lòng thử lại.');
+      }
+    } catch (e) {
+      console.error(e);
+      setFormError('Lỗi khi lưu địa chỉ. Vui lòng thử lại.');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -422,6 +452,12 @@ const CheckoutPage = () => {
                   onChange={handleInputChange}
                 />
               </div>
+
+              {savedAddresses.length === 0 && addressMode === 'manual' && (
+                <button type="button" className="btn-save-address" onClick={handleSaveAddress} disabled={savingAddress}>
+                  {savingAddress ? 'Đang lưu...' : 'Lưu địa chỉ này'}
+                </button>
+              )}
             </section>
 
             <section className="checkout-card glass-panel">
