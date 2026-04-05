@@ -19,5 +19,5 @@ try:
 except Exception as e:
     out = str(e)
 
-with open("test_create_out.txt", "w") as f:
+with open("logs/test_create_out.txt", "w") as f:
     f.write(out)

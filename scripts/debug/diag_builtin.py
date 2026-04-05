@@ -31,6 +31,6 @@ def run():
 if __name__ == "__main__":
     result = run()
     import os
-    file_path = os.path.join(os.getcwd(), 'diagnostic_out.txt')
+    file_path = os.path.join(os.getcwd(), 'logs', 'diagnostic_out.txt')
     with open(file_path, 'w') as f:
         f.write(result)

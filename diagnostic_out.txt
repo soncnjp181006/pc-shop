@@ -1,2 +1,0 @@
-HTTP ERROR: 401
-{"detail":"Not authenticated"}

@@ -1,5 +1,5 @@
 import sys
-with open('debug_out.txt', 'w') as f:
+with open('logs/debug_out.txt', 'w') as f:
     try:
         from app.main import app
         f.write('App imported successfully!\n')

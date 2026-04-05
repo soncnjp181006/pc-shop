@@ -1,20 +1,26 @@
 import sys
 import os
 
-with open('test_direct_out.txt', 'w') as f:
+with open('logs/test_direct_out2.txt', 'w') as f:
     sys.stdout = f
     sys.stderr = f
-    
     try:
-        import traceback
         sys.path.append(os.getcwd())
+        from app.db.session import SessionLocal
+        from app.models.category import Category
+        
+        db = SessionLocal()
+        # Find a valid category
+        cat = db.query(Category).first()
+        if not cat:
+            print("No category found!")
+        else:
+            print("Found category", cat.id)
+
         from app.main import app
         from fastapi.testclient import TestClient
-
         client = TestClient(app)
-        from app.models.user import User
 
-        # Create a mock user object with basic attributes
         class MockUser:
             id = 1
             username = "admin"
@@ -24,9 +30,9 @@ with open('test_direct_out.txt', 'w') as f:
         app.dependency_overrides[get_current_user] = lambda: MockUser()
 
         payload = {
-            "name": "Testing Save",
-            "slug": "test-save-101",
-            "category_id": 1,
+            "name": "Testing Save Again",
+            "slug": "test-save-102",
+            "category_id": cat.id if cat else 1,
             "seller_id": 1,
             "base_price": 500000.0,
             "stock_quantity": 42
@@ -36,21 +42,6 @@ with open('test_direct_out.txt', 'w') as f:
         r = client.post("/api/v1/products/", json=payload)
         print("Status POST:", r.status_code)
         print("Body POST:", r.text)
-
-        product_id = r.json().get('id', 1) if r.status_code == 200 else 1
-
-        payload_update = {
-            "slug": "test-save-101",
-            "base_price": 600000.0,
-            "stock_quantity": 0,
-            "image_url": None,
-            "description": "[MEDIA:]"
-        }
-        
-        print(f"Testing PUT /api/v1/products/{product_id}")
-        r2 = client.put(f"/api/v1/products/{product_id}", json=payload_update)
-        print("Status PUT:", r2.status_code)
-        print("Body PUT:", r2.text)
-
     except Exception as e:
+        import traceback
         print("ERROR:", traceback.format_exc())

@@ -24,5 +24,5 @@ def test_db():
 
 if __name__ == "__main__":
     result = test_db()
-    with open("test_db_out.txt", "w") as f:
+    with open("logs/test_db_out.txt", "w") as f:
         f.write(result)

@@ -30,5 +30,5 @@ except ValidationError as e:
 except Exception as e:
     output.append(f"AN UNEXPECTED ERROR OCCURRED: {e}")
 
-with open("pydantic_debug.txt", "w", encoding="utf-8") as f:
+with open("logs/pydantic_debug.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(output))

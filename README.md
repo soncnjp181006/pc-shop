@@ -130,7 +130,7 @@ PC-Shop là nền tảng thương mại điện tử chuyên cung cấp giải p
 #### Backend
 ```bash
 pip install -r requirements.txt
-python init_db.py
+python scripts/setup/init_db.py
 uvicorn app.main:app --reload
 ```
 
