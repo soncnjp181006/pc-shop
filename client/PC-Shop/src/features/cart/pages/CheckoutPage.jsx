@@ -77,6 +77,8 @@ const CheckoutPage = () => {
   const [profile, setProfile] = useState(null);
   const [addressMode, setAddressMode] = useState('manual');
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [selectedItems, setSelectedItems] = useState(new Set()); // Track selected items
+  const [itemQuantities, setItemQuantities] = useState(new Map()); // Track quantities
 
   const [formData, setShippingData] = useState({
     fullName: '',
@@ -119,6 +121,14 @@ const CheckoutPage = () => {
           return;
         }
         setCart(data);
+        // Initialize selected items (all by default) and quantities
+        const ids = new Set(data.items.map(item => item.id));
+        setSelectedItems(ids);
+        const qtyMap = new Map();
+        data.items.forEach(item => {
+          qtyMap.set(item.id, item.quantity || 1);
+        });
+        setItemQuantities(qtyMap);
       } else {
         navigate('/cart');
       }
@@ -185,16 +195,16 @@ const CheckoutPage = () => {
 
   const subtotal = useMemo(() => {
     if (!cart?.items?.length) return 0;
-    const fromApi = Number(cart.total_price);
-    if (Number.isFinite(fromApi) && fromApi > 0) return fromApi;
+    
+    // Calculate only selected items with their updated quantities
     return cart.items.reduce((acc, item) => {
-      const line = Number(item.subtotal);
-      if (Number.isFinite(line)) return acc + line;
-      const unit = Number(item.price);
-      const q = Number(item.quantity) || 0;
-      return acc + (Number.isFinite(unit) ? unit * q : 0);
+      if (!selectedItems.has(item.id)) return acc;
+      
+      const qty = itemQuantities.get(item.id) || item.quantity || 1;
+      const unitPrice = Number(item.price) || 0;
+      return acc + (unitPrice * qty);
     }, 0);
-  }, [cart]);
+  }, [cart, selectedItems, itemQuantities]);
 
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -213,6 +223,27 @@ const CheckoutPage = () => {
     setSelectedAddressId(null);
     setFormError('');
     setShippingData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const toggleItemSelect = (itemId) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const updateItemQuantity = (itemId, newQty) => {
+    if (newQty < 1) return;
+    setItemQuantities(prev => {
+      const newMap = new Map(prev);
+      newMap.set(itemId, newQty);
+      return newMap;
+    });
   };
 
   const onSelectSavedAddress = (id) => {
@@ -590,22 +621,62 @@ const CheckoutPage = () => {
               <div className="checkout-items-list-v2">
                 {cart?.items?.map((item) => {
                   const unit = Number(item.price);
-                  const qty = Number(item.quantity) || 0;
-                  const line =
-                    Number.isFinite(Number(item.subtotal)) && Number(item.subtotal) > 0
-                      ? Number(item.subtotal)
-                      : (Number.isFinite(unit) ? unit * qty : 0);
+                  const qty = itemQuantities.get(item.id) || item.quantity || 1;
+                  const isSelected = selectedItems.has(item.id);
+                  const line = Number.isFinite(unit) ? unit * qty : 0;
                   return (
-                    <div key={item.id} className="checkout-line-item">
+                    <div key={item.id} className={`checkout-line-item ${isSelected ? 'selected' : ''}`}>
+                      {/* Checkbox */}
+                      <label className="item-checkbox-wrap">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleItemSelect(item.id)}
+                          className="item-checkbox"
+                        />
+                        <span className={`checkbox-visual ${isSelected ? 'checked' : ''}`} />
+                      </label>
+
+                      {/* Image */}
                       <div className="cli-img">
                         <img src={getImageUrl(item.variant?.product?.image_url)} alt="" />
                       </div>
+
+                      {/* Product Info */}
                       <div className="cli-body">
                         <span className="cli-name">{item.variant?.product?.name || 'Sản phẩm'}</span>
                         <span className="cli-meta">
-                          SL: {qty} × {formatVnd(unit)}
+                          {formatVnd(unit)} / chiếc
                         </span>
                       </div>
+
+                      {/* Quantity Controls */}
+                      <div className="item-qty-controls">
+                        <button
+                          type="button"
+                          className="qty-btn"
+                          onClick={() => updateItemQuantity(item.id, qty - 1)}
+                          disabled={qty <= 1}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          value={qty}
+                          onChange={(e) => updateItemQuantity(item.id, parseInt(e.target.value) || 1)}
+                          className="qty-input"
+                          min="1"
+                        />
+                        <button
+                          type="button"
+                          className="qty-btn"
+                          onClick={() => updateItemQuantity(item.id, qty + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Price */}
                       <span className="cli-price">{formatVnd(line)}</span>
                     </div>
                   );
