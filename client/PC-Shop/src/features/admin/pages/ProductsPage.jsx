@@ -562,8 +562,47 @@ const ProductsPage = () => {
       width: '130px'
     },
     { 
-      title: 'Kho', 
+      title: 'Kho (Tổng)', 
       key: 'stock_quantity',
+      sortable: true,
+      render: (val) => (
+        <div className="stock-cell">
+          <Badge variant="info">
+            {val}
+          </Badge>
+        </div>
+      ),
+      width: '80px'
+    },
+    { 
+      title: 'Đã bán', 
+      key: 'sold_count',
+      sortable: true,
+      render: (val) => (
+        <div className="stock-cell">
+          <Badge variant="neutral">
+            {val}
+          </Badge>
+        </div>
+      ),
+      width: '80px'
+    },
+    { 
+      title: 'Chưa bán', 
+      key: 'unsold_stock',
+      sortable: true,
+      render: (val) => (
+        <div className="stock-cell">
+          <Badge variant={val > 10 ? 'success' : (val > 0 ? 'warning' : 'danger')}>
+            {val}
+          </Badge>
+        </div>
+      ),
+      width: '80px'
+    },
+    { 
+      title: 'Còn lại', 
+      key: 'available_stock',
       sortable: true,
       render: (val) => (
         <div className="stock-cell">

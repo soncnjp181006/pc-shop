@@ -41,6 +41,7 @@ class ProductOut(ProductBase):
     category_name: Optional[str] = None
     seller_name: Optional[str] = None
     available_stock: int = 0
+    unsold_stock: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
     sold_count: int = 0

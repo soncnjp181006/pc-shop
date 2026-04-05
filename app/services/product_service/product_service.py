@@ -42,8 +42,11 @@ def _inject_product_available_stock(db: Session, product: Product) -> Product:
     # available_stock của product = tổng stock - tổng đã bán - tổng đang trong giỏ
     product.available_stock = max(0, product.stock_quantity - int(total_sold) - int(total_in_cart))
     
-    # Gắn thêm thuộc tính sold_count để ProductOut serialize
-    setattr(product, "sold_count", int(total_in_cart) + int(total_sold))
+    # chưa bán = tổng stock - tổng đã bán
+    setattr(product, "unsold_stock", max(0, product.stock_quantity - int(total_sold)))
+
+    # đã bán
+    setattr(product, "sold_count", int(total_sold))
     return product
 
 def create_product_service(db: Session, product_in: ProductCreate) -> Product:
