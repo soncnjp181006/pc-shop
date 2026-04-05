@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.routers import health # import file health
 from app.api.routers.auth import auth_register, auth_login, auth_refresh
 from app.api.routers.user import get_me, customer_profile
-from app.api.routers.admin import manage_user, manage_product
+from app.api.routers.admin import manage_user, manage_product, manage_order
 from app.api.routers.category import category
 from app.api.routers.product import product, product_variant
 from app.api.routers.cart import cart
@@ -29,6 +29,7 @@ user.include_router(customer_profile.router)
 admin = APIRouter(prefix="/api/v1/admin", tags=["Admin Management"])
 admin.include_router(manage_user.router)
 admin.include_router(manage_product.router)
+admin.include_router(manage_order.router)
 
 # Category
 category_router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])

@@ -1,0 +1,329 @@
+/* Buttons */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--admin-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: var(--admin-primary);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--admin-primary-hover);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn-secondary {
+  background-color: #f1f5f9 !important; /* Slate 100 */
+  border: 1.5px solid #cbd5e1 !important; /* Slate 300 */
+  color: #334155 !important; /* Slate 700 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .btn-secondary {
+  background-color: var(--admin-surface-muted) !important;
+  border: 1.5px solid var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #e2e8f0 !important; /* Slate 200 */
+  border-color: #94a3b8 !important; /* Slate 400 */
+  color: #0f172a !important; /* Slate 900 */
+  transform: translateY(-1px);
+}
+
+/* Specific colored variants for better contrast as requested */
+.btn-secondary.btn-config {
+  background-color: rgba(79, 70, 229, 0.1) !important;
+  border-color: rgba(79, 70, 229, 0.3) !important;
+  color: #4f46e5 !important;
+}
+.btn-secondary.btn-export {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
+}
+.btn-secondary.btn-filter {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #2563eb !important;
+}
+
+.btn-secondary.btn-config:hover { background-color: rgba(79, 70, 229, 0.2) !important; }
+.btn-secondary.btn-export:hover { background-color: rgba(16, 185, 129, 0.2) !important; }
+.btn-secondary.btn-filter:hover { background-color: rgba(59, 130, 246, 0.2) !important; }
+
+[data-theme='dark'] .btn-secondary:hover:not(:disabled) {
+  background-color: var(--admin-border) !important;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--admin-text-muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--admin-surface-muted);
+  color: var(--admin-text);
+}
+
+.btn-danger {
+  background-color: var(--admin-danger);
+  color: white;
+}
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn-md { height: 40px; padding: 0 16px; font-size: 14px; }
+.btn-lg { height: 48px; padding: 0 24px; font-size: 16px; }
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Cards */
+.admin-card {
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: var(--admin-shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+  margin: 4px 0 0;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+.card-body.no-padding {
+  padding: 0;
+}
+
+/* Badges */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent !important;
+}
+
+.badge-neutral { color: var(--admin-text-muted); }
+.badge-success { color: var(--admin-success); }
+.badge-warning { color: var(--admin-warning); }
+.badge-danger { color: var(--admin-danger); }
+.badge-info { color: var(--admin-primary); }
+.badge-primary { color: var(--admin-primary); }
+
+/* Skeletons */
+.admin-skeleton {
+  background: var(--admin-surface-muted);
+  background-image: linear-gradient(
+    90deg, 
+    var(--admin-surface-muted) 25%, 
+    var(--admin-border) 50%, 
+    var(--admin-surface-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  opacity: 0.6;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* PORTAL MODAL - PHYSICAL SCREEN CENTERING (VIEWPORT RELATIVE) */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background-color: rgba(15, 23, 42, 0.8) !important; /* Slate 900 with opacity */
+  z-index: 1000000 !important;
+  backdrop-filter: blur(8px) !important;
+  /* Reset flex to ensure we can use absolute centering on child if needed, 
+     but flex is usually fine if we don't have weird constraints.
+     However, the user wants "physical centering" which often implies 
+     absolute positioning relative to viewport. */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important; /* Safe area */
+}
+
+.modal-container {
+  position: fixed !important; /* Force fixed relative to viewport */
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important; /* THE physical centering trick */
+  
+  background: var(--admin-surface) !important;
+  color: var(--admin-text) !important;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 80% !important; /* Reduced to 80% as requested */
+  max-width: 800px !important; /* Slightly smaller max-width */
+  max-height: calc(100vh - 60px) !important; /* Leave more margin top/bottom */
+  display: flex !important;
+  flex-direction: column !important;
+  border: 1px solid var(--admin-border);
+  overflow: visible !important;
+  z-index: 1000001 !important;
+  
+  /* Animation using a combined transform to not break centering */
+  animation: modal-appear-center 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-xl { max-width: 950px !important; width: 90% !important; }
+.modal-lg { max-width: 800px !important; width: 80% !important; }
+.modal-md { max-width: 600px !important; width: 70% !important; }
+.modal-sm { max-width: 400px !important; width: 50% !important; }
+
+@keyframes modal-appear-center {
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, -48%) scale(0.98); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1); 
+  }
+}
+
+.modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: var(--admin-surface);
+  flex-shrink: 0 !important;
+  z-index: 10;
+  position: relative; /* Add this for positioning if needed */
+}
+
+.modal-close {
+  position: absolute !important;
+  top: -12px !important; /* Offset outside slightly for modern look */
+  right: -12px !important;
+  background: #ef4444 !important; /* Danger red */
+  border: 2px solid white !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important; /* Circle */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  color: white !important;
+  transition: all 0.2s !important;
+  z-index: 1000005 !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.modal-close:hover {
+  background: #dc2626 !important;
+  transform: scale(1.1) rotate(90deg) !important;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  min-height: 0;
+  background: var(--admin-surface);
+}
+
+/* Custom scrollbar for modal body to be thin and professional */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--admin-border);
+  border-radius: 10px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-text-muted);
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--admin-border);
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px;
+  background: var(--admin-surface);
+  flex-shrink: 0 !important;
+  z-index: 10;
+}
+
+.modal-sm { max-width: 440px; }
+.modal-md { max-width: 680px; }
+.modal-lg { max-width: 920px; }
+.modal-xl { max-width: 1100px; }
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.modal-close {
+  background: var(--admin-surface-muted);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--admin-text-muted);
+  transition: all 0.2s;
+}

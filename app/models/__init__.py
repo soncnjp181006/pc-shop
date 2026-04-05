@@ -5,6 +5,7 @@ from .product_variant import ProductVariant
 from .cart import Cart, CartItem
 from .user_payment_profile import UserPaymentMethod, UserShippingAddress, UserPhone
 from .favorite import Favorite
+from .order import Order, OrderItem, OrderStatus
 
 __all__ = [
     "User",
@@ -17,4 +18,7 @@ __all__ = [
     "UserShippingAddress",
     "UserPhone",
     "Favorite",
+    "Order",
+    "OrderItem",
+    "OrderStatus",
 ]

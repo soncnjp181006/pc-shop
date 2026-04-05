@@ -180,6 +180,23 @@ export const adminApi = {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
+  // Order management
+  getOrders: (params = {}) => {
+    const query = new URLSearchParams();
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        query.append(key, String(params[key]));
+      }
+    });
+    const qs = query.toString();
+    return apiFetch(`/admin/orders${qs ? `?${qs}` : ''}`);
+  },
+  getOrderById: (id) => apiFetch(`/admin/orders/${id}`),
+  updateOrderStatus: (id, status) => apiFetch(`/admin/orders/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
+  getOverviewStats: () => apiFetch('/admin/stats/overview'),
 };
 
 // Thông tin thanh toán / địa chỉ / SĐT (đã đăng nhập)

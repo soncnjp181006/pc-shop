@@ -5,7 +5,11 @@ import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
 import ProfilePage from './features/home/pages/ProfilePage';
 import PaymentSettingsPage from './features/home/pages/PaymentSettingsPage';
-import DashboardPage from './features/admin/pages/DashboardPage';
+import DashboardOverview from './features/admin/pages/DashboardOverview';
+import ProductsPage from './features/admin/pages/ProductsPage';
+import CategoriesPage from './features/admin/pages/CategoriesPage';
+import UsersPage from './features/admin/pages/UsersPage';
+import AdminLayout from './features/admin/components/Layout/AdminLayout';
 import ProductListPage from './features/products/pages/ProductListPage';
 import ProductDetailPage from './features/products/pages/ProductDetailPage';
 import CartPage from './features/cart/pages/CartPage';
@@ -18,16 +22,8 @@ import Footer from './components/layout/Footer';
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    // Sử dụng requestAnimationFrame để đợi cho đến khi component mới render xong
-    // giúp tránh hiện tượng "nhảy" trang khi scroll diễn ra quá sớm
-    const animationId = requestAnimationFrame(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'instant' // Dùng instant để tránh cảm giác giật khi kết hợp với animation CSS
-      });
-    });
-    return () => cancelAnimationFrame(animationId);
+    // Không dùng behavior: 'instant' nếu muốn mượt hơn, hoặc dùng scrollTo mà không có behavior
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 };
@@ -109,7 +105,16 @@ function App() {
 
         {/* Admin/Seller Routes */}
         <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<DashboardPage />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<DashboardOverview />} />
+            <Route path="/admin/products" element={<ProductsPage />} />
+            <Route path="/admin/categories" element={<CategoriesPage />} />
+            <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/orders" element={<div>Đơn hàng (Coming soon)</div>} />
+            <Route path="/admin/reports" element={<div>Báo cáo (Coming soon)</div>} />
+            <Route path="/admin/settings" element={<div>Cài đặt (Coming soon)</div>} />
+          </Route>
         </Route>
 
         {/* Fallback */}
