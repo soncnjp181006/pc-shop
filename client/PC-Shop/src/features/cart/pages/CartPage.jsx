@@ -293,24 +293,6 @@ const CartPage = () => {
               </div>
             </div>
 
-            {recommendedProducts.length > 0 && (
-              <div className="empty-recommendations">
-                <h3 className="section-title"><Sparkles size={20} /> Sản phẩm đang hot</h3>
-                <div className="recommendations-grid">
-                  {recommendedProducts.slice(0, 4).map(product => (
-                    <div key={product.id} className="rec-card glass-panel" onClick={() => navigate(`/products/${product.id}`)}>
-                      <div className="rec-img">
-                        <img src={getImageUrl(product.image_url)} alt={product.name} />
-                      </div>
-                      <div className="rec-info">
-                        <h4>{product.name}</h4>
-                        <span className="price">{product.base_price.toLocaleString()} ₫</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div className="cart-main-layout">
@@ -533,7 +515,7 @@ const CartPage = () => {
         )}
 
         {/* Bottom Recommendations */}
-        {!isEmpty && recommendedProducts.length > 0 && (
+        {recommendedProducts.length > 0 && (
           <section className="cart-recommendations-bottom">
             <div className="section-header">
               <div className="title-group">
