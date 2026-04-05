@@ -118,6 +118,33 @@ const ProductDetailPage = () => {
     }
   };
 
+  const handleBuyNow = async () => {
+    if (variants.length > 0 && !selectedVariant) {
+      showToast('Vui lòng chọn phiên bản phù hợp.', 'error');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      const response = await cartApi.addItem(
+        selectedVariant ? parseInt(selectedVariant.id) : null,
+        quantity,
+        parseInt(id)
+      );
+      if (response.ok) {
+        window.dispatchEvent(new Event('cartUpdated'));
+        navigate('/checkout');
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.detail || 'Lỗi bất ngờ xảy ra.', 'error');
+      }
+    } catch {
+      showToast('Máy chủ không phản hồi.', 'error');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   if (loading) return (
     <div className="product-page-loader">
       <div className="spinner-modular" />
@@ -285,11 +312,11 @@ const ProductDetailPage = () => {
                 </button>
                 <button
                   className="btn-buy-modular"
-                  disabled={isOutOfStock}
-                  onClick={() => navigate('/checkout', { state: { product, variant: selectedVariant, quantity } })}
+                  disabled={isOutOfStock || addingToCart}
+                  onClick={handleBuyNow}
                 >
+                  {addingToCart ? <div className="btn-spinner" /> : <ArrowRight size={18} />}
                   Mua ngay
-                  <ArrowRight size={18} />
                 </button>
               </div>
               

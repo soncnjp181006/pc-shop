@@ -376,9 +376,6 @@ const CheckoutPage = () => {
 
         <header className="checkout-v2-header">
           <h1 className="checkout-v2-title">Thanh toán</h1>
-          <p className="checkout-v2-lead">
-            Kiểm tra thông tin nhận hàng, chọn phương thức thanh toán và xác nhận đơn — một trang, đủ thao tác.
-          </p>
         </header>
 
         <div className="checkout-v2-grid">
