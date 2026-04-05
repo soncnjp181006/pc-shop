@@ -302,6 +302,16 @@
 }
 .meta-item:hover { color: var(--text-primary); border-color: var(--text-secondary); }
 
+.meta-item-heart {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border-color) !important;
+  background: transparent !important;
+}
+
+.meta-item-heart:hover { border-color: var(--text-secondary); }
+
 .modular-trust-grid { display: flex; flex-direction: column; gap: 8px; }
 .trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--text-tertiary); font-weight: 500; }
 .trust-item .icon { color: var(--accent-secondary); }

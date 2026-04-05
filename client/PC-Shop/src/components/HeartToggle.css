@@ -5,48 +5,43 @@
   width: 40px;
   height: 40px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #7b8794;
-}
-
-.dark .heart-toggle {
-  background: rgba(255, 255, 255, 0.1);
   color: #9ca3af;
+  padding: 0;
 }
 
-.light .heart-toggle {
+html.light .heart-toggle {
   background: rgba(0, 0, 0, 0.05);
   color: #6b7280;
 }
 
 .heart-toggle:hover {
-  background: rgba(255, 107, 107, 0.2);
+  background: rgba(255, 107, 107, 0.15);
   color: #ff6b6b;
   transform: scale(1.1);
 }
 
 .heart-toggle.favorited {
   color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
 }
 
-.heart-toggle.favorited {
-  background: rgba(255, 107, 107, 0.15);
+.heart-icon {
+  transition: transform 0.3s ease, fill 0.3s ease;
+  width: 20px;
+  height: 20px;
+}
+
+.heart-icon {
+  animation: heartBeat 0.3s ease;
 }
 
 .heart-toggle:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.heart-icon {
-  transition: transform 0.3s ease, fill 0.3s ease;
-}
-
-.heart-icon.filled {
-  animation: heartBeat 0.3s ease;
 }
 
 @keyframes heartBeat {

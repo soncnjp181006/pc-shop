@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import './App.css';
 import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
@@ -23,19 +23,26 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Layout cho Customer
+const CustomerLayout = () => {
+  return (
+    <div className="app-container">
+      <Header />
+      <main style={{ flex: 1, minHeight: '100vh' }}>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
 // Route bảo vệ chung (yêu cầu login)
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('access_token');
   if (!token) {
     return <Navigate to="/" replace />;
   }
-  return (
-    <>
-      <Header />
-      <main style={{ flex: 1 }}>{children}</main>
-      <Footer />
-    </>
-  );
+  return children || <Outlet />;
 };
 
 // Route bảo vệ theo Role (Admin/Seller)
@@ -47,7 +54,7 @@ const AdminRoute = ({ children }) => {
   if (role !== 'ADMIN' && role !== 'SELLER') {
     return <Navigate to="/home" replace />;
   }
-  return children;
+  return children || <Outlet />;
 };
 
 // Route công khai (chưa login mới vào được)
@@ -61,18 +68,7 @@ const PublicRoute = ({ children }) => {
     }
     return <Navigate to="/home" replace />;
   }
-  return children;
-};
-
-// Route bán công khai (xem được khi chưa login, nhưng có Header nếu đã login)
-const SemiPublicRoute = ({ children }) => {
-  return (
-    <>
-      <Header />
-      <main style={{ flex: 1 }}>{children}</main>
-      <Footer />
-    </>
-  );
+  return children || <Outlet />;
 };
 
 function App() {
@@ -80,89 +76,28 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
-        {/* Auth Route */}
-        <Route 
-          path="/" 
-          element={
-            <PublicRoute>
-              <AuthPage />
-            </PublicRoute>
-          } 
-        />
+        {/* Auth Route (No Header/Footer) */}
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<AuthPage />} />
+        </Route>
 
-        {/* Customer Routes */}
-        <Route 
-          path="/home" 
-          element={
-            <SemiPublicRoute>
-              <HomePage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/profile/payment" 
-          element={
-            <ProtectedRoute>
-              <PaymentSettingsPage />
-            </ProtectedRoute>
-          } 
-        />
+        {/* Customer Routes (With Header/Footer) */}
+        <Route element={<CustomerLayout />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          
+          {/* Routes require login */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/payment" element={<PaymentSettingsPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+          </Route>
+        </Route>
 
-        {/* Product Routes */}
-        <Route 
-          path="/products" 
-          element={
-            <SemiPublicRoute>
-              <ProductListPage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/products/:id" 
-          element={
-            <SemiPublicRoute>
-              <ProductDetailPage />
-            </SemiPublicRoute>
-          } 
-        />
-
-        {/* Cart Route */}
-        <Route 
-          path="/cart" 
-          element={
-            <SemiPublicRoute>
-              <CartPage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/checkout" 
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Favorites Route */}
-        <Route 
-          path="/favorites" 
-          element={
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Admin/Seller Routes */}
+        {/* Admin/Seller Routes (Maybe different layout later) */}
         <Route 
           path="/admin" 
           element={

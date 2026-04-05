@@ -13,6 +13,11 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    // Reset scroll state when navigation occurs
+    setIsScrolled(false);
+  }, [location.pathname]);
+
   const fetchCartCount = useCallback(async () => {
     const token = localStorage.getItem('access_token');
     if (!token) return;

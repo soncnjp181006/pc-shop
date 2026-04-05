@@ -26,7 +26,7 @@ html.light {
 .checkout-page {
   background: var(--checkout-bg);
   min-height: 100vh;
-  padding: 20px 0 60px;
+  padding: calc(var(--header-height) + 20px) 0 60px;
 }
 
 .checkout-v2-container {

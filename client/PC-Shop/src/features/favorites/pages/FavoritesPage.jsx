@@ -77,8 +77,16 @@ const FavoritesPage = () => {
   if (loading) {
     return (
       <div className="favorites-page">
-        <div className="loading-container">
-          <p>Đang tải danh sách yêu thích...</p>
+        <div className="favorites-header">
+          <h1>Danh sách yêu thích</h1>
+          <p className="favorites-count">Đang tải...</p>
+        </div>
+        <div className="favorites-content-wrapper">
+          <div className="loading-grid">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="loading-card" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -88,78 +96,82 @@ const FavoritesPage = () => {
     <div className="favorites-page">
       <div className="favorites-container">
         <div className="favorites-header">
-          <h1>Danh sách yêu thích</h1>
-          <p className="favorites-count">{favorites.length} sản phẩm</p>
+          <h1>✨ Danh sách yêu thích</h1>
+          <p className="favorites-count">{favorites.length} sản phẩm được lưu</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <div className="favorites-content-wrapper">
+          {error && <div className="error-message">{error}</div>}
 
-        {favorites.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">💝</div>
-            <p>Bạn chưa thêm sản phẩm yêu thích nào</p>
-            <button
-              onClick={() => navigate('/products')}
-              className="browse-button"
-            >
-              Khám phá sản phẩm
-            </button>
-          </div>
-        ) : (
-          <div className="favorites-grid">
-            {favorites.map((favorite) => (
-              <div key={favorite.id} className="favorite-card">
-                <div className="card-image-wrapper">
-                  <img
-                    src={favorite.product.image_url || '/placeholder.jpg'}
-                    alt={favorite.product.name}
-                    className="card-image"
-                    onClick={() => handleNavigateToProduct(favorite.product.slug)}
-                  />
-                  <button
-                    className="remove-btn"
-                    onClick={() => handleRemoveFavorite(favorite.id)}
-                    title="Xóa khỏi yêu thích"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-
-                <div className="card-content">
-                  <h3
-                    className="product-name"
-                    onClick={() => handleNavigateToProduct(favorite.product.slug)}
-                  >
-                    {favorite.product.name}
-                  </h3>
-
-                  {favorite.product.brand && (
-                    <p className="product-brand">{favorite.product.brand}</p>
-                  )}
-
-                  <div className="product-price">
-                    {formatVnd(favorite.product.base_price)}
+          {favorites.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">💝</div>
+              <p>Chưa có sản phẩm yêu thích</p>
+              <p className="empty-state-subtitle">Bắt đầu thêm các sản phẩm yêu thích để lưu lại</p>
+              <button
+                onClick={() => navigate('/products')}
+                className="browse-button"
+              >
+                🛍️ Khám phá sản phẩm ngay
+              </button>
+            </div>
+          ) : (
+            <div className="favorites-grid">
+              {favorites.map((favorite) => (
+                <div key={favorite.id} className="favorite-card">
+                  <div className="card-image-wrapper">
+                    <div className={`stock-badge ${favorite.product.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                      {favorite.product.stock_quantity > 0 ? '✓ Còn hàng' : '⨯ Hết hàng'}
+                    </div>
+                    <img
+                      src={favorite.product.image_url || '/placeholder.jpg'}
+                      alt={favorite.product.name}
+                      className="card-image"
+                      onClick={() => handleNavigateToProduct(favorite.product.slug)}
+                    />
+                    <button
+                      className="remove-btn"
+                      onClick={() => handleRemoveFavorite(favorite.id)}
+                      title="Xóa khỏi yêu thích"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
 
-                  <div className="product-meta">
-                    <span className={`stock ${favorite.product.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                      {favorite.product.stock_quantity > 0 ? 'Còn hàng' : 'Hết hàng'}
-                    </span>
-                  </div>
+                  <div className="card-content">
+                    {favorite.product.brand && (
+                      <p className="product-brand">{favorite.product.brand}</p>
+                    )}
 
-                  <button
-                    className="add-to-cart-btn"
-                    onClick={() => handleAddToCart(favorite.product.id)}
-                    disabled={favorite.product.stock_quantity === 0}
-                  >
-                    <ShoppingCart size={16} />
-                    Thêm vào giỏ
-                  </button>
+                    <h3
+                      className="product-name"
+                      onClick={() => handleNavigateToProduct(favorite.product.slug)}
+                    >
+                      {favorite.product.name}
+                    </h3>
+
+                    <div className="separator" />
+
+                    <div className="product-price">
+                      {formatVnd(favorite.product.base_price)}
+                    </div>
+
+                    <div className="card-actions">
+                      <button
+                        className="add-to-cart-btn"
+                        onClick={() => handleAddToCart(favorite.product.id)}
+                        disabled={favorite.product.stock_quantity === 0}
+                      >
+                        <ShoppingCart size={16} />
+                        <span>Giỏ</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
