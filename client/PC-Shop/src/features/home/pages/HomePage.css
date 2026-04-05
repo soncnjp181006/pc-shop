@@ -1,5 +1,5 @@
 .home-container {
-  padding-top: var(--header-height);
+  /* Padding top is now handled by the layout's main tag */
 }
 
 /* Hero Section Premium */

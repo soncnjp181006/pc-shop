@@ -2,7 +2,7 @@
 
 /* ===================== BASE ===================== */
 .product-detail-modular {
-  padding: calc(var(--header-height) + 20px) 0 60px;
+  padding: 20px 0 60px;
   background: var(--bg-color);
   min-height: 100vh;
 }

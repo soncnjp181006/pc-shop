@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import './App.css';
 import AuthPage from './features/auth/pages/AuthPage';
 import HomePage from './features/home/pages/HomePage';
@@ -23,23 +23,30 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Layout chính chứa Header và Footer cố định
+const MainLayout = () => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Header />
+      <main style={{ flex: 1, paddingTop: 'var(--header-height)' }}>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
 // Route bảo vệ chung (yêu cầu login)
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const token = localStorage.getItem('access_token');
   if (!token) {
     return <Navigate to="/" replace />;
   }
-  return (
-    <>
-      <Header />
-      <main style={{ flex: 1 }}>{children}</main>
-      <Footer />
-    </>
-  );
+  return <Outlet />;
 };
 
 // Route bảo vệ theo Role (Admin/Seller)
-const AdminRoute = ({ children }) => {
+const AdminRoute = () => {
   const token = localStorage.getItem('access_token');
   const role = localStorage.getItem('user_role');
   
@@ -47,11 +54,11 @@ const AdminRoute = ({ children }) => {
   if (role !== 'ADMIN' && role !== 'SELLER') {
     return <Navigate to="/home" replace />;
   }
-  return children;
+  return <Outlet />;
 };
 
 // Route công khai (chưa login mới vào được)
-const PublicRoute = ({ children }) => {
+const PublicRoute = () => {
   const token = localStorage.getItem('access_token');
   const role = localStorage.getItem('user_role');
   
@@ -61,18 +68,7 @@ const PublicRoute = ({ children }) => {
     }
     return <Navigate to="/home" replace />;
   }
-  return children;
-};
-
-// Route bán công khai (xem được khi chưa login, nhưng có Header nếu đã login)
-const SemiPublicRoute = ({ children }) => {
-  return (
-    <>
-      <Header />
-      <main style={{ flex: 1 }}>{children}</main>
-      <Footer />
-    </>
-  );
+  return <Outlet />;
 };
 
 function App() {
@@ -80,97 +76,32 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
-        {/* Auth Route */}
-        <Route 
-          path="/" 
-          element={
-            <PublicRoute>
-              <AuthPage />
-            </PublicRoute>
-          } 
-        />
+        {/* Auth Route - Không có Header/Footer */}
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<AuthPage />} />
+        </Route>
 
-        {/* Customer Routes */}
-        <Route 
-          path="/home" 
-          element={
-            <SemiPublicRoute>
-              <HomePage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/profile/payment" 
-          element={
-            <ProtectedRoute>
-              <PaymentSettingsPage />
-            </ProtectedRoute>
-          } 
-        />
+        {/* Các Route có Header/Footer */}
+        <Route element={<MainLayout />}>
+          {/* Customer Routes công khai */}
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
 
-        {/* Product Routes */}
-        <Route 
-          path="/products" 
-          element={
-            <SemiPublicRoute>
-              <ProductListPage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/products/:id" 
-          element={
-            <SemiPublicRoute>
-              <ProductDetailPage />
-            </SemiPublicRoute>
-          } 
-        />
-
-        {/* Cart Route */}
-        <Route 
-          path="/cart" 
-          element={
-            <SemiPublicRoute>
-              <CartPage />
-            </SemiPublicRoute>
-          } 
-        />
-        <Route 
-          path="/checkout" 
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Favorites Route */}
-        <Route 
-          path="/favorites" 
-          element={
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          } 
-        />
+          {/* Customer Routes cần login */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/payment" element={<PaymentSettingsPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+          </Route>
+        </Route>
 
         {/* Admin/Seller Routes */}
-        <Route 
-          path="/admin" 
-          element={
-            <AdminRoute>
-              <DashboardPage />
-            </AdminRoute>
-          } 
-        />
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<DashboardPage />} />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,7 +7,6 @@
 .product-list-page {
   display: flex;
   min-height: 100vh;
-  padding-top: var(--header-height);
   background: var(--bg-color);
 }
 

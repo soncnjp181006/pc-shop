@@ -36,7 +36,7 @@ html.light {
 .cart-modern-container {
   background: var(--bg-container);
   min-height: 100vh;
-  padding: calc(var(--header-height) + 12px) 0 40px;
+  padding: 12px 0 40px;
   position: relative;
 }
 

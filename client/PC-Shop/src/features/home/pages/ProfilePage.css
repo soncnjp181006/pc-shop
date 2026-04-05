@@ -3,7 +3,6 @@
 /* ===================== CONTAINER ===================== */
 .profile-container {
   min-height: 100vh;
-  padding-top: var(--header-height);
   padding-bottom: 80px;
   background: var(--bg-color);
   display: flex;
